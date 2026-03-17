@@ -14,50 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
-      bills: {
+      cash_balance: {
+        Row: {
+          amount: number
+          balance_date: string
+          bank_account: string | null
+          created_at: string
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          amount: number
+          balance_date: string
+          bank_account?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          amount?: number
+          balance_date?: string
+          bank_account?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      transactions: {
         Row: {
           amount: number
           category: string
           cost_center: string
+          counterpart: string
           created_at: string
           description: string
           due_date: string
           id: string
           notes: string | null
           paid_at: string | null
+          payment_method: string | null
+          priority: string
           recurrence: string
           status: string
-          supplier: string
+          type: string
           updated_at: string
         }
         Insert: {
           amount?: number
           category?: string
           cost_center?: string
+          counterpart?: string
           created_at?: string
           description: string
           due_date: string
           id?: string
           notes?: string | null
           paid_at?: string | null
+          payment_method?: string | null
+          priority?: string
           recurrence?: string
           status?: string
-          supplier?: string
+          type: string
           updated_at?: string
         }
         Update: {
           amount?: number
           category?: string
           cost_center?: string
+          counterpart?: string
           created_at?: string
           description?: string
           due_date?: string
           id?: string
           notes?: string | null
           paid_at?: string | null
+          payment_method?: string | null
+          priority?: string
           recurrence?: string
           status?: string
-          supplier?: string
+          type?: string
           updated_at?: string
         }
         Relationships: []

@@ -1,7 +1,7 @@
-import StatCards from '@/components/StatCards';
-import PriorityList from '@/components/PriorityList';
-import CostCenterChart from '@/components/CostCenterChart';
-import WeeklyTimeline from '@/components/WeeklyTimeline';
+import AlertBanner from '@/components/AlertBanner';
+import DashboardStatCards from '@/components/DashboardStatCards';
+import ActionList from '@/components/ActionList';
+import CashFlowMiniChart from '@/components/CashFlowMiniChart';
 
 export default function Dashboard() {
   const today = new Date();
@@ -9,25 +9,23 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <AlertBanner />
+
       <div>
         <h1 className="text-2xl font-bold">{greeting} 👋</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Aqui está o resumo financeiro da sua empresa.
-        </p>
+        <p className="text-muted-foreground text-sm mt-1">Painel financeiro operacional — BWILD Finance</p>
       </div>
 
-      <StatCards />
+      <DashboardStatCards />
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3">
-          <PriorityList />
+          <ActionList />
         </div>
         <div className="lg:col-span-2">
-          <CostCenterChart />
+          <CashFlowMiniChart />
         </div>
       </div>
-
-      <WeeklyTimeline />
     </div>
   );
 }
