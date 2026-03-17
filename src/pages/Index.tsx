@@ -34,6 +34,8 @@ export default function Dashboard() {
         <DashboardPeriodFilter value={period} onChange={setPeriod} />
       </div>
 
+      <TodayTomorrowActions />
+
       <DashboardKPIs period={period} />
 
       {/* Hero Chart - full width, maximum prominence */}
