@@ -1,34 +1,49 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AlertBanner from '@/components/AlertBanner';
-import DashboardStatCards from '@/components/DashboardStatCards';
+import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
+import DashboardKPIs from '@/components/DashboardKPIs';
+import CashFlowHeroChart from '@/components/CashFlowHeroChart';
 import CashRunwayCard from '@/components/CashRunwayCard';
-import ForecastChart from '@/components/ForecastChart';
 import ForecastInsights from '@/components/ForecastInsights';
 import ActionList from '@/components/ActionList';
 import CostCenterBreakdown from '@/components/CostCenterBreakdown';
 import { Beaker, ChevronRight } from 'lucide-react';
+import { todayISO, addDays } from '@/lib/helpers';
 
 export default function Dashboard() {
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Bom dia' : today.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
 
+  const [period, setPeriod] = useState<PeriodRange>({
+    from: todayISO(),
+    to: addDays(todayISO(), 30),
+    label: '30d',
+  });
+
   return (
     <div className="space-y-5">
       <AlertBanner />
 
-      <div>
-        <h1 className="text-2xl font-bold">{greeting} 👋</h1>
-        <p className="text-muted-foreground text-sm mt-1">Painel de controle financeiro — BWILD Finance</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">{greeting} 👋</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Painel de controle financeiro — BWILD Finance</p>
+        </div>
+        <DashboardPeriodFilter value={period} onChange={setPeriod} />
       </div>
 
-      <DashboardStatCards />
+      <DashboardKPIs period={period} />
+
+      {/* Hero Chart - full width, maximum prominence */}
+      <CashFlowHeroChart period={period} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-4">
           <CashRunwayCard />
         </div>
         <div className="lg:col-span-8">
-          <ForecastChart />
+          <ActionList />
         </div>
       </div>
 
@@ -50,14 +65,11 @@ export default function Dashboard() {
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-6">
           <ForecastInsights />
         </div>
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-6">
           <CostCenterBreakdown />
-        </div>
-        <div className="lg:col-span-4">
-          <ActionList />
         </div>
       </div>
     </div>
