@@ -153,7 +153,9 @@ export default function TransactionTable({ type }: Props) {
                 <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Vencimento</th>
                 <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Descrição</th>
                 <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">{cLabel}</th>
-                <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase hidden lg:table-cell">Categoria</th>
+                <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase hidden lg:table-cell">
+                  {type === 'receber' ? 'Parcela' : 'Categoria'}
+                </th>
                 {type === 'pagar' && (
                   <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase hidden lg:table-cell">Obra</th>
                 )}
