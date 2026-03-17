@@ -154,6 +154,9 @@ export default function TransactionTable({ type }: Props) {
                 <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Descrição</th>
                 <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">{cLabel}</th>
                 <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase hidden lg:table-cell">Categoria</th>
+                {type === 'pagar' && (
+                  <th className="text-left px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase hidden lg:table-cell">Obra</th>
+                )}
                 <th className="text-right px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase">Valor</th>
                 <th className="text-right px-3 py-2.5 text-[10px] font-medium text-muted-foreground uppercase w-28">Ações</th>
               </tr>
@@ -184,6 +187,11 @@ export default function TransactionTable({ type }: Props) {
                       <td className="px-3 py-2.5 font-medium max-w-[180px] truncate">{tx.description}</td>
                       <td className="px-3 py-2.5 text-muted-foreground max-w-[140px] truncate">{tx.counterpart}</td>
                       <td className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell">{tx.category}</td>
+                      {type === 'pagar' && (
+                        <td className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell">
+                          {['Materiais de Obra', 'Mão de Obra Terceirizada'].includes(tx.category) ? tx.costCenter : '—'}
+                        </td>
+                      )}
                       <td className="px-3 py-2.5 text-right font-mono font-semibold whitespace-nowrap">{formatCurrency(tx.amount)}</td>
                       <td className="px-3 py-2.5">
                         <div className="flex items-center justify-end gap-0.5">
