@@ -32,12 +32,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Row 3: Insights + Actions */}
+      {/* Row 3: Insights + Cost Centers + Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-4">
           <ForecastInsights />
         </div>
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-4">
+          <CostCenterBreakdown />
+        </div>
+        <div className="lg:col-span-4">
           <ActionList />
         </div>
       </div>
