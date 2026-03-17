@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bills: {
+        Row: {
+          amount: number
+          category: string
+          cost_center: string
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          recurrence: string
+          status: string
+          supplier: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          cost_center?: string
+          created_at?: string
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          recurrence?: string
+          status?: string
+          supplier?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          cost_center?: string
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          recurrence?: string
+          status?: string
+          supplier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
