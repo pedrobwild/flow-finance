@@ -4,6 +4,7 @@ import CashRunwayCard from '@/components/CashRunwayCard';
 import ForecastChart from '@/components/ForecastChart';
 import ForecastInsights from '@/components/ForecastInsights';
 import ActionList from '@/components/ActionList';
+import CostCenterBreakdown from '@/components/CostCenterBreakdown';
 
 export default function Dashboard() {
   const today = new Date();
