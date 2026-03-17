@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import ContasPagar from "./pages/ContasPagar";
 import ContasReceber from "./pages/ContasReceber";
 import FluxoCaixa from "./pages/FluxoCaixa";
+import Simulador from "./pages/Simulador";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
