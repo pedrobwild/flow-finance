@@ -9,6 +9,7 @@ const navItems = [
   { label: 'A Pagar', icon: ArrowDownCircle, path: '/pagar' },
   { label: 'A Receber', icon: ArrowUpCircle, path: '/receber' },
   { label: 'Fluxo de Caixa', icon: TrendingUp, path: '/fluxo' },
+  { label: 'Simulador', icon: Beaker, path: '/simulador' },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
