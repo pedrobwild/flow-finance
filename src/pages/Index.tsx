@@ -5,6 +5,7 @@ import ForecastChart from '@/components/ForecastChart';
 import ForecastInsights from '@/components/ForecastInsights';
 import ActionList from '@/components/ActionList';
 import CostCenterBreakdown from '@/components/CostCenterBreakdown';
+import ScenarioSimulator from '@/components/ScenarioSimulator';
 
 export default function Dashboard() {
   const today = new Date();
@@ -19,10 +20,8 @@ export default function Dashboard() {
         <p className="text-muted-foreground text-sm mt-1">Painel de controle financeiro — BWILD Finance</p>
       </div>
 
-      {/* Row 1: Stat cards */}
       <DashboardStatCards />
 
-      {/* Row 2: Runway + Forecast Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-4">
           <CashRunwayCard />
@@ -32,7 +31,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Row 3: Insights + Cost Centers + Actions */}
+      {/* Scenario Simulator */}
+      <ScenarioSimulator />
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-4">
           <ForecastInsights />
