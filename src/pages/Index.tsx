@@ -1,29 +1,43 @@
 import AlertBanner from '@/components/AlertBanner';
 import DashboardStatCards from '@/components/DashboardStatCards';
+import CashRunwayCard from '@/components/CashRunwayCard';
+import ForecastChart from '@/components/ForecastChart';
+import ForecastInsights from '@/components/ForecastInsights';
 import ActionList from '@/components/ActionList';
-import CashFlowMiniChart from '@/components/CashFlowMiniChart';
 
 export default function Dashboard() {
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Bom dia' : today.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AlertBanner />
 
       <div>
         <h1 className="text-2xl font-bold">{greeting} 👋</h1>
-        <p className="text-muted-foreground text-sm mt-1">Painel financeiro operacional — BWILD Finance</p>
+        <p className="text-muted-foreground text-sm mt-1">Painel de controle financeiro — BWILD Finance</p>
       </div>
 
+      {/* Row 1: Stat cards */}
       <DashboardStatCards />
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3">
-          <ActionList />
+      {/* Row 2: Runway + Forecast Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-4">
+          <CashRunwayCard />
         </div>
-        <div className="lg:col-span-2">
-          <CashFlowMiniChart />
+        <div className="lg:col-span-8">
+          <ForecastChart />
+        </div>
+      </div>
+
+      {/* Row 3: Insights + Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-5">
+          <ForecastInsights />
+        </div>
+        <div className="lg:col-span-7">
+          <ActionList />
         </div>
       </div>
     </div>
