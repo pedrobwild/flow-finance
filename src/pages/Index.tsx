@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AlertBanner from '@/components/AlertBanner';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
+import TodayTomorrowActions from '@/components/TodayTomorrowActions';
 import DashboardKPIs from '@/components/DashboardKPIs';
 import CashFlowHeroChart from '@/components/CashFlowHeroChart';
 import CashRunwayCard from '@/components/CashRunwayCard';
@@ -32,6 +33,8 @@ export default function Dashboard() {
         </div>
         <DashboardPeriodFilter value={period} onChange={setPeriod} />
       </div>
+
+      <TodayTomorrowActions />
 
       <DashboardKPIs period={period} />
 
