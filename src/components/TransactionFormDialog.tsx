@@ -50,13 +50,13 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         amount: transaction.amount.toString(),
         dueDate: transaction.dueDate,
         paidAt: transaction.paidAt || '',
-        status: transaction.status,
-        costCenter: transaction.costCenter,
+        status: transaction.status as any,
+        costCenter: transaction.costCenter as any,
         category: transaction.category,
-        recurrence: transaction.recurrence,
+        recurrence: transaction.recurrence as any,
         paymentMethod: transaction.paymentMethod || '_none',
         notes: transaction.notes,
-        priority: transaction.priority,
+        priority: transaction.priority as any,
       });
     } else {
       setForm(empty(defaultType));
