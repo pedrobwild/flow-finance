@@ -4,6 +4,7 @@ import CashRunwayCard from '@/components/CashRunwayCard';
 import ForecastChart from '@/components/ForecastChart';
 import ForecastInsights from '@/components/ForecastInsights';
 import ActionList from '@/components/ActionList';
+import CostCenterBreakdown from '@/components/CostCenterBreakdown';
 
 export default function Dashboard() {
   const today = new Date();
@@ -31,12 +32,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Row 3: Insights + Actions */}
+      {/* Row 3: Insights + Cost Centers + Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-4">
           <ForecastInsights />
         </div>
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-4">
+          <CostCenterBreakdown />
+        </div>
+        <div className="lg:col-span-4">
           <ActionList />
         </div>
       </div>
