@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import ContasPagar from "./pages/ContasPagar";
 import ContasReceber from "./pages/ContasReceber";
 import FluxoCaixa from "./pages/FluxoCaixa";
+import Simulador from "./pages/Simulador";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/pagar" element={<ContasPagar />} />
               <Route path="/receber" element={<ContasReceber />} />
               <Route path="/fluxo" element={<FluxoCaixa />} />
+              <Route path="/simulador" element={<Simulador />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AppShell>
