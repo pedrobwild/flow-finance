@@ -40,7 +40,11 @@ export default function DashboardStatCards() {
     const balDate = currentBalance?.balanceDate;
     const balAge = balDate ? daysBetween(balDate, today) : null;
 
-    return { projected7, projected14, delta7, delta14, outWeek, inWeek, overdueCount, overdueAmount, balAge, bal };
+    const in30days = addDays(today, 30);
+    const projected30 = projectedBalance(in30days);
+    const delta30 = projected30 - bal;
+
+    return { projected7, projected14, projected30, delta7, delta14, delta30, outWeek, inWeek, overdueCount, overdueAmount, balAge, bal };
   }, [transactions, projectedBalance, currentBalance]);
 
   const handleSaveBalance = () => {
