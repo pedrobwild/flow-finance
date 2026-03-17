@@ -155,13 +155,22 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
               )}
             </div>
             <div>
-              <Label className="text-xs">Categoria</Label>
-              <Select value={form.category} onValueChange={v => set('category', v)}>
-                <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              {form.type === 'receber' ? (
+                <>
+                  <Label className="text-xs">Parcela</Label>
+                  <Input value={form.category} onChange={e => set('category', e.target.value)} placeholder="Ex: 3/6, Sinal, Medição 2" />
+                </>
+              ) : (
+                <>
+                  <Label className="text-xs">Categoria</Label>
+                  <Select value={form.category} onValueChange={v => set('category', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
             </div>
             <div>
               <Label className="text-xs">Recorrência</Label>
