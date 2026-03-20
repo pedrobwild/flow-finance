@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from '@/components/ui/dialog';
+import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
   Clock, AlertTriangle, CalendarDays, X,
 } from 'lucide-react';
@@ -29,6 +32,7 @@ export default function TransactionTable({ type }: Props) {
   const [periodFilter, setPeriodFilter] = useState('todos');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
 
   const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || costCenterFilter !== 'todos' || periodFilter !== 'todos' || search.length > 0;
 
@@ -90,6 +94,13 @@ export default function TransactionTable({ type }: Props) {
 
   const cLabel = type === 'pagar' ? 'Fornecedor' : 'Cliente';
   const isPagar = type === 'pagar';
+
+  const handleDelete = () => {
+    if (deleteConfirm) {
+      deleteTransaction(deleteConfirm.id);
+      setDeleteConfirm(null);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -327,7 +338,7 @@ export default function TransactionTable({ type }: Props) {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-success/10 active:scale-90"
+                              className="h-7 w-7 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity hover:bg-success/10 active:scale-90"
                               onClick={() => confirmTransaction(tx.id)}
                               title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}
                             >
@@ -337,7 +348,7 @@ export default function TransactionTable({ type }: Props) {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity active:scale-90"
+                            className="h-7 w-7 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90"
                             onClick={() => { setEditingTx(tx); setShowForm(true); }}
                           >
                             <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
@@ -345,8 +356,8 @@ export default function TransactionTable({ type }: Props) {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-destructive/10 active:scale-90"
-                            onClick={() => { if (confirm('Excluir esta transação?')) deleteTransaction(tx.id); }}
+                            className="h-7 w-7 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity hover:bg-destructive/10 active:scale-90"
+                            onClick={() => setDeleteConfirm(tx)}
                           >
                             <Trash2 className="w-3.5 h-3.5 text-destructive" />
                           </Button>
@@ -383,6 +394,31 @@ export default function TransactionTable({ type }: Props) {
         transaction={editingTx}
         defaultType={type}
       />
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteConfirm} onOpenChange={(v) => !v && setDeleteConfirm(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Excluir transação</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir <strong>{deleteConfirm?.description}</strong>?
+              {deleteConfirm && (
+                <span className="block mt-1 text-xs font-mono">
+                  Valor: {formatCurrency(deleteConfirm.amount)}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

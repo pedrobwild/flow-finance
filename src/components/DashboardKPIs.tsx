@@ -82,7 +82,7 @@ export default function DashboardKPIs({ period }: Props) {
       value: stats.totalPagar,
       icon: ArrowDownCircle,
       color: 'text-destructive',
-      bgIcon: 'bg-destructive/8',
+      bgIcon: 'bg-destructive/10',
       ringColor: stats.overduePayable > 0 ? 'ring-1 ring-destructive/20' : '',
       subtitle: `${stats.countPagar} transações`,
       overdue: stats.overduePayable > 0 ? `+${formatCurrency(stats.overduePayableTotal)} atrasado` : undefined,
@@ -92,7 +92,7 @@ export default function DashboardKPIs({ period }: Props) {
       value: stats.totalReceber,
       icon: ArrowUpCircle,
       color: 'text-success',
-      bgIcon: 'bg-success/8',
+      bgIcon: 'bg-success/10',
       ringColor: stats.overdueReceivable > 0 ? 'ring-1 ring-warning/20' : '',
       subtitle: `${stats.countReceber} transações`,
       overdue: stats.overdueReceivable > 0 ? `${formatCurrency(stats.overdueReceivableTotal)} em atraso` : undefined,
@@ -102,7 +102,7 @@ export default function DashboardKPIs({ period }: Props) {
       value: stats.saldoLiquido,
       icon: TrendingUp,
       color: stats.saldoLiquido >= 0 ? 'text-success' : 'text-destructive',
-      bgIcon: stats.saldoLiquido >= 0 ? 'bg-success/8' : 'bg-destructive/8',
+      bgIcon: stats.saldoLiquido >= 0 ? 'bg-success/10' : 'bg-destructive/10',
       ringColor: '',
       subtitle: `Projeção final: ${formatCurrency(stats.projectedEnd)}`,
     },
@@ -167,7 +167,7 @@ export default function DashboardKPIs({ period }: Props) {
                     {stats.balAge !== null && stats.balAge > 0 && ` (${stats.balAge}d atrás)`}
                   </p>
                   <Button
-                    size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    size="icon" variant="ghost" className="h-6 w-6 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                     onClick={() => { setBalanceInput(currentBalance?.amount?.toString() || ''); setEditingBalance(true); }}
                   >
                     <Edit3 className="w-3 h-3" />

@@ -6,6 +6,7 @@ import {
   CostCenter, Recurrence, PaymentMethod, Priority,
 } from './types';
 import { computeStatus, todayISO } from './helpers';
+import { toast } from 'sonner';
 
 function rowToTransaction(row: any): Transaction {
   const tx: Transaction = {
@@ -112,7 +113,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) throw error;
     },
-    onSuccess: invalidateTx,
+    onSuccess: () => {
+      invalidateTx();
+      toast.success('Transação criada com sucesso');
+    },
+    onError: () => toast.error('Erro ao criar transação'),
   });
 
   const updateMutation = useMutation({
@@ -134,7 +139,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.from('transactions').update(db).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: invalidateTx,
+    onSuccess: () => {
+      invalidateTx();
+      toast.success('Transação atualizada');
+    },
+    onError: () => toast.error('Erro ao atualizar transação'),
   });
 
   const deleteMutation = useMutation({
@@ -142,7 +151,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: invalidateTx,
+    onSuccess: () => {
+      invalidateTx();
+      toast.success('Transação excluída');
+    },
+    onError: () => toast.error('Erro ao excluir transação'),
   });
 
   const confirmMutation = useMutation({
@@ -153,7 +166,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       }).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: invalidateTx,
+    onSuccess: () => {
+      invalidateTx();
+      toast.success('Transação confirmada');
+    },
+    onError: () => toast.error('Erro ao confirmar transação'),
   });
 
   const balanceMutation = useMutation({
@@ -165,12 +182,15 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       }, { onConflict: 'balance_date' });
       if (error) throw error;
     },
-    onSuccess: invalidateBal,
+    onSuccess: () => {
+      invalidateBal();
+      toast.success('Saldo atualizado');
+    },
+    onError: () => toast.error('Erro ao atualizar saldo'),
   });
 
   const projectedBalance = useCallback((targetDate: string): number => {
     const base = currentBalance?.amount ?? 0;
-    const today = todayISO();
     let projected = base;
 
     for (const tx of transactions) {

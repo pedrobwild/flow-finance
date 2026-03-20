@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
-import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth } from '@/lib/helpers';
+import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingDown, Shield, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
