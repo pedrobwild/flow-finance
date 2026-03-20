@@ -119,8 +119,8 @@ export default function ContasReceber() {
                   <Users className="w-3.5 h-3.5 text-accent" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold">Concentração por Cliente</p>
-                  <p className="text-[10px] text-muted-foreground">Top clientes com valores pendentes</p>
+                  <p className="text-xs font-semibold">Concentração por Obra / Cliente</p>
+                  <p className="text-[10px] text-muted-foreground">Top obras com valores pendentes</p>
                 </div>
               </div>
               <div className="space-y-2">

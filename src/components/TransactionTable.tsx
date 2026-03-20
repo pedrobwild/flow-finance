@@ -94,7 +94,7 @@ export default function TransactionTable({ type }: Props) {
     return { total, overdueCount: overdue.length, overdueTotal, next7Total, next7Count: next7.length, confirmedTotal, confirmedCount: confirmed.length };
   }, [filtered]);
 
-  const cLabel = type === 'pagar' ? 'Fornecedor' : 'Cliente';
+  const cLabel = type === 'pagar' ? 'Fornecedor' : 'Obra / Cliente';
   const isPagar = type === 'pagar';
 
   const handleDelete = () => {

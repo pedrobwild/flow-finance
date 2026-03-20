@@ -65,7 +65,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
 
   const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
   const categories = form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES;
-  const cLabel = form.type === 'pagar' ? 'Fornecedor' : 'Cliente';
+  const cLabel = form.type === 'pagar' ? 'Fornecedor' : 'Obra / Cliente';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
