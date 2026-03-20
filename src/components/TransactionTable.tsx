@@ -425,20 +425,22 @@ export default function TransactionTable({ type }: Props) {
         </DialogContent>
       </Dialog>
 
-      {/* Confirm receivable modal */}
-      <Dialog open={!!confirmReceivable} onOpenChange={(v) => !v && setConfirmReceivable(null)}>
+      {/* Confirm payment/receivable modal */}
+      <Dialog open={!!confirmTx} onOpenChange={(v) => !v && setConfirmTx(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Confirmar recebimento</DialogTitle>
+            <DialogTitle>{confirmTx?.type === 'pagar' ? 'Confirmar pagamento' : 'Confirmar recebimento'}</DialogTitle>
             <DialogDescription>
-              Informe o valor real recebido para <strong>{confirmReceivable?.description}</strong>.
+              Informe o valor real {confirmTx?.type === 'pagar' ? 'pago' : 'recebido'} para <strong>{confirmTx?.description}</strong>.
               <span className="block mt-1.5 text-xs text-muted-foreground">
-                Valor planejado: <span className="font-mono font-semibold text-foreground">{confirmReceivable && formatCurrency(confirmReceivable.amount)}</span>
+                Valor planejado: <span className="font-mono font-semibold text-foreground">{confirmTx && formatCurrency(confirmTx.amount)}</span>
               </span>
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
-            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Valor recebido (R$)</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+              Valor {confirmTx?.type === 'pagar' ? 'pago' : 'recebido'} (R$)
+            </label>
             <Input
               type="number"
               step="0.01"
@@ -447,27 +449,27 @@ export default function TransactionTable({ type }: Props) {
               className="font-mono text-base"
               autoFocus
             />
-            {confirmReceivable && parseFloat(actualAmount) !== confirmReceivable.amount && actualAmount !== '' && (
+            {confirmTx && parseFloat(actualAmount) !== confirmTx.amount && actualAmount !== '' && (
               <p className="text-[11px] mt-1.5 text-muted-foreground">
                 Diferença: <span className={cn(
                   'font-mono font-semibold',
-                  parseFloat(actualAmount) > confirmReceivable.amount ? 'text-success' : 'text-destructive'
+                  parseFloat(actualAmount) > confirmTx.amount ? 'text-success' : 'text-destructive'
                 )}>
-                  {parseFloat(actualAmount) > confirmReceivable.amount ? '+' : ''}{formatCurrency(parseFloat(actualAmount) - confirmReceivable.amount)}
+                  {parseFloat(actualAmount) > confirmTx.amount ? '+' : ''}{formatCurrency(parseFloat(actualAmount) - confirmTx.amount)}
                 </span>
               </p>
             )}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" size="sm" onClick={() => setConfirmReceivable(null)}>
+            <Button variant="outline" size="sm" onClick={() => setConfirmTx(null)}>
               Cancelar
             </Button>
             <Button
               size="sm"
               onClick={() => {
-                if (confirmReceivable && actualAmount) {
-                  confirmTransaction(confirmReceivable.id, parseFloat(actualAmount));
-                  setConfirmReceivable(null);
+                if (confirmTx && actualAmount) {
+                  confirmTransaction(confirmTx.id, parseFloat(actualAmount), confirmTx.type);
+                  setConfirmTx(null);
                 }
               }}
               disabled={!actualAmount || parseFloat(actualAmount) <= 0}
