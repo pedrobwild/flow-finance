@@ -327,6 +327,9 @@ export default function TransactionTable({ type }: Props) {
                           }
                         </td>
                       )}
+                      {!isPagar && (
+                        <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell">{tx.costCenter}</td>
+                      )}
                       <td className="px-3 py-3 text-right">
                         <span className={cn(
                           'font-mono font-bold whitespace-nowrap text-xs',
