@@ -235,7 +235,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       addTransaction: (tx) => addMutation.mutate(tx),
       updateTransaction: (id, updates) => updateMutation.mutate({ id, updates }),
       deleteTransaction: (id) => deleteMutation.mutate(id),
-      confirmTransaction: (id) => confirmMutation.mutate(id),
+      confirmTransaction: (id, actualAmount) => confirmMutation.mutate({ id, actualAmount }),
       updateCashBalance: (amount, date) => balanceMutation.mutate({ amount, date: date || todayISO() }),
       projectedBalance,
     }}>
