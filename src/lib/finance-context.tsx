@@ -171,7 +171,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   });
 
   const confirmMutation = useMutation({
-    mutationFn: async ({ id, actualAmount }: { id: string; actualAmount?: number }) => {
+    mutationFn: async ({ id, actualAmount, txType }: { id: string; actualAmount?: number; txType?: string }) => {
       const updateData: any = {
         status: 'confirmado',
         paid_at: todayISO(),
@@ -182,10 +182,12 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.from('transactions').update(updateData).eq('id', id);
       if (error) throw error;
 
-      // If an actual amount is provided (receivable confirmation), update the cash balance
-      if (actualAmount !== undefined) {
+      // Update cash balance when actual amount is provided
+      if (actualAmount !== undefined && txType) {
         const currentAmt = currentBalance?.amount ?? 0;
-        const newBalance = currentAmt + actualAmount;
+        const newBalance = txType === 'receber'
+          ? currentAmt + actualAmount
+          : currentAmt - actualAmount;
         const today = todayISO();
         const { error: balError } = await supabase.from('cash_balance').upsert({
           balance_date: today,
