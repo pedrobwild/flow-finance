@@ -263,9 +263,6 @@ export default function TransactionTable({ type }: Props) {
                 {isPagar && (
                   <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Obra</th>
                 )}
-                {!isPagar && (
-                  <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Centro de Custo</th>
-                )}
                 <th className="text-right px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Valor</th>
                 <th className="text-right pr-5 pl-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider w-28">Ações</th>
               </tr>
