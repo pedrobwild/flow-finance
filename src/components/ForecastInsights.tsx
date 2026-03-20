@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Calendar, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, Zap, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ConcentrationRisk {
@@ -19,7 +19,6 @@ export default function ForecastInsights() {
   const insights = useMemo(() => {
     const result: { type: 'danger' | 'warning' | 'info' | 'positive'; icon: typeof TrendingUp; title: string; detail: string }[] = [];
 
-    // 1. Concentration risk: days with >30% of balance in outflows
     const bal = currentBalance?.amount ?? 0;
     const dayMap = new Map<string, { total: number; count: number; items: { description: string; amount: number }[] }>();
     
@@ -47,7 +46,6 @@ export default function ForecastInsights() {
       });
     }
 
-    // 2. Receivable gap: periods with no income
     let gapStart: string | null = null;
     let gapLength = 0;
     for (let i = 1; i <= 30; i++) {
@@ -80,7 +78,6 @@ export default function ForecastInsights() {
       });
     }
 
-    // 3. Weekly trend
     const thisWeekOut = transactions
       .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 7))
       .reduce((s, t) => s + t.amount, 0);
@@ -97,7 +94,6 @@ export default function ForecastInsights() {
       });
     }
 
-    // 4. Positive: incoming surplus
     const in7 = transactions
       .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 7))
       .reduce((s, t) => s + t.amount, 0);
@@ -110,7 +106,6 @@ export default function ForecastInsights() {
       });
     }
 
-    // 5. Overdue receivables
     const overdueRec = transactions.filter(t => t.type === 'receber' && t.status === 'atrasado');
     if (overdueRec.length > 0) {
       const totalOverdue = overdueRec.reduce((s, t) => s + t.amount, 0);
@@ -128,10 +123,17 @@ export default function ForecastInsights() {
   if (insights.length === 0) return null;
 
   const typeStyles = {
-    danger: 'border-l-destructive bg-destructive/5',
-    warning: 'border-l-warning bg-warning/5',
-    info: 'border-l-accent bg-accent/5',
-    positive: 'border-l-success bg-success/5',
+    danger: 'border-l-destructive bg-destructive/[0.04]',
+    warning: 'border-l-warning bg-warning/[0.04]',
+    info: 'border-l-accent bg-accent/[0.04]',
+    positive: 'border-l-success bg-success/[0.04]',
+  };
+
+  const iconBg = {
+    danger: 'bg-destructive/10',
+    warning: 'bg-warning/10',
+    info: 'bg-accent/10',
+    positive: 'bg-success/10',
   };
 
   const iconStyles = {
@@ -142,27 +144,32 @@ export default function ForecastInsights() {
   };
 
   return (
-    <div className="card-elevated">
-      <div className="p-4 border-b">
-        <h2 className="font-semibold text-sm">Alertas de Forecast</h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5">Riscos e oportunidades detectados automaticamente</p>
+    <div className="card-elevated h-full flex flex-col">
+      <div className="px-4 py-3 border-b flex items-center gap-2">
+        <Lightbulb className="w-4 h-4 text-warning" />
+        <div>
+          <h2 className="font-semibold text-sm">Alertas de Forecast</h2>
+          <p className="text-[10px] text-muted-foreground">Riscos e oportunidades automáticos</p>
+        </div>
       </div>
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-2 flex-1">
         {insights.map((insight, i) => {
           const Icon = insight.icon;
           return (
             <motion.div
               key={i}
-              initial={{ opacity: 0, x: -8 }}
+              initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className={cn('rounded-lg border-l-4 p-3', typeStyles[insight.type])}
+              transition={{ delay: i * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className={cn('rounded-lg border-l-[3px] p-3 transition-colors hover:brightness-[0.98]', typeStyles[insight.type])}
             >
               <div className="flex items-start gap-2.5">
-                <Icon className={cn('w-4 h-4 mt-0.5 shrink-0', iconStyles[insight.type])} />
-                <div>
-                  <p className="text-xs font-semibold">{insight.title}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{insight.detail}</p>
+                <div className={cn('w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5', iconBg[insight.type])}>
+                  <Icon className={cn('w-3.5 h-3.5', iconStyles[insight.type])} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold leading-tight">{insight.title}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{insight.detail}</p>
                 </div>
               </div>
             </motion.div>

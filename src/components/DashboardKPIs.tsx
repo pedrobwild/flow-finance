@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, daysBetween } from '@/lib/helpers';
 import { motion } from 'framer-motion';
@@ -9,7 +9,6 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
 import type { PeriodRange } from './DashboardPeriodFilter';
 
 interface Props {
@@ -73,16 +72,18 @@ export default function DashboardKPIs({ period }: Props) {
       label: 'Saldo Atual',
       value: stats.bal,
       icon: Wallet,
-      color: 'text-accent',
+      color: 'text-accent' as const,
       bgIcon: 'bg-accent/10',
+      ringColor: '',
       isBalance: true,
     },
     {
       label: 'Total a Pagar',
       value: stats.totalPagar,
       icon: ArrowDownCircle,
-      color: 'text-destructive',
-      bgIcon: 'bg-destructive/10',
+      color: 'text-destructive' as const,
+      bgIcon: 'bg-destructive/8',
+      ringColor: stats.overduePayable > 0 ? 'ring-1 ring-destructive/20' : '',
       subtitle: `${stats.countPagar} transações`,
       overdue: stats.overduePayable > 0 ? `+${formatCurrency(stats.overduePayableTotal)} atrasado` : undefined,
     },
@@ -90,8 +91,9 @@ export default function DashboardKPIs({ period }: Props) {
       label: 'Total a Receber',
       value: stats.totalReceber,
       icon: ArrowUpCircle,
-      color: 'text-success',
-      bgIcon: 'bg-success/10',
+      color: 'text-success' as const,
+      bgIcon: 'bg-success/8',
+      ringColor: stats.overdueReceivable > 0 ? 'ring-1 ring-warning/20' : '',
       subtitle: `${stats.countReceber} transações`,
       overdue: stats.overdueReceivable > 0 ? `${formatCurrency(stats.overdueReceivableTotal)} em atraso` : undefined,
     },
@@ -99,8 +101,9 @@ export default function DashboardKPIs({ period }: Props) {
       label: 'Saldo Líquido',
       value: stats.saldoLiquido,
       icon: TrendingUp,
-      color: stats.saldoLiquido >= 0 ? 'text-success' : 'text-destructive',
-      bgIcon: stats.saldoLiquido >= 0 ? 'bg-success/10' : 'bg-destructive/10',
+      color: (stats.saldoLiquido >= 0 ? 'text-success' : 'text-destructive') as const,
+      bgIcon: stats.saldoLiquido >= 0 ? 'bg-success/8' : 'bg-destructive/8',
+      ringColor: '',
       subtitle: `Projeção final: ${formatCurrency(stats.projectedEnd)}`,
     },
   ];
@@ -110,19 +113,27 @@ export default function DashboardKPIs({ period }: Props) {
       {cards.map((card, i) => (
         <motion.div
           key={card.label}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.04 }}
+          transition={{ delay: i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className={cn(
-            'card-elevated p-4 relative overflow-hidden',
-            card.overdue && 'border-destructive/30',
-            card.label === 'Saldo Atual' && stats.balAge !== null && stats.balAge > 3 && 'border-warning/50'
+            'card-elevated p-4 relative overflow-hidden group hover:shadow-md transition-shadow duration-200',
+            card.ringColor,
+            card.label === 'Saldo Atual' && stats.balAge !== null && stats.balAge > 3 && 'ring-1 ring-warning/40'
           )}
         >
-          <div className="flex items-center justify-between mb-2">
+          {/* Subtle top accent line */}
+          <div className={cn(
+            'absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-60',
+            card.color === 'text-accent' && 'bg-accent',
+            card.color === 'text-destructive' && 'bg-destructive',
+            card.color === 'text-success' && 'bg-success',
+          )} />
+
+          <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{card.label}</span>
-            <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center', card.bgIcon)}>
-              <card.icon className={cn('w-3.5 h-3.5', card.color)} />
+            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110', card.bgIcon)}>
+              <card.icon className={cn('w-4 h-4', card.color)} />
             </div>
           </div>
 
@@ -149,21 +160,21 @@ export default function DashboardKPIs({ period }: Props) {
                 {card.isBalance && !currentBalance ? '—' : formatCurrency(card.value)}
               </p>
               {card.isBalance ? (
-                <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center justify-between mt-2">
                   <p className={cn('text-[10px]', stats.balAge !== null && stats.balAge > 3 ? 'text-warning' : 'text-muted-foreground')}>
-                    {stats.balAge !== null && stats.balAge > 3 && <Clock className="w-3 h-3 inline mr-0.5" />}
+                    {stats.balAge !== null && stats.balAge > 3 && <Clock className="w-3 h-3 inline mr-0.5 -mt-0.5" />}
                     {balanceDateLabel || 'Informar saldo'}
                     {stats.balAge !== null && stats.balAge > 0 && ` (${stats.balAge}d atrás)`}
                   </p>
                   <Button
-                    size="icon" variant="ghost" className="h-5 w-5"
+                    size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => { setBalanceInput(currentBalance?.amount?.toString() || ''); setEditingBalance(true); }}
                   >
                     <Edit3 className="w-3 h-3" />
                   </Button>
                 </div>
               ) : (
-                <div className="mt-1 space-y-0.5">
+                <div className="mt-2 space-y-0.5">
                   {card.subtitle && <p className="text-[10px] text-muted-foreground">{card.subtitle}</p>}
                   {card.overdue && (
                     <p className="text-[10px] text-destructive font-semibold flex items-center gap-0.5">
