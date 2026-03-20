@@ -4,13 +4,13 @@ import {
   Transaction, TransactionType, STATUS_OPTIONS, PRIORITY_OPTIONS, COST_CENTERS,
   STATUS_LABELS, PRIORITY_LABELS, PRIORITY_CLASSES,
 } from '@/lib/types';
-import { formatCurrency, formatDateFull, todayISO, addDays, getDayMonth } from '@/lib/helpers';
+import { formatCurrency, formatDateFull, todayISO, addDays } from '@/lib/helpers';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
-  Clock, AlertTriangle, CalendarDays, Filter, X,
+  Clock, AlertTriangle, CalendarDays, X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -92,103 +92,77 @@ export default function TransactionTable({ type }: Props) {
   const isPagar = type === 'pagar';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* KPI Cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3"
-      >
-        <div className="card-elevated p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              {isPagar
-                ? <ArrowDownRight className="w-3.5 h-3.5 text-primary" />
-                : <ArrowUpRight className="w-3.5 h-3.5 text-primary" />
-              }
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          {
+            icon: isPagar ? ArrowDownRight : ArrowUpRight,
+            iconBg: 'bg-primary/10',
+            iconColor: 'text-primary',
+            label: 'Total',
+            value: formatCurrency(totals.total),
+            sub: `${filtered.length} transação(ões)`,
+            ring: '',
+          },
+          {
+            icon: AlertTriangle,
+            iconBg: totals.overdueCount > 0 ? 'bg-destructive/10' : 'bg-muted',
+            iconColor: totals.overdueCount > 0 ? 'text-destructive' : 'text-muted-foreground',
+            label: isPagar ? 'Atrasados' : 'Não recebidos',
+            value: formatCurrency(totals.overdueTotal),
+            valueColor: totals.overdueCount > 0 ? 'text-destructive' : '',
+            sub: `${totals.overdueCount} item(ns)`,
+            ring: totals.overdueCount > 0 ? 'ring-1 ring-destructive/15' : '',
+            pulse: totals.overdueCount > 0,
+          },
+          {
+            icon: CalendarDays,
+            iconBg: 'bg-warning/10',
+            iconColor: 'text-warning',
+            label: 'Próximos 7 dias',
+            value: formatCurrency(totals.next7Total),
+            sub: `${totals.next7Count} vencimento(s)`,
+            ring: '',
+          },
+          {
+            icon: Check,
+            iconBg: 'bg-success/10',
+            iconColor: 'text-success',
+            label: isPagar ? 'Pagos' : 'Recebidos',
+            value: formatCurrency(totals.confirmedTotal),
+            valueColor: 'text-success',
+            sub: `${totals.confirmedCount} confirmado(s)`,
+            ring: '',
+          },
+        ].map((card, i) => (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+            className={cn('card-elevated p-4 group hover:shadow-md transition-shadow duration-200', card.ring)}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110', card.iconBg)}>
+                <card.icon className={cn('w-3.5 h-3.5', card.iconColor)} />
+              </div>
+              <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">{card.label}</span>
+              {card.pulse && <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />}
             </div>
-            <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">
-              Total
-            </span>
-          </div>
-          <p className="text-xl font-bold font-mono tracking-tight">
-            {formatCurrency(totals.total)}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            {filtered.length} transação(ões)
-          </p>
-        </div>
-
-        <div className={cn(
-          'card-elevated p-4',
-          totals.overdueCount > 0 && 'ring-1 ring-destructive/20'
-        )}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className={cn(
-              'w-7 h-7 rounded-lg flex items-center justify-center',
-              totals.overdueCount > 0 ? 'bg-destructive/10' : 'bg-muted'
-            )}>
-              <AlertTriangle className={cn(
-                'w-3.5 h-3.5',
-                totals.overdueCount > 0 ? 'text-destructive' : 'text-muted-foreground'
-              )} />
-            </div>
-            <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">
-              {isPagar ? 'Atrasados' : 'Não recebidos'}
-            </span>
-          </div>
-          <p className={cn(
-            'text-xl font-bold font-mono tracking-tight',
-            totals.overdueCount > 0 && 'text-destructive'
-          )}>
-            {formatCurrency(totals.overdueTotal)}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            {totals.overdueCount} item(ns)
-          </p>
-        </div>
-
-        <div className="card-elevated p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center">
-              <CalendarDays className="w-3.5 h-3.5 text-warning" />
-            </div>
-            <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">
-              Próximos 7 dias
-            </span>
-          </div>
-          <p className="text-xl font-bold font-mono tracking-tight">
-            {formatCurrency(totals.next7Total)}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            {totals.next7Count} vencimento(s)
-          </p>
-        </div>
-
-        <div className="card-elevated p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center">
-              <Check className="w-3.5 h-3.5 text-success" />
-            </div>
-            <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">
-              {isPagar ? 'Pagos' : 'Recebidos'}
-            </span>
-          </div>
-          <p className="text-xl font-bold font-mono tracking-tight text-success">
-            {formatCurrency(totals.confirmedTotal)}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            {totals.confirmedCount} confirmado(s)
-          </p>
-        </div>
-      </motion.div>
+            <p className={cn('text-xl font-bold font-mono tracking-tight', card.valueColor)}>
+              {card.value}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">{card.sub}</p>
+          </motion.div>
+        ))}
+      </div>
 
       {/* Filters + Actions */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
         className="card-elevated p-3"
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -235,7 +209,7 @@ export default function TransactionTable({ type }: Props) {
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1 active:scale-95 transition-transform"
               onClick={clearFilters}
             >
               <X className="w-3 h-3" />
@@ -246,7 +220,7 @@ export default function TransactionTable({ type }: Props) {
           <Button
             size="sm"
             onClick={() => { setEditingTx(null); setShowForm(true); }}
-            className="h-8 gap-1.5 text-xs font-medium shadow-sm"
+            className="h-8 gap-1.5 text-xs font-medium shadow-sm active:scale-95 transition-transform"
           >
             <Plus className="w-3.5 h-3.5" />
             {isPagar ? 'Nova conta a pagar' : 'Nova conta a receber'}
@@ -258,13 +232,13 @@ export default function TransactionTable({ type }: Props) {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.55, delay: 0.15, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
         className="card-elevated overflow-hidden"
       >
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/20">
+              <tr className="border-b bg-muted/30">
                 <th className="text-left pl-5 pr-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Prior.</th>
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Vencimento</th>
@@ -282,7 +256,7 @@ export default function TransactionTable({ type }: Props) {
             </thead>
             <tbody>
               <AnimatePresence mode="popLayout">
-                {filtered.map(tx => {
+                {filtered.map((tx, i) => {
                   const today = todayISO();
                   const isOverdue = tx.status === 'atrasado';
                   const isDueToday = tx.dueDate === today && !isOverdue && tx.status !== 'confirmado';
@@ -291,15 +265,16 @@ export default function TransactionTable({ type }: Props) {
                   return (
                     <motion.tr
                       key={tx.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 6 }}
+                      transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
                       layout
                       className={cn(
-                        'border-b transition-colors group',
-                        isOverdue && 'bg-destructive/[0.04]',
-                        isDueToday && 'bg-warning/[0.04]',
-                        isConfirmed && 'opacity-60',
+                        'border-b border-border/50 transition-colors group/row',
+                        isOverdue && 'bg-destructive/[0.03] hover:bg-destructive/[0.06]',
+                        isDueToday && 'bg-warning/[0.03] hover:bg-warning/[0.06]',
+                        isConfirmed && 'opacity-50 hover:opacity-70',
                         !isOverdue && !isDueToday && !isConfirmed && 'hover:bg-muted/30'
                       )}
                     >
@@ -352,7 +327,7 @@ export default function TransactionTable({ type }: Props) {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-success/10"
+                              className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-success/10 active:scale-90"
                               onClick={() => confirmTransaction(tx.id)}
                               title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}
                             >
@@ -362,7 +337,7 @@ export default function TransactionTable({ type }: Props) {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity active:scale-90"
                             onClick={() => { setEditingTx(tx); setShowForm(true); }}
                           >
                             <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
@@ -370,7 +345,7 @@ export default function TransactionTable({ type }: Props) {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10"
+                            className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-destructive/10 active:scale-90"
                             onClick={() => { if (confirm('Excluir esta transação?')) deleteTransaction(tx.id); }}
                           >
                             <Trash2 className="w-3.5 h-3.5 text-destructive" />
