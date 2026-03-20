@@ -3,7 +3,7 @@ import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, formatDate, todayISO, addDays } from '@/lib/helpers';
 import { PRIORITY_CLASSES } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowDownCircle, ArrowUpCircle, Check, AlertTriangle } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Check, AlertTriangle, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -44,12 +44,15 @@ export default function ActionList() {
   };
 
   return (
-    <div className="card-elevated">
-      <div className="p-4 border-b">
-        <h2 className="font-semibold text-sm">Próximas Ações</h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5">Prioridades imediatas do CEO</p>
+    <div className="card-elevated h-full flex flex-col">
+      <div className="px-4 py-3 border-b flex items-center gap-2">
+        <ListChecks className="w-4 h-4 text-accent" />
+        <div>
+          <h2 className="font-semibold text-sm">Próximas Ações</h2>
+          <p className="text-[10px] text-muted-foreground">Top 10 — ordenadas por urgência</p>
+        </div>
       </div>
-      <div className="divide-y">
+      <div className="divide-y divide-border/60 flex-1 overflow-auto">
         <AnimatePresence mode="popLayout">
           {actions.map((tx, i) => (
             <motion.div
@@ -57,20 +60,20 @@ export default function ActionList() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
-              transition={{ delay: i * 0.03 }}
+              transition={{ delay: i * 0.03, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className={cn(
-                'flex items-center gap-3 px-4 py-3 group hover:bg-muted/50 transition-colors',
-                tx.status === 'atrasado' && 'bg-destructive/5',
-                tx.dueDate === today && tx.status !== 'atrasado' && 'bg-warning/5'
+                'flex items-center gap-3 px-4 py-3 group/row hover:bg-muted/40 transition-colors',
+                tx.status === 'atrasado' && 'bg-destructive/[0.03]',
+                tx.dueDate === today && tx.status !== 'atrasado' && 'bg-warning/[0.03]'
               )}
             >
               <div className={cn(
                 'w-7 h-7 rounded-full flex items-center justify-center shrink-0',
-                tx.type === 'pagar' ? 'bg-destructive/10' : 'bg-success/10'
+                tx.type === 'pagar' ? 'bg-destructive/8' : 'bg-success/8'
               )}>
                 {tx.type === 'pagar'
-                  ? <ArrowDownCircle className="w-4 h-4 text-destructive" />
-                  : <ArrowUpCircle className="w-4 h-4 text-success" />
+                  ? <ArrowDownCircle className="w-3.5 h-3.5 text-destructive" />
+                  : <ArrowUpCircle className="w-3.5 h-3.5 text-success" />
                 }
               </div>
               <div className="flex-1 min-w-0">
@@ -85,13 +88,15 @@ export default function ActionList() {
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {tx.priority === 'crítica' && <AlertTriangle className="w-3.5 h-3.5 text-destructive" />}
-                <span className={cn('status-badge text-[10px]', `status-${tx.status}`)}>{tx.status === 'atrasado' ? 'Atrasado' : tx.status === 'pendente' ? 'Pendente' : 'Previsto'}</span>
+                <span className={cn('status-badge text-[10px]', `status-${tx.status}`)}>
+                  {tx.status === 'atrasado' ? 'Atrasado' : tx.status === 'pendente' ? 'Pendente' : 'Previsto'}
+                </span>
                 <span className={cn('status-badge text-[10px] hidden md:inline-flex', PRIORITY_CLASSES[tx.priority])}>{tx.priority}</span>
               </div>
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-7 w-7 shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity active:scale-90"
                 onClick={() => confirmTransaction(tx.id)}
                 title={tx.type === 'pagar' ? 'Confirmar pagamento' : 'Confirmar recebimento'}
               >
