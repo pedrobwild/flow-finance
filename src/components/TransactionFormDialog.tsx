@@ -136,24 +136,26 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              {form.type === 'pagar' && ['Materiais de Obra', 'Mão de Obra Terceirizada'].includes(form.category) ? (
-                <>
-                  <Label className="text-xs">Obra</Label>
-                  <Input value={form.costCenter} onChange={e => set('costCenter', e.target.value)} placeholder="Ex: Reforma Apt 302 — Vila Madalena" />
-                </>
-              ) : (
-                <>
-                  <Label className="text-xs">Centro de Custo</Label>
-                  <Select value={form.costCenter} onValueChange={v => set('costCenter', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </>
-              )}
-            </div>
+            {form.type === 'pagar' && (
+              <div>
+                {['Materiais de Obra', 'Mão de Obra Terceirizada'].includes(form.category) ? (
+                  <>
+                    <Label className="text-xs">Obra</Label>
+                    <Input value={form.costCenter} onChange={e => set('costCenter', e.target.value)} placeholder="Ex: Reforma Apt 302 — Vila Madalena" />
+                  </>
+                ) : (
+                  <>
+                    <Label className="text-xs">Centro de Custo</Label>
+                    <Select value={form.costCenter} onValueChange={v => set('costCenter', v)}>
+                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+              </div>
+            )}
             <div>
               {form.type === 'receber' ? (
                 <>
