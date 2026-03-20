@@ -31,7 +31,7 @@ interface DayRow {
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 14, filter: 'blur(6px)' },
   animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
-  transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] },
+  transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 export default function FluxoCaixa() {
