@@ -48,7 +48,7 @@ interface FinanceContextType {
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
-  confirmTransaction: (id: string) => void;
+  confirmTransaction: (id: string, actualAmount?: number) => void;
   updateCashBalance: (amount: number, date?: string) => void;
   projectedBalance: (date: string) => number;
 }
@@ -159,16 +159,34 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   });
 
   const confirmMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('transactions').update({
+    mutationFn: async ({ id, actualAmount }: { id: string; actualAmount?: number }) => {
+      const updateData: any = {
         status: 'confirmado',
         paid_at: todayISO(),
-      }).eq('id', id);
+      };
+      if (actualAmount !== undefined) {
+        updateData.amount = actualAmount;
+      }
+      const { error } = await supabase.from('transactions').update(updateData).eq('id', id);
       if (error) throw error;
+
+      // If an actual amount is provided (receivable confirmation), update the cash balance
+      if (actualAmount !== undefined) {
+        const currentAmt = currentBalance?.amount ?? 0;
+        const newBalance = currentAmt + actualAmount;
+        const today = todayISO();
+        const { error: balError } = await supabase.from('cash_balance').upsert({
+          balance_date: today,
+          amount: newBalance,
+          bank_account: 'Principal',
+        }, { onConflict: 'balance_date' });
+        if (balError) throw balError;
+      }
     },
     onSuccess: () => {
       invalidateTx();
-      toast.success('Transação confirmada');
+      invalidateBal();
+      toast.success('Transação confirmada e saldo atualizado');
     },
     onError: () => toast.error('Erro ao confirmar transação'),
   });
@@ -217,7 +235,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       addTransaction: (tx) => addMutation.mutate(tx),
       updateTransaction: (id, updates) => updateMutation.mutate({ id, updates }),
       deleteTransaction: (id) => deleteMutation.mutate(id),
-      confirmTransaction: (id) => confirmMutation.mutate(id),
+      confirmTransaction: (id, actualAmount) => confirmMutation.mutate({ id, actualAmount }),
       updateCashBalance: (amount, date) => balanceMutation.mutate({ amount, date: date || todayISO() }),
       projectedBalance,
     }}>
