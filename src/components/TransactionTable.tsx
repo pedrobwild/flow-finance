@@ -36,7 +36,7 @@ export default function TransactionTable({ type }: Props) {
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [actualAmount, setActualAmount] = useState('');
 
-  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || costCenterFilter !== 'todos' || periodFilter !== 'todos' || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || (type === 'pagar' && costCenterFilter !== 'todos') || periodFilter !== 'todos' || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
@@ -202,13 +202,15 @@ export default function TransactionTable({ type }: Props) {
               {PRIORITY_OPTIONS.map(p => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={costCenterFilter} onValueChange={setCostCenterFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Centros</SelectItem>
-              {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {isPagar && (
+            <Select value={costCenterFilter} onValueChange={setCostCenterFilter}>
+              <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Centros</SelectItem>
+                {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={periodFilter} onValueChange={setPeriodFilter}>
             <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
