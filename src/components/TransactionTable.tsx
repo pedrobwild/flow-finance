@@ -33,6 +33,8 @@ export default function TransactionTable({ type }: Props) {
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
+  const [confirmReceivable, setConfirmReceivable] = useState<Transaction | null>(null);
+  const [actualAmount, setActualAmount] = useState('');
 
   const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || costCenterFilter !== 'todos' || periodFilter !== 'todos' || search.length > 0;
 
