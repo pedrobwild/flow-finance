@@ -1,6 +1,10 @@
 import { useMemo } from 'react';
-import { formatCurrency, getDayMonth } from '@/lib/helpers';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from 'recharts';
+import { formatCurrency } from '@/lib/helpers';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  ReferenceLine, CartesianGrid, Bar, ComposedChart,
+} from 'recharts';
+import { cn } from '@/lib/utils';
 
 interface DayData {
   date: string;
@@ -21,11 +25,8 @@ export default function CashFlowAreaChart({ days, threshold }: Props) {
     label: d.label,
     saldo: d.accumulated,
     entradas: d.entradas || 0,
-    saidas: d.saidas ? -d.saidas : 0,
+    saidas: d.saidas ? d.saidas : 0,
   })), [days]);
-
-  const minVal = Math.min(...data.map(d => Math.min(d.saldo, d.saidas)));
-  const maxVal = Math.max(...data.map(d => Math.max(d.saldo, d.entradas)));
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
@@ -34,120 +35,139 @@ export default function CashFlowAreaChart({ days, threshold }: Props) {
     const saidas = payload.find((p: any) => p.dataKey === 'saidas');
 
     return (
-      <div className="bg-card border rounded-lg p-3 shadow-xl text-xs space-y-1.5 min-w-[160px]">
-        <p className="font-semibold text-foreground">{label}</p>
-        {saldo && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Saldo</span>
-            <span className="font-mono font-semibold" style={{ color: saldo.value >= 0 ? '#059669' : '#DC2626' }}>
-              {formatCurrency(saldo.value)}
-            </span>
-          </div>
-        )}
-        {entradas && entradas.value > 0 && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Entradas</span>
-            <span className="font-mono text-success">+{formatCurrency(entradas.value)}</span>
-          </div>
-        )}
-        {saidas && saidas.value < 0 && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Saídas</span>
-            <span className="font-mono text-destructive">−{formatCurrency(Math.abs(saidas.value))}</span>
-          </div>
-        )}
+      <div className="bg-card border rounded-xl p-3.5 shadow-lg text-xs space-y-2 min-w-[180px]">
+        <p className="font-semibold text-sm text-foreground">{label}</p>
+        <div className="space-y-1.5">
+          {saldo && (
+            <div className="flex items-center justify-between gap-6">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: 'hsl(var(--primary))' }} />
+                Saldo
+              </span>
+              <span className={cn('font-mono font-bold', saldo.value >= 0 ? 'text-foreground' : 'text-destructive')}>
+                {formatCurrency(saldo.value)}
+              </span>
+            </div>
+          )}
+          {entradas && entradas.value > 0 && (
+            <div className="flex items-center justify-between gap-6">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-success" />
+                Entradas
+              </span>
+              <span className="font-mono text-success font-medium">+{formatCurrency(entradas.value)}</span>
+            </div>
+          )}
+          {saidas && saidas.value > 0 && (
+            <div className="flex items-center justify-between gap-6">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-destructive" />
+                Saídas
+              </span>
+              <span className="font-mono text-destructive font-medium">−{formatCurrency(saidas.value)}</span>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="card-elevated">
-      <div className="p-4 border-b flex items-center justify-between">
-        <h2 className="font-semibold text-sm">Curva de Saldo Projetado</h2>
-        <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+    <div className="card-elevated overflow-hidden">
+      <div className="px-5 py-4 border-b flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold text-sm">Curva de Saldo Projetado</h2>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            Saldo acumulado com barras de entrada e saída
+          </p>
+        </div>
+        <div className="flex items-center gap-5 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="w-6 h-0.5 rounded" style={{ background: '#1A6B8A' }} /> Saldo
+            <span className="w-5 h-[3px] rounded-full bg-primary" /> Saldo
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded opacity-40" style={{ background: '#059669' }} /> Entradas
+            <span className="w-2.5 h-2.5 rounded-sm bg-success/30" /> Entradas
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded opacity-40" style={{ background: '#DC2626' }} /> Saídas
+            <span className="w-2.5 h-2.5 rounded-sm bg-destructive/30" /> Saídas
           </span>
           {threshold > 0 && (
             <span className="flex items-center gap-1.5">
-              <span className="w-4 h-0 border-t-2 border-dashed" style={{ borderColor: '#D97706' }} /> Alerta
+              <span className="w-4 h-0 border-t-2 border-dashed border-warning" /> Alerta
             </span>
           )}
         </div>
       </div>
-      <div className="p-4" style={{ height: 280 }}>
+      <div className="p-4 pt-6" style={{ height: 320 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
+          <ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
             <defs>
               <linearGradient id="saldoGradPos" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1A6B8A" stopOpacity={0.2} />
-                <stop offset="100%" stopColor="#1A6B8A" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="entradasGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#059669" stopOpacity={0.15} />
-                <stop offset="100%" stopColor="#059669" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="saidasGrad" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stopColor="#DC2626" stopOpacity={0.15} />
-                <stop offset="100%" stopColor="#DC2626" stopOpacity={0} />
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e5e9" strokeOpacity={0.5} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 9, fill: '#94a3b8' }}
-              axisLine={{ stroke: '#e2e5e9' }}
+              tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
               tickLine={false}
+              interval={data.length > 30 ? 3 : 2}
             />
             <YAxis
-              tick={{ fontSize: 9, fill: '#94a3b8' }}
+              yAxisId="saldo"
+              tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
+              tickFormatter={v => v === 0 ? '0' : `${(v / 1000).toFixed(0)}k`}
+            />
+            <YAxis
+              yAxisId="bars"
+              orientation="right"
+              tick={false}
+              axisLine={false}
+              tickLine={false}
+              hide
             />
             <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine y={0} stroke="#DC2626" strokeWidth={1} strokeOpacity={0.5} />
+            <ReferenceLine yAxisId="saldo" y={0} stroke="hsl(var(--destructive))" strokeWidth={1} strokeOpacity={0.4} />
             {threshold > 0 && (
               <ReferenceLine
+                yAxisId="saldo"
                 y={threshold}
-                stroke="#D97706"
-                strokeDasharray="6 3"
+                stroke="hsl(var(--warning))"
+                strokeDasharray="6 4"
                 strokeWidth={1.5}
-                label={{ value: `Alerta: ${formatCurrency(threshold)}`, fontSize: 9, fill: '#D97706', position: 'insideTopRight' }}
               />
             )}
-            <Area
-              type="monotone"
+            <Bar
+              yAxisId="bars"
               dataKey="entradas"
-              stroke="#059669"
-              strokeWidth={0}
-              fill="url(#entradasGrad)"
-              stackId="bars"
+              fill="hsl(var(--success))"
+              fillOpacity={0.2}
+              radius={[2, 2, 0, 0]}
+              barSize={data.length > 30 ? 4 : 6}
             />
-            <Area
-              type="monotone"
+            <Bar
+              yAxisId="bars"
               dataKey="saidas"
-              stroke="#DC2626"
-              strokeWidth={0}
-              fill="url(#saidasGrad)"
-              stackId="bars"
+              fill="hsl(var(--destructive))"
+              fillOpacity={0.2}
+              radius={[2, 2, 0, 0]}
+              barSize={data.length > 30 ? 4 : 6}
             />
             <Area
+              yAxisId="saldo"
               type="monotone"
               dataKey="saldo"
-              stroke="#1A6B8A"
+              stroke="hsl(var(--primary))"
               strokeWidth={2.5}
               fill="url(#saldoGradPos)"
-              dot={{ r: 2, fill: '#1A6B8A', strokeWidth: 0 }}
-              activeDot={{ r: 4, fill: '#1A6B8A', stroke: '#fff', strokeWidth: 2 }}
+              dot={false}
+              activeDot={{ r: 5, fill: 'hsl(var(--primary))', stroke: 'hsl(var(--card))', strokeWidth: 2 }}
             />
-          </AreaChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>
