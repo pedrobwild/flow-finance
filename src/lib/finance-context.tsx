@@ -53,7 +53,19 @@ interface FinanceContextType {
   projectedBalance: (date: string) => number;
 }
 
-const FinanceContext = createContext<FinanceContextType | null>(null);
+const financeContextRegistry = globalThis as typeof globalThis & {
+  __BWILD_FINANCE_CONTEXT__?: React.Context<FinanceContextType | null>;
+};
+
+const FinanceContext =
+  financeContextRegistry.__BWILD_FINANCE_CONTEXT__ ??
+  createContext<FinanceContextType | null>(null);
+
+if (!financeContextRegistry.__BWILD_FINANCE_CONTEXT__) {
+  financeContextRegistry.__BWILD_FINANCE_CONTEXT__ = FinanceContext;
+}
+
+FinanceContext.displayName = 'FinanceContext';
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient();
