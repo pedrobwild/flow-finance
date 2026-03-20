@@ -15,7 +15,7 @@ import { motion } from 'framer-motion';
 const section = (delay: number) => ({
   initial: { opacity: 0, y: 18, filter: 'blur(4px)' },
   animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
-  transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] },
+  transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
 export default function Dashboard() {
