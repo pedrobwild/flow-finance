@@ -48,7 +48,7 @@ interface FinanceContextType {
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
-  confirmTransaction: (id: string) => void;
+  confirmTransaction: (id: string, actualAmount?: number) => void;
   updateCashBalance: (amount: number, date?: string) => void;
   projectedBalance: (date: string) => number;
 }
