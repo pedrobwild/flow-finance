@@ -347,7 +347,14 @@ export default function TransactionTable({ type }: Props) {
                               size="icon"
                               variant="ghost"
                               className="h-7 w-7 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity hover:bg-success/10 active:scale-90"
-                              onClick={() => confirmTransaction(tx.id)}
+                              onClick={() => {
+                                if (tx.type === 'receber') {
+                                  setConfirmReceivable(tx);
+                                  setActualAmount(tx.amount.toString());
+                                } else {
+                                  confirmTransaction(tx.id);
+                                }
+                              }}
                               title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}
                             >
                               <Check className="w-3.5 h-3.5 text-success" />
