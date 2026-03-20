@@ -226,7 +226,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useFinance() {
+export function useFinance(): FinanceContextType {
   const ctx = useContext(FinanceContext);
   if (!ctx) throw new Error('useFinance must be used within FinanceProvider');
   return ctx;
