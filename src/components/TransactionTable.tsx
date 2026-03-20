@@ -434,6 +434,59 @@ export default function TransactionTable({ type }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm receivable modal */}
+      <Dialog open={!!confirmReceivable} onOpenChange={(v) => !v && setConfirmReceivable(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Confirmar recebimento</DialogTitle>
+            <DialogDescription>
+              Informe o valor real recebido para <strong>{confirmReceivable?.description}</strong>.
+              <span className="block mt-1.5 text-xs text-muted-foreground">
+                Valor planejado: <span className="font-mono font-semibold text-foreground">{confirmReceivable && formatCurrency(confirmReceivable.amount)}</span>
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Valor recebido (R$)</label>
+            <Input
+              type="number"
+              step="0.01"
+              value={actualAmount}
+              onChange={(e) => setActualAmount(e.target.value)}
+              className="font-mono text-base"
+              autoFocus
+            />
+            {confirmReceivable && parseFloat(actualAmount) !== confirmReceivable.amount && actualAmount !== '' && (
+              <p className="text-[11px] mt-1.5 text-muted-foreground">
+                Diferença: <span className={cn(
+                  'font-mono font-semibold',
+                  parseFloat(actualAmount) > confirmReceivable.amount ? 'text-success' : 'text-destructive'
+                )}>
+                  {parseFloat(actualAmount) > confirmReceivable.amount ? '+' : ''}{formatCurrency(parseFloat(actualAmount) - confirmReceivable.amount)}
+                </span>
+              </p>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setConfirmReceivable(null)}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                if (confirmReceivable && actualAmount) {
+                  confirmTransaction(confirmReceivable.id, parseFloat(actualAmount));
+                  setConfirmReceivable(null);
+                }
+              }}
+              disabled={!actualAmount || parseFloat(actualAmount) <= 0}
+            >
+              Confirmar e atualizar saldo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
