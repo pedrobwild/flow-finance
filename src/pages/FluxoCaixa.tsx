@@ -2,14 +2,17 @@ import { useState, useMemo, useEffect, Fragment } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName } from '@/lib/helpers';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, ChevronRight, Calendar, TrendingDown, TrendingUp, ArrowDownRight, ArrowUpRight, Wallet, ShieldAlert, Eye, EyeOff } from 'lucide-react';
+import {
+  AlertTriangle, ChevronRight, Calendar, TrendingDown, TrendingUp,
+  ArrowDownRight, ArrowUpRight, Wallet, ShieldAlert, Eye, EyeOff,
+  CheckCircle2, BarChart3, Zap, Clock, ArrowRight
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import CashFlowAreaChart from '@/components/CashFlowAreaChart';
 import { Transaction } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { useFinance as useFinanceCtx } from '@/lib/finance-context';
+import { Progress } from '@/components/ui/progress';
 
 interface DayRow {
   date: string;
@@ -24,6 +27,12 @@ interface DayRow {
   isWeekend: boolean;
   txCount: number;
 }
+
+const sect = (delay: number) => ({
+  initial: { opacity: 0, y: 14, filter: 'blur(6px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as const },
+});
 
 export default function FluxoCaixa() {
   const { transactions, currentBalance, confirmTransaction } = useFinance();
@@ -94,23 +103,63 @@ export default function FluxoCaixa() {
   const daysWithMovement = days.filter(d => d.txCount > 0).length;
   const dangerDays = days.filter(d => d.accumulated < 0).length;
   const netFlow = totalEntradas - totalSaidas;
+  const coverageRatio = totalSaidas > 0 ? Math.min((totalEntradas / totalSaidas) * 100, 200) : 100;
+
+  // Weekly breakdown
+  const weeklyBreakdown = useMemo(() => {
+    const weeks: { label: string; entradas: number; saidas: number; saldo: number; days: number }[] = [];
+    for (let w = 0; w < Math.ceil(period / 7); w++) {
+      const weekDays = days.slice(w * 7, (w + 1) * 7);
+      if (weekDays.length === 0) continue;
+      const entradas = weekDays.reduce((s, d) => s + d.entradas, 0);
+      const saidas = weekDays.reduce((s, d) => s + d.saidas, 0);
+      weeks.push({
+        label: `${weekDays[0].label} – ${weekDays[weekDays.length - 1].label}`,
+        entradas,
+        saidas,
+        saldo: entradas - saidas,
+        days: weekDays.length,
+      });
+    }
+    return weeks;
+  }, [days, period]);
+
+  // Concentration risk: biggest single-day outflow
+  const biggestOutflowDay = useMemo(() => {
+    const d = days.reduce((max, day) => day.saidas > max.saidas ? day : max, days[0]);
+    return d && d.saidas > 0 ? d : null;
+  }, [days]);
+
+  // Days without income
+  const noIncomeDays = useMemo(() => {
+    let maxStreak = 0, streak = 0;
+    for (const d of days) {
+      if (d.entradas === 0) { streak++; maxStreak = Math.max(maxStreak, streak); }
+      else streak = 0;
+    }
+    return maxStreak;
+  }, [days]);
 
   return (
-    <div className="space-y-6">
-      {/* Header row */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-start justify-between gap-4"
-      >
+    <div className="space-y-5">
+      {/* Header */}
+      <motion.div {...sect(0)} className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold leading-tight">Fluxo de Caixa</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Projeção de {period} dias · {daysWithMovement} dias com movimentação
+          <p className="text-muted-foreground text-sm mt-1 flex items-center gap-2">
+            Projeção de {period} dias · {daysWithMovement} com movimentação
+            {coverageRatio >= 100 ? (
+              <span className="inline-flex items-center gap-1 text-success text-[10px] font-semibold bg-success/10 rounded-full px-2 py-0.5">
+                <CheckCircle2 className="w-3 h-3" /> Cobertura OK
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-warning text-[10px] font-semibold bg-warning/10 rounded-full px-2 py-0.5">
+                <AlertTriangle className="w-3 h-3" /> Cobertura {coverageRatio.toFixed(0)}%
+              </span>
+            )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {([15, 30, 45] as const).map(p => (
             <Button
               key={p}
@@ -122,7 +171,7 @@ export default function FluxoCaixa() {
               )}
               onClick={() => setPeriod(p)}
             >
-              {p} dias
+              {p}d
             </Button>
           ))}
           <Button
@@ -177,12 +226,7 @@ export default function FluxoCaixa() {
       </AnimatePresence>
 
       {/* KPI cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3"
-      >
+      <motion.div {...sect(0.06)} className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {/* Saldo Atual */}
         <div className="card-elevated p-4 relative overflow-hidden">
           <div className="flex items-center gap-2 mb-2">
@@ -193,7 +237,7 @@ export default function FluxoCaixa() {
               Saldo Atual
             </span>
           </div>
-          <p className="text-xl font-bold font-mono tracking-tight">
+          <p className="text-lg font-bold font-mono tracking-tight">
             {formatCurrency(initialBalance)}
           </p>
         </div>
@@ -215,38 +259,47 @@ export default function FluxoCaixa() {
             </span>
           </div>
           <p className={cn(
-            'text-xl font-bold font-mono tracking-tight',
+            'text-lg font-bold font-mono tracking-tight',
             finalBalance >= 0 ? 'text-success' : 'text-destructive'
           )}>
             {formatCurrency(finalBalance)}
           </p>
           <p className={cn(
-            'text-[10px] font-mono mt-1',
+            'text-[10px] font-mono mt-0.5',
             netFlow >= 0 ? 'text-success/70' : 'text-destructive/70'
           )}>
             {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow)} líquido
           </p>
         </div>
 
-        {/* Movimentações */}
+        {/* Entradas */}
         <div className="card-elevated p-4">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-              <ArrowUpRight className="w-3.5 h-3.5 text-accent" />
+            <div className="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center">
+              <ArrowUpRight className="w-3.5 h-3.5 text-success" />
             </div>
             <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">
               Entradas
             </span>
           </div>
-          <p className="text-xl font-bold font-mono tracking-tight text-success">
+          <p className="text-lg font-bold font-mono tracking-tight text-success">
             {formatCurrency(totalEntradas)}
           </p>
-          <div className="flex items-center gap-1.5 mt-1">
-            <ArrowDownRight className="w-3 h-3 text-destructive/60" />
-            <span className="text-[10px] font-mono text-destructive/70">
-              {formatCurrency(totalSaidas)} saídas
+        </div>
+
+        {/* Saídas */}
+        <div className="card-elevated p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <ArrowDownRight className="w-3.5 h-3.5 text-destructive" />
+            </div>
+            <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">
+              Saídas
             </span>
           </div>
+          <p className="text-lg font-bold font-mono tracking-tight text-destructive">
+            {formatCurrency(totalSaidas)}
+          </p>
         </div>
 
         {/* Saldo Mínimo / Alerta */}
@@ -271,74 +324,180 @@ export default function FluxoCaixa() {
               </span>
             </div>
             <p className={cn(
-              'text-xl font-bold font-mono tracking-tight',
+              'text-lg font-bold font-mono tracking-tight',
               minDay.accumulated < 0 ? 'text-destructive' : minDay.accumulated < alertThreshold ? 'text-warning' : ''
             )}>
               {formatCurrency(minDay.accumulated)}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-[10px] text-muted-foreground mt-0.5">
               em {minDay.label} ({minDay.weekday})
             </p>
           </div>
         )}
       </motion.div>
 
+      {/* Coverage bar */}
+      <motion.div {...sect(0.1)} className="card-elevated p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">
+            Cobertura de saídas por entradas
+          </span>
+          <span className={cn(
+            'text-xs font-bold font-mono',
+            coverageRatio >= 100 ? 'text-success' : coverageRatio >= 70 ? 'text-warning' : 'text-destructive'
+          )}>
+            {coverageRatio.toFixed(0)}%
+          </span>
+        </div>
+        <Progress
+          value={Math.min(coverageRatio, 100)}
+          className={cn(
+            'h-2',
+            coverageRatio >= 100 ? '[&>div]:bg-success' : coverageRatio >= 70 ? '[&>div]:bg-warning' : '[&>div]:bg-destructive'
+          )}
+        />
+        <div className="flex items-center justify-between mt-1.5 text-[10px] text-muted-foreground">
+          <span>Entradas: <span className="font-mono font-semibold text-success">{formatCurrency(totalEntradas)}</span></span>
+          <span>Saídas: <span className="font-mono font-semibold text-destructive">{formatCurrency(totalSaidas)}</span></span>
+        </div>
+      </motion.div>
+
+      {/* Insights strip */}
+      {(biggestOutflowDay || noIncomeDays >= 5 || dangerDays > 0) && (
+        <motion.div {...sect(0.13)} className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {dangerDays > 0 && (
+            <div className="bg-destructive/[0.06] border border-destructive/15 rounded-xl p-3.5 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-4 h-4 text-destructive" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold">Dias com saldo negativo</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  <span className="font-mono font-bold text-destructive">{dangerDays}</span> dia(s) com projeção abaixo de zero
+                </p>
+              </div>
+            </div>
+          )}
+
+          {biggestOutflowDay && (
+            <div className="bg-warning/[0.06] border border-warning/15 rounded-xl p-3.5 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+                <Zap className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold">Maior saída concentrada</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  <span className="font-mono font-bold text-warning">{formatCurrency(biggestOutflowDay.saidas)}</span> em {biggestOutflowDay.label} ({biggestOutflowDay.weekday})
+                </p>
+              </div>
+            </div>
+          )}
+
+          {noIncomeDays >= 5 && (
+            <div className="bg-accent/[0.06] border border-accent/15 rounded-xl p-3.5 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold">Janela sem recebimentos</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Até <span className="font-mono font-bold">{noIncomeDays}</span> dias consecutivos sem entradas previstas
+                </p>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
+
       {/* Warnings */}
       <AnimatePresence>
-        {(overduePayablesTotal > 0 || dangerDays > 0) && (
+        {overduePayablesTotal > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="space-y-2"
           >
-            {overduePayablesTotal > 0 && (
-              <div className="bg-destructive/8 border border-destructive/15 rounded-xl p-3.5 text-sm flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
-                </div>
-                <div>
-                  <p className="font-semibold text-xs">Pagamentos atrasados descontados</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    <span className="font-mono font-semibold text-destructive">{formatCurrency(overduePayablesTotal)}</span> em {overduePayables.length} pagamento(s) já descontados do saldo inicial.
-                  </p>
-                </div>
+            <div className="bg-destructive/[0.06] border border-destructive/15 rounded-xl p-3.5 text-sm flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
               </div>
-            )}
-            {dangerDays > 0 && (
-              <div className="bg-destructive/8 border border-destructive/15 rounded-xl p-3.5 text-sm flex items-start gap-3 pulse-negative">
-                <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <ShieldAlert className="w-3.5 h-3.5 text-destructive" />
-                </div>
-                <div>
-                  <p className="font-semibold text-xs">Projeção com saldo negativo</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    O saldo fica negativo em <span className="font-semibold text-destructive">{dangerDays} dia(s)</span>. Revise pagamentos ou antecipe recebimentos.
-                  </p>
-                </div>
+              <div>
+                <p className="font-semibold text-xs">Pagamentos atrasados descontados</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  <span className="font-mono font-semibold text-destructive">{formatCurrency(overduePayablesTotal)}</span> em {overduePayables.length} pagamento(s) já descontados do saldo inicial.
+                </p>
               </div>
-            )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-      >
+      <motion.div {...sect(0.16)}>
         <CashFlowAreaChart days={days} threshold={alertThreshold} />
       </motion.div>
 
+      {/* Weekly breakdown */}
+      {weeklyBreakdown.length > 1 && (
+        <motion.div {...sect(0.2)} className="card-elevated overflow-hidden">
+          <div className="px-5 py-4 border-b flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <BarChart3 className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-sm">Resumo Semanal</h2>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Fluxo agregado por semana</p>
+            </div>
+          </div>
+          <div className="divide-y">
+            {weeklyBreakdown.map((week, i) => {
+              const maxVal = Math.max(...weeklyBreakdown.map(w => Math.max(w.entradas, w.saidas)));
+              const entPct = maxVal > 0 ? (week.entradas / maxVal) * 100 : 0;
+              const saiPct = maxVal > 0 ? (week.saidas / maxVal) * 100 : 0;
+
+              return (
+                <div key={i} className="px-5 py-3 flex items-center gap-4">
+                  <div className="w-[120px] shrink-0">
+                    <p className="text-xs font-medium">{i === 0 ? 'Esta semana' : `Semana ${i + 1}`}</p>
+                    <p className="text-[10px] text-muted-foreground">{week.label}</p>
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 rounded-full bg-success/20 flex-1 overflow-hidden">
+                        <div className="h-full rounded-full bg-success transition-all" style={{ width: `${entPct}%` }} />
+                      </div>
+                      <span className="text-[10px] font-mono text-success font-medium w-[80px] text-right">
+                        +{formatCurrency(week.entradas)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 rounded-full bg-destructive/20 flex-1 overflow-hidden">
+                        <div className="h-full rounded-full bg-destructive transition-all" style={{ width: `${saiPct}%` }} />
+                      </div>
+                      <span className="text-[10px] font-mono text-destructive font-medium w-[80px] text-right">
+                        −{formatCurrency(week.saidas)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-[80px] text-right">
+                    <p className={cn(
+                      'text-xs font-bold font-mono',
+                      week.saldo >= 0 ? 'text-success' : 'text-destructive'
+                    )}>
+                      {week.saldo >= 0 ? '+' : ''}{formatCurrency(week.saldo)}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">líquido</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
       {/* Timeline */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="card-elevated overflow-hidden"
-      >
+      <motion.div {...sect(0.24)} className="card-elevated overflow-hidden">
         <div className="px-5 py-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
@@ -351,11 +510,14 @@ export default function FluxoCaixa() {
               </p>
             </div>
           </div>
+          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium">
+            {days.filter(d => d.txCount > 0).length} dias com transações
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/20">
+              <tr className="border-b bg-muted/30">
                 <th className="w-8" />
                 <th className="text-left pl-2 pr-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Data</th>
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Dia</th>
@@ -367,7 +529,7 @@ export default function FluxoCaixa() {
               </tr>
             </thead>
             <tbody>
-              {days.map((day, idx) => {
+              {days.map((day) => {
                 const isDanger = day.accumulated < 0;
                 const isWarn = !isDanger && day.accumulated < alertThreshold;
 
@@ -379,7 +541,7 @@ export default function FluxoCaixa() {
                         day.txCount > 0 && 'cursor-pointer hover:bg-muted/40',
                         isDanger && 'bg-destructive/[0.04]',
                         isWarn && 'bg-warning/[0.04]',
-                        day.isToday && 'bg-accent/[0.06]',
+                        day.isToday && 'bg-accent/[0.06] border-l-2 border-l-accent',
                         day.isWeekend && !day.isToday && !isDanger && 'opacity-50'
                       )}
                       onClick={() => day.txCount > 0 && toggleDay(day.date)}
@@ -499,6 +661,7 @@ export default function FluxoCaixa() {
                                         confirmTransaction(tx.id);
                                       }}
                                     >
+                                      <CheckCircle2 className="w-3 h-3 mr-1" />
                                       Confirmar
                                     </Button>
                                   </div>
