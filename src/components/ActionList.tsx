@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, formatDate, todayISO, addDays } from '@/lib/helpers';
-import { PRIORITY_CLASSES } from '@/lib/types';
+import { PRIORITY_CLASSES, PRIORITY_LABELS } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDownCircle, ArrowUpCircle, Check, AlertTriangle, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -69,7 +69,7 @@ export default function ActionList() {
             >
               <div className={cn(
                 'w-7 h-7 rounded-full flex items-center justify-center shrink-0',
-                tx.type === 'pagar' ? 'bg-destructive/8' : 'bg-success/8'
+                tx.type === 'pagar' ? 'bg-destructive/10' : 'bg-success/10'
               )}>
                 {tx.type === 'pagar'
                   ? <ArrowDownCircle className="w-3.5 h-3.5 text-destructive" />
@@ -91,12 +91,14 @@ export default function ActionList() {
                 <span className={cn('status-badge text-[10px]', `status-${tx.status}`)}>
                   {tx.status === 'atrasado' ? 'Atrasado' : tx.status === 'pendente' ? 'Pendente' : 'Previsto'}
                 </span>
-                <span className={cn('status-badge text-[10px] hidden md:inline-flex', PRIORITY_CLASSES[tx.priority])}>{tx.priority}</span>
+                <span className={cn('status-badge text-[10px] hidden md:inline-flex', PRIORITY_CLASSES[tx.priority])}>
+                  {PRIORITY_LABELS[tx.priority]}
+                </span>
               </div>
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7 shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity active:scale-90"
+                className="h-7 w-7 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90"
                 onClick={() => confirmTransaction(tx.id)}
                 title={tx.type === 'pagar' ? 'Confirmar pagamento' : 'Confirmar recebimento'}
               >
