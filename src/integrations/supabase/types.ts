@@ -41,6 +41,65 @@ export type Database = {
         }
         Relationships: []
       }
+      obra_stages: {
+        Row: {
+          actual_end_date: string | null
+          actual_start_date: string | null
+          created_at: string
+          estimated_end_date: string | null
+          estimated_start_date: string | null
+          estimated_value: number
+          id: string
+          name: string
+          notes: string | null
+          obra_id: string
+          sort_order: number
+          status: string
+          supplier: string
+          updated_at: string
+        }
+        Insert: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          created_at?: string
+          estimated_end_date?: string | null
+          estimated_start_date?: string | null
+          estimated_value?: number
+          id?: string
+          name: string
+          notes?: string | null
+          obra_id: string
+          sort_order?: number
+          status?: string
+          supplier?: string
+          updated_at?: string
+        }
+        Update: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          created_at?: string
+          estimated_end_date?: string | null
+          estimated_start_date?: string | null
+          estimated_value?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          obra_id?: string
+          sort_order?: number
+          status?: string
+          supplier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obra_stages_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obras: {
         Row: {
           actual_end_date: string | null
