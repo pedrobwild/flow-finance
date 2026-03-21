@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          changed_at: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       cash_balance: {
         Row: {
           amount: number
@@ -38,6 +68,27 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+        }
+        Relationships: []
+      }
+      custom_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
         }
         Relationships: []
       }
@@ -105,6 +156,7 @@ export type Database = {
           actual_end_date: string | null
           actual_start_date: string | null
           address: string | null
+          budget_target: number | null
           client_name: string
           code: string
           condominium: string
@@ -123,6 +175,7 @@ export type Database = {
           actual_end_date?: string | null
           actual_start_date?: string | null
           address?: string | null
+          budget_target?: number | null
           client_name: string
           code: string
           condominium?: string
@@ -141,6 +194,7 @@ export type Database = {
           actual_end_date?: string | null
           actual_start_date?: string | null
           address?: string | null
+          budget_target?: number | null
           client_name?: string
           code?: string
           condominium?: string
@@ -184,6 +238,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          attachment_url: string | null
           billing_count: number
           billing_sent_at: string | null
           category: string
@@ -205,6 +260,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          attachment_url?: string | null
           billing_count?: number
           billing_sent_at?: string | null
           category?: string
@@ -226,6 +282,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          attachment_url?: string | null
           billing_count?: number
           billing_sent_at?: string | null
           category?: string
