@@ -88,6 +88,12 @@ export default function TransactionTable({ type }: Props) {
 
     return transactions
       .filter(t => t.type === type)
+      // Company view: hide confirmed past transactions (only future matters)
+      .filter(t => {
+        if (isFiltered) return true; // Obra view: show everything
+        if (t.status === 'confirmado' && t.dueDate < today) return false;
+        return true;
+      })
       .filter(t => statusFilter === 'todos' || t.status === statusFilter)
       .filter(t => priorityFilter === 'todas' || t.priority === priorityFilter)
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
