@@ -34,7 +34,7 @@ export default function WeeklyCashProjection() {
   const [days, setDays] = useState<DayCount>(30);
   const [weeks, setWeeks] = useState<WeekCount>(6);
 
-  const baseBalance = filteredBalance?.amount ?? baseBalance ?? 0;
+  const baseBalance = filteredBalance?.amount ?? currentBalance?.amount ?? 0;
 
   const safetyMargin = useMemo(() => {
     return Math.max(baseBalance * 0.1, 5000);
