@@ -12,6 +12,7 @@ import HealthScore from '@/components/HealthScore';
 import MacroIndicators from '@/components/MacroIndicators';
 import RealVsProjected from '@/components/RealVsProjected';
 import ObraRanking from '@/components/ObraRanking';
+import DueAlertsBanner from '@/components/DueAlertsBanner';
 import { motion } from 'framer-motion';
 
 const section = (delay: number) => ({
