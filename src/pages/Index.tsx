@@ -53,6 +53,11 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
+      {/* === ALERTAS DE VENCIMENTO === */}
+      <motion.div {...section(0.09)}>
+        <DueAlertsBanner />
+      </motion.div>
+
       {/* === ALERTAS DE DECISÃO === */}
       <motion.div {...section(0.10)}>
         <DecisionAlerts />

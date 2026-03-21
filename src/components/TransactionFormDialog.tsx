@@ -150,9 +150,21 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
   const cLabel = form.type === 'pagar' ? 'Fornecedor' : (form.obraId ? 'Obra / Cliente' : 'Origem / Pagador');
   const isObraReceber = form.type === 'receber' && !!form.obraId;
 
+  const generateRecurringDates = (startDate: string, recurrence: string, count: number): string[] => {
+    const dates: string[] = [];
+    for (let i = 1; i <= count; i++) {
+      const d = new Date(startDate + 'T12:00:00');
+      if (recurrence === 'mensal') d.setMonth(d.getMonth() + i);
+      else if (recurrence === 'semanal') d.setDate(d.getDate() + 7 * i);
+      else if (recurrence === 'trimestral') d.setMonth(d.getMonth() + 3 * i);
+      else if (recurrence === 'anual') d.setFullYear(d.getFullYear() + i);
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    return dates;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For receber with obra, use parcela (category) as description; without obra, use description field
     const description = form.type === 'receber' && form.obraId
       ? form.category || form.description || 'Parcela'
       : form.description || form.category;
@@ -178,6 +190,21 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       updateTransaction(transaction.id, data);
     } else {
       addTransaction(data);
+      // Auto-generate recurring transactions
+      if (form.recurrence !== 'única') {
+        const futureDates = generateRecurringDates(form.dueDate, form.recurrence, recurrenceCount);
+        const futureTxs = futureDates.map((date, i) => ({
+          ...data,
+          dueDate: date,
+          status: 'previsto',
+          paidAt: null,
+          notes: `${data.notes ? data.notes + ' · ' : ''}Recorrência ${i + 2}/${recurrenceCount + 1}`,
+        }));
+        if (futureTxs.length > 0) {
+          addTransactions(futureTxs);
+          toast.success(`${futureTxs.length} parcela(s) recorrente(s) criada(s)`);
+        }
+      }
     }
     onClose();
   };
