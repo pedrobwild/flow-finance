@@ -369,6 +369,22 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                 </Select>
               </div>
             )}
+            {form.recurrence !== 'única' && !isEdit && (
+              <div>
+                <Label className="text-xs">Repetições futuras</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={24}
+                  value={recurrenceCount}
+                  onChange={e => setRecurrenceCount(Math.min(24, Math.max(1, parseInt(e.target.value) || 1)))}
+                  className="text-sm"
+                />
+                <p className="text-[9px] text-muted-foreground mt-0.5">
+                  Gera {recurrenceCount} parcela(s) adicional(is) automaticamente
+                </p>
+              </div>
+            )}
             <div>
               <Label className="text-xs">{form.type === 'pagar' ? 'Pago em' : 'Recebido em'}</Label>
               <Input type="date" value={form.paidAt} onChange={e => set('paidAt', e.target.value)} />
