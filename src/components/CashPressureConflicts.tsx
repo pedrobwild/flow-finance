@@ -149,7 +149,7 @@ export default function CashPressureConflicts() {
     });
   }, [transactions, activeObras, today, bal]);
 
-  if (conflicts.length === 0 && pressureItems.length === 0) return null;
+  if (conflicts.length === 0 && pressureItems.length === 0 && stageConflicts.length === 0) return null;
 
   const severityConfig = {
     critical: { bg: 'bg-destructive/5', border: 'border-destructive/20', text: 'text-destructive', label: 'Crítico' },
