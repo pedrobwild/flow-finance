@@ -24,6 +24,7 @@ function rowToTransaction(row: any): Transaction {
     paymentMethod: (row.payment_method || '') as PaymentMethod,
     notes: row.notes || '',
     priority: row.priority as Priority,
+    obraId: row.obra_id || null,
   };
   tx.status = computeStatus(tx);
   return tx;
@@ -122,6 +123,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         payment_method: tx.paymentMethod,
         notes: tx.notes,
         priority: tx.priority,
+        obra_id: (tx as any).obraId || null,
       });
       if (error) throw error;
     },
@@ -148,6 +150,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (updates.paymentMethod !== undefined) db.payment_method = updates.paymentMethod;
       if (updates.notes !== undefined) db.notes = updates.notes;
       if (updates.priority !== undefined) db.priority = updates.priority;
+      if ((updates as any).obraId !== undefined) db.obra_id = (updates as any).obraId;
       const { error } = await supabase.from('transactions').update(db).eq('id', id);
       if (error) throw error;
     },
