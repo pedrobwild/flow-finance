@@ -307,7 +307,7 @@ export default function TransactionTable({ type }: Props) {
             <thead>
               <tr className="border-b bg-muted/30">
                 <th className="text-left pl-5 pr-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Prior.</th>
+                {isPagar && <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Prior.</th>}
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Vencimento</th>
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Descrição</th>
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{cLabel}</th>
