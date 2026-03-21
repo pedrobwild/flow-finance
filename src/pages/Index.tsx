@@ -10,7 +10,7 @@ import CashRunwayCard from '@/components/CashRunwayCard';
 import ForecastInsights from '@/components/ForecastInsights';
 import ActionList from '@/components/ActionList';
 import CostCenterBreakdown from '@/components/CostCenterBreakdown';
-import { Beaker, ChevronRight, AlertTriangle, Building2 } from 'lucide-react';
+import { Beaker, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
