@@ -104,10 +104,10 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For receber, auto-generate description from parcela info
-    const description = form.type === 'receber'
+    // For receber with obra, use parcela (category) as description; without obra, use description field
+    const description = form.type === 'receber' && form.obraId
       ? form.category || form.description || 'Parcela'
-      : form.description;
+      : form.description || form.category;
     const data: any = {
       type: form.type as TransactionType,
       description,
