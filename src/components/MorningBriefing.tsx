@@ -3,7 +3,7 @@ import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, daysBetween } from '@/lib/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock } from 'lucide-react';
+import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
