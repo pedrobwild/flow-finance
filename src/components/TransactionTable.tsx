@@ -95,7 +95,7 @@ export default function TransactionTable({ type }: Props) {
       .filter(t => t.type === type)
       // Company view: hide confirmed past transactions (only future matters)
       .filter(t => {
-        if (isFiltered) return true; // Obra view: show everything
+        if (isFiltered) return true;
         if (t.status === 'confirmado' && t.dueDate < today) return false;
         return true;
       })
