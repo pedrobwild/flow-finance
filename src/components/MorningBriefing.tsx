@@ -62,6 +62,31 @@ export default function MorningBriefing() {
       if (fin.totalOverdueReceivable > 0) {
         lines.push(`  ⚠ Recebíveis atrasados: ${formatCurrency(fin.totalOverdueReceivable)}`);
       }
+
+      // Billing/collection history per obra
+      const obraReceivables = transactions.filter(t => t.obraId === obra.id && t.type === 'receber');
+      const withBilling = obraReceivables.filter(t => t.billingCount > 0);
+      if (withBilling.length > 0) {
+        lines.push(`  📧 Histórico de cobranças:`);
+        withBilling.forEach(t => {
+          const daysUntil = daysBetween(today, t.dueDate);
+          const daysLabel = daysUntil > 0 ? `vence em ${daysUntil}d` : daysUntil === 0 ? 'vence hoje' : `${Math.abs(daysUntil)}d atrasado`;
+          lines.push(`    - ${formatCurrency(t.amount)} (${t.status}, ${daysLabel}): ${t.billingCount} cobrança(s) enviada(s)${t.billingSentAt ? `, última em ${getDayMonth(t.billingSentAt)}` : ''}`);
+          if (t.notes) lines.push(`      Obs: ${t.notes}`);
+        });
+      }
+
+      // Upcoming receivables for discount analysis
+      const upcomingReceivables = obraReceivables
+        .filter(t => t.status !== 'confirmado' && t.dueDate > today)
+        .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      if (upcomingReceivables.length > 0) {
+        lines.push(`  📅 Parcelas futuras (${upcomingReceivables.length}):`);
+        upcomingReceivables.slice(0, 5).forEach(t => {
+          const daysUntil = daysBetween(today, t.dueDate);
+          lines.push(`    - ${formatCurrency(t.amount)} em ${getDayMonth(t.dueDate)} (${daysUntil}d) — ${t.status}${t.paymentMethod ? `, via ${t.paymentMethod}` : ''}`);
+        });
+      }
     });
 
     const corpPending = transactions.filter(t => !t.obraId && t.type === 'pagar' && t.status !== 'confirmado');
@@ -102,8 +127,22 @@ export default function MorningBriefing() {
       lines.push(`=== ATRASADOS: ${overdue.length} itens, total ${formatCurrency(overdue.reduce((s, t) => s + t.amount, 0))} ===`);
       overdue.slice(0, 5).forEach(t => {
         const daysLate = daysBetween(t.dueDate, today);
-        lines.push(`  ${t.type === 'receber' ? '📥' : '📤'} ${formatCurrency(t.amount)} — ${t.description} (${daysLate}d atraso)`);
+        const obraRef = t.obraId ? obras.find(o => o.id === t.obraId) : null;
+        lines.push(`  ${t.type === 'receber' ? '📥' : '📤'} ${formatCurrency(t.amount)} — ${t.description} (${daysLate}d atraso)${t.billingCount > 0 ? ` [${t.billingCount} cobrança(s)]` : ''}${obraRef ? ` [${obraRef.code}]` : ''}`);
+        if (t.notes) lines.push(`    Obs: ${t.notes}`);
       });
+    }
+
+    // Cash pressure analysis
+    const totalPendingOut = transactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate <= addDays(today, 14)).reduce((s, t) => s + t.amount, 0);
+    const totalPendingIn = transactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate <= addDays(today, 14)).reduce((s, t) => s + t.amount, 0);
+    lines.push('');
+    lines.push(`=== PRESSÃO DE CAIXA 14 DIAS ===`);
+    lines.push(`Saídas previstas: ${formatCurrency(totalPendingOut)}`);
+    lines.push(`Entradas previstas: ${formatCurrency(totalPendingIn)}`);
+    lines.push(`Gap: ${formatCurrency(totalPendingIn - totalPendingOut)}`);
+    if (bal + totalPendingIn - totalPendingOut < 0) {
+      lines.push(`⚠ CAIXA FICARÁ NEGATIVO em até 14 dias sem ação`);
     }
 
     return lines.join('\n');
