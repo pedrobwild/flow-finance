@@ -496,6 +496,9 @@ export default function TransactionTable({ type }: Props) {
         defaultType={type}
       />
 
+      {/* Obra Detail Sheet */}
+      <ObraDetailSheet obra={detailObra} onClose={() => setDetailObra(null)} />
+
       {/* Delete confirmation dialog */}
       <Dialog open={!!deleteConfirm} onOpenChange={(v) => !v && setDeleteConfirm(null)}>
         <DialogContent className="max-w-sm">
