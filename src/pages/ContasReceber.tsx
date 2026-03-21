@@ -36,14 +36,6 @@ export default function ContasReceber() {
       ? Math.round(overdue.reduce((s, t) => s + daysBetween(t.dueDate, today), 0) / overdue.length)
       : 0;
 
-    // Top 3 clients by pending amount
-    const clientMap = new Map<string, number>();
-    pending.forEach(t => clientMap.set(t.counterpart, (clientMap.get(t.counterpart) || 0) + t.amount));
-    const topClients = [...clientMap.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([name, amount]) => ({ name, amount, pct: totalPending > 0 ? Math.round(amount / totalPending * 100) : 0 }));
-
     // Next 7d incoming
     const in7d = addDays(today, 7);
     const next7 = pending.filter(t => t.dueDate >= today && t.dueDate <= in7d);
