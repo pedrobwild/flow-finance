@@ -233,10 +233,15 @@ export default function TransactionTable({ type }: Props) {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos status</SelectItem>
-              {STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
+              <SelectItem value="pendentes">Pendentes</SelectItem>
+              <SelectItem value="todos">Todos</SelectItem>
+              {STATUS_OPTIONS.map(s => (
+                <SelectItem key={s} value={s}>
+                  {isPagar && s === 'confirmado' ? 'Pago' : STATUS_LABELS[s]}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {isPagar && (
