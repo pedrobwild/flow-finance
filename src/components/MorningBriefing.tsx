@@ -303,7 +303,7 @@ export default function MorningBriefing() {
                       severityBg[insight.severity]
                     )}
                   >
-                    {severityIcon[insight.severity]}
+                    {getInsightIcon(insight)}
                     <p className="text-xs leading-relaxed text-foreground">{insight.text}</p>
                   </motion.div>
                 ))}
