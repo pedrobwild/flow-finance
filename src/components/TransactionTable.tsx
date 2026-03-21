@@ -34,7 +34,7 @@ interface Props { type: TransactionType; }
 const STATUS_ORDER: Record<string, number> = { atrasado: 0, pendente: 1, previsto: 2, confirmado: 3 };
 
 export default function TransactionTable({ type }: Props) {
-  const { confirmTransaction, deleteTransaction } = useFinance();
+  const { confirmTransaction, deleteTransaction, updateTransaction } = useFinance();
   const { filteredTransactions: transactions, isFiltered } = useObraFilter();
   const { obras } = useObras();
   const [search, setSearch] = useState('');
