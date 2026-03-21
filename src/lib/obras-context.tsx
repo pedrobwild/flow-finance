@@ -205,7 +205,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
       value={{
         obras,
         isLoading,
-        addObra: (data) => addMutation.mutate(data),
+        addObra: (data) => addMutation.mutateAsync(data),
         updateObra: (id, data) => updateMutation.mutate({ id, data }),
         deleteObra: (id) => deleteMutation.mutate(id),
         getObraFinancials,
