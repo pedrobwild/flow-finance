@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
-  Clock, AlertTriangle, CalendarDays, X, CalendarIcon, Send, FileText, CreditCard,
+  Clock, AlertTriangle, CalendarDays, X, CalendarIcon, Send, FileText, CreditCard, Paperclip,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,8 @@ import { ptBR } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import TransactionFormDialog from './TransactionFormDialog';
 import ObraDetailSheet from './ObraDetailSheet';
+import AuditLogDrawer from './AuditLogDrawer';
+import CustomCategoriesManager from './CustomCategoriesManager';
 
 interface Props { type: TransactionType; }
 
@@ -320,6 +322,8 @@ export default function TransactionTable({ type }: Props) {
             </Button>
           )}
           <div className="flex-1" />
+          <AuditLogDrawer />
+          <CustomCategoriesManager />
           <Button
             size="sm"
             onClick={() => { setEditingTx(null); setShowForm(true); }}
@@ -515,6 +519,13 @@ export default function TransactionTable({ type }: Props) {
                       </td>
                       <td className="pr-5 pl-3 py-3">
                         <div className="flex items-center justify-end gap-0.5">
+                          {tx.attachmentUrl && (
+                            <a href={tx.attachmentUrl} target="_blank" rel="noopener noreferrer" title="Ver comprovante">
+                              <Button size="icon" variant="ghost" className="h-7 w-7 hover:bg-primary/10" type="button">
+                                <Paperclip className="w-3.5 h-3.5 text-primary" />
+                              </Button>
+                            </a>
+                          )}
                           {!isPagar && !isConfirmed && (
                             <Button
                               size="icon"

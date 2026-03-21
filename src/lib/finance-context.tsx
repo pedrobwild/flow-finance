@@ -27,6 +27,7 @@ function rowToTransaction(row: any): Transaction {
     obraId: row.obra_id || null,
     billingSentAt: row.billing_sent_at || null,
     billingCount: Number(row.billing_count) || 0,
+    attachmentUrl: row.attachment_url || null,
   };
   tx.status = computeStatus(tx);
   return tx;
@@ -131,6 +132,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         obra_id: (tx as any).obraId || null,
         billing_sent_at: tx.billingSentAt || null,
         billing_count: tx.billingCount || 0,
+        attachment_url: tx.attachmentUrl || null,
       });
       if (error) throw error;
     },
@@ -163,6 +165,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         obra_id: (tx as any).obraId || null,
         billing_sent_at: tx.billingSentAt || null,
         billing_count: tx.billingCount || 0,
+        attachment_url: tx.attachmentUrl || null,
       }));
       const { error } = await supabase.from('transactions').insert(rows);
       if (error) throw error;
@@ -192,6 +195,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if ((updates as any).obraId !== undefined) db.obra_id = (updates as any).obraId;
       if (updates.billingSentAt !== undefined) db.billing_sent_at = updates.billingSentAt;
       if (updates.billingCount !== undefined) db.billing_count = updates.billingCount;
+      if (updates.attachmentUrl !== undefined) db.attachment_url = updates.attachmentUrl;
       const { error } = await supabase.from('transactions').update(db).eq('id', id);
       if (error) throw error;
     },

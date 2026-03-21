@@ -49,6 +49,7 @@ function rowToObra(row: any): Obra {
     address: row.address || '',
     status: row.status as ObraStatus,
     contractValue: Number(row.contract_value) || 0,
+    budgetTarget: Number(row.budget_target) || 0,
     paymentTerms: row.payment_terms || '',
     expectedStartDate: row.expected_start_date || null,
     expectedEndDate: row.expected_end_date || null,
@@ -158,6 +159,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
         address: data.address,
         status: data.status,
         contract_value: data.contractValue,
+        budget_target: data.budgetTarget || 0,
         payment_terms: data.paymentTerms,
         expected_start_date: data.expectedStartDate || null,
         expected_end_date: data.expectedEndDate || null,
@@ -184,6 +186,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
       if (data.address !== undefined) update.address = data.address;
       if (data.status !== undefined) update.status = data.status;
       if (data.contractValue !== undefined) update.contract_value = data.contractValue;
+      if (data.budgetTarget !== undefined) update.budget_target = data.budgetTarget;
       if (data.paymentTerms !== undefined) update.payment_terms = data.paymentTerms;
       if (data.expectedStartDate !== undefined) update.expected_start_date = data.expectedStartDate || null;
       if (data.expectedEndDate !== undefined) update.expected_end_date = data.expectedEndDate || null;

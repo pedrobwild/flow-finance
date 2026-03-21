@@ -21,6 +21,7 @@ const emptyForm = {
   address: '',
   status: 'ativa' as ObraStatus,
   contractValue: '',
+  budgetTarget: '',
   paymentTerms: '',
   expectedStartDate: '',
   expectedEndDate: '',
@@ -45,6 +46,7 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
         address: obra.address,
         status: obra.status,
         contractValue: obra.contractValue.toString(),
+        budgetTarget: obra.budgetTarget ? obra.budgetTarget.toString() : '',
         paymentTerms: obra.paymentTerms,
         expectedStartDate: obra.expectedStartDate || '',
         expectedEndDate: obra.expectedEndDate || '',
@@ -68,6 +70,7 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
       address: form.address,
       status: form.status,
       contractValue: parseFloat(form.contractValue) || 0,
+      budgetTarget: parseFloat(form.budgetTarget) || 0,
       paymentTerms: form.paymentTerms,
       expectedStartDate: form.expectedStartDate || null,
       expectedEndDate: form.expectedEndDate || null,
@@ -120,9 +123,13 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
                 <Label className="text-xs">Endereço</Label>
                 <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Rua, número, bairro..." />
               </div>
-              <div className="col-span-2">
+              <div>
                 <Label className="text-xs">Valor do Contrato (R$) *</Label>
                 <Input type="number" step="0.01" value={form.contractValue} onChange={e => set('contractValue', e.target.value)} required />
+              </div>
+              <div>
+                <Label className="text-xs">Meta de Orçamento (R$)</Label>
+                <Input type="number" step="0.01" value={form.budgetTarget} onChange={e => set('budgetTarget', e.target.value)} placeholder="Custo máximo esperado" />
               </div>
               <div className="col-span-2">
                 <Label className="text-xs">Condições de Pagamento</Label>

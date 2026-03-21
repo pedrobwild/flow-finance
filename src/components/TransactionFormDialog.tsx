@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import {
@@ -13,7 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2 } from 'lucide-react';
+import { Building2, Upload, X, FileText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useCustomCategories } from './CustomCategoriesManager';
+import { toast } from 'sonner';
 
 interface PrefillData {
   description?: string;
@@ -55,8 +58,12 @@ const empty = (type: TransactionType, obraId?: string) => ({
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId, prefill }: Props) {
   const { addTransaction, updateTransaction } = useFinance();
   const { obras } = useObras();
+  const { data: customCategories = [] } = useCustomCategories();
   const isEdit = !!transaction;
   const [form, setForm] = useState(empty(defaultType, defaultObraId));
+  const [uploading, setUploading] = useState(false);
+  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeObras = obras.filter(o => ACTIVE_OBRA_STATUSES.includes(o.status));
 
@@ -79,16 +86,15 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         priority: transaction.priority as any,
         billingSentAt: transaction.billingSentAt || '',
       });
+      setAttachmentUrl(transaction.attachmentUrl || null);
     } else {
       const init = empty(defaultType, defaultObraId);
-      // Auto-fill counterpart if defaultObraId is set and type is receber
       if (defaultObraId) {
         const obra = obras.find(o => o.id === defaultObraId);
         if (obra && defaultType === 'receber') {
           init.counterpart = `${obra.clientName}${obra.condominium ? ` — ${obra.condominium}` : ''}${obra.unitNumber ? ` un. ${obra.unitNumber}` : ''}`;
         }
       }
-      // Apply prefill data from AI suggestions
       if (prefill) {
         if (prefill.description) init.description = prefill.description;
         if (prefill.counterpart) init.counterpart = prefill.counterpart;
@@ -97,8 +103,32 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         if (prefill.notes) init.notes = prefill.notes;
       }
       setForm(init);
+      setAttachmentUrl(null);
     }
   }, [transaction, open, defaultType, defaultObraId, obras, prefill]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Arquivo muito grande (máx. 10MB)');
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      setAttachmentUrl(urlData.publicUrl);
+      toast.success('Comprovante anexado');
+    } catch {
+      toast.error('Erro ao enviar arquivo');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const set = (key: string, value: string) => {
     setForm(f => ({ ...f, [key]: value }));
@@ -115,7 +145,8 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
     });
   };
 
-  const categories = form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES;
+  const customCatsForType = customCategories.filter(c => c.type === form.type).map(c => c.name);
+  const categories = [...(form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES), ...customCatsForType];
   const cLabel = form.type === 'pagar' ? 'Fornecedor' : (form.obraId ? 'Obra / Cliente' : 'Origem / Pagador');
   const isObraReceber = form.type === 'receber' && !!form.obraId;
 
@@ -141,6 +172,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       priority: form.type === 'receber' ? 'normal' : form.priority,
       obraId: form.obraId || null,
       billingSentAt: form.billingSentAt || null,
+      attachmentUrl: attachmentUrl || null,
     };
     if (isEdit && transaction) {
       updateTransaction(transaction.id, data);
@@ -322,6 +354,40 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
             <div className="col-span-2">
               <Label className="text-xs">Observações</Label>
               <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} />
+            </div>
+            {/* Attachment */}
+            <div className="col-span-2">
+              <Label className="text-xs">Comprovante</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              {attachmentUrl ? (
+                <div className="flex items-center gap-2 mt-1 p-2 rounded-md bg-muted/50 border">
+                  <FileText className="w-4 h-4 text-primary shrink-0" />
+                  <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline truncate flex-1">
+                    Ver comprovante
+                  </a>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAttachmentUrl(null)}>
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-1 gap-1.5 text-xs w-full h-9"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {uploading ? 'Enviando...' : 'Anexar comprovante (PDF/imagem)'}
+                </Button>
+              )}
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">

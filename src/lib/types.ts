@@ -23,6 +23,7 @@ export interface Transaction {
   obraId: string | null;
   billingSentAt: string | null;
   billingCount: number;
+  attachmentUrl: string | null;
 }
 
 export interface CashBalance {
@@ -44,6 +45,7 @@ export interface Obra {
   address: string;
   status: ObraStatus;
   contractValue: number;
+  budgetTarget: number;
   paymentTerms: string;
   expectedStartDate: string | null;
   expectedEndDate: string | null;
