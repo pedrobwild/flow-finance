@@ -374,21 +374,42 @@ export default function TransactionTable({ type }: Props) {
                           </span>
                         </div>
                       </td>
-                      <td className="px-3 py-3 max-w-[200px]">
-                        <p className="font-medium truncate text-xs">{tx.description}</p>
-                        {tx.notes && (
-                          <p className="text-[10px] text-muted-foreground truncate mt-0.5">{tx.notes}</p>
-                        )}
-                      </td>
-                      <td className={cn("px-3 py-3 max-w-[140px] truncate text-xs", isPagar ? "text-muted-foreground" : "font-medium text-foreground")}>{tx.counterpart || '—'}</td>
-                      <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell">{tx.category}</td>
-                      <td className="px-3 py-3 text-xs hidden lg:table-cell">
-                        {obraCode ? (
-                          <Badge variant="outline" className="text-[10px] font-mono">{obraCode}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground/40">{isPagar ? 'Corp.' : '—'}</span>
-                        )}
-                      </td>
+                      {isPagar ? (
+                        <>
+                          <td className="px-3 py-3 max-w-[200px]">
+                            <p className="font-medium truncate text-xs">{tx.description}</p>
+                            {tx.notes && (
+                              <p className="text-[10px] text-muted-foreground truncate mt-0.5">{tx.notes}</p>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 max-w-[140px] truncate text-xs text-muted-foreground">{tx.counterpart || '—'}</td>
+                          <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell">{tx.category}</td>
+                          <td className="px-3 py-3 text-xs hidden lg:table-cell">
+                            {obraCode ? (
+                              <Badge variant="outline" className="text-[10px] font-mono">{obraCode}</Badge>
+                            ) : (
+                              <span className="text-muted-foreground/40">Corp.</span>
+                            )}
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-3 py-3 text-xs">
+                            {obraCode ? (
+                              <Badge variant="outline" className="text-[10px] font-mono">{obraCode}</Badge>
+                            ) : (
+                              <span className="text-muted-foreground/40">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 max-w-[160px] truncate text-xs font-medium">{tx.counterpart || '—'}</td>
+                          <td className="px-3 py-3 max-w-[160px]">
+                            <p className="text-xs truncate">{tx.category || tx.description}</p>
+                            {tx.notes && (
+                              <p className="text-[10px] text-muted-foreground truncate mt-0.5">{tx.notes}</p>
+                            )}
+                          </td>
+                        </>
+                      )}
                       <td className="px-3 py-3 text-right">
                         <span className={cn(
                           'font-mono font-bold whitespace-nowrap text-xs',
