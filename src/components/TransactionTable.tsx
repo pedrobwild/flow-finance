@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
-  Clock, AlertTriangle, CalendarDays, X, CalendarIcon,
+  Clock, AlertTriangle, CalendarDays, X, CalendarIcon, Send, FileText, CreditCard,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -326,6 +326,9 @@ export default function TransactionTable({ type }: Props) {
                     <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Obra</th>
                     <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Cliente</th>
                     <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Parcela</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Pgto.</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Cobrança</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden xl:table-cell">Obs.</th>
                   </>
                 )}
                 <th className="text-right px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Valor</th>
@@ -415,10 +418,35 @@ export default function TransactionTable({ type }: Props) {
                             )}
                           </td>
                           <td className="px-3 py-3 max-w-[160px] truncate text-xs font-medium">{tx.counterpart || '—'}</td>
-                          <td className="px-3 py-3 max-w-[160px]">
+                          <td className="px-3 py-3 max-w-[140px]">
                             <p className="text-xs truncate">{tx.category || tx.description}</p>
-                            {tx.notes && (
-                              <p className="text-[10px] text-muted-foreground truncate mt-0.5">{tx.notes}</p>
+                          </td>
+                          <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">
+                            {tx.paymentMethod ? (
+                              <span className="flex items-center gap-1">
+                                <CreditCard className="w-3 h-3" />
+                                {tx.paymentMethod}
+                              </span>
+                            ) : '—'}
+                          </td>
+                          <td className="px-3 py-3 text-xs hidden lg:table-cell whitespace-nowrap">
+                            {tx.billingSentAt ? (
+                              <span className="flex items-center gap-1 text-success">
+                                <Send className="w-3 h-3" />
+                                {formatDateFull(tx.billingSentAt)}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground/50">Não enviada</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 max-w-[140px] text-xs text-muted-foreground hidden xl:table-cell">
+                            {tx.notes ? (
+                              <p className="truncate flex items-center gap-1" title={tx.notes}>
+                                <FileText className="w-3 h-3 shrink-0" />
+                                {tx.notes}
+                              </p>
+                            ) : (
+                              <span className="text-muted-foreground/40">—</span>
                             )}
                           </td>
                         </>

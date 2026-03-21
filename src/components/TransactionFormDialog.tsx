@@ -40,6 +40,7 @@ const empty = (type: TransactionType, obraId?: string) => ({
   paymentMethod: '_none',
   notes: '',
   priority: 'normal' as const,
+  billingSentAt: '',
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId }: Props) {
@@ -67,6 +68,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         paymentMethod: transaction.paymentMethod || '_none',
         notes: transaction.notes,
         priority: transaction.priority as any,
+        billingSentAt: transaction.billingSentAt || '',
       });
     } else {
       const init = empty(defaultType, defaultObraId);
@@ -120,6 +122,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       notes: form.notes,
       priority: form.type === 'receber' ? 'normal' : form.priority,
       obraId: form.obraId || null,
+      billingSentAt: form.billingSentAt || null,
     };
     if (isEdit && transaction) {
       updateTransaction(transaction.id, data);
@@ -269,6 +272,12 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
               <Label className="text-xs">{form.type === 'pagar' ? 'Pago em' : 'Recebido em'}</Label>
               <Input type="date" value={form.paidAt} onChange={e => set('paidAt', e.target.value)} />
             </div>
+            {form.type === 'receber' && (
+              <div>
+                <Label className="text-xs">Cobrança enviada em</Label>
+                <Input type="date" value={form.billingSentAt} onChange={e => set('billingSentAt', e.target.value)} />
+              </div>
+            )}
             <div className="col-span-2">
               <Label className="text-xs">Observações</Label>
               <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} />
