@@ -132,6 +132,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         obra_id: (tx as any).obraId || null,
         billing_sent_at: tx.billingSentAt || null,
         billing_count: tx.billingCount || 0,
+        attachment_url: tx.attachmentUrl || null,
       });
       if (error) throw error;
     },
