@@ -67,6 +67,7 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
     e.preventDefault();
     const data = {
       clientName: form.clientName,
+      clientEmail: form.clientEmail,
       condominium: form.condominium,
       unitNumber: form.unitNumber,
       address: form.address,
