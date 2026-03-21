@@ -154,8 +154,19 @@ export default function MorningBriefing() {
     setLoading(true);
     setError(null);
     try {
+      // Fetch market data in parallel (non-blocking — briefing works without it)
+      let marketContext: string | null = null;
+      try {
+        const { data: marketData } = await supabase.functions.invoke('market-data');
+        if (marketData?.marketContext) {
+          marketContext = marketData.marketContext;
+        }
+      } catch (e) {
+        console.warn('Market data unavailable:', e);
+      }
+
       const { data: fnData, error: fnError } = await supabase.functions.invoke('morning-briefing', {
-        body: { financialSummary },
+        body: { financialSummary, marketContext },
       });
 
       if (fnError) throw new Error(fnError.message);
