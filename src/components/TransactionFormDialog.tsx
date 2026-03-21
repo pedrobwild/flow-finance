@@ -139,14 +139,18 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <Label className="text-xs">Descrição</Label>
-              <Input value={form.description} onChange={e => set('description', e.target.value)} required />
-            </div>
+            {/* For pagar: description first */}
+            {form.type === 'pagar' && (
+              <div className="col-span-2">
+                <Label className="text-xs">Descrição</Label>
+                <Input value={form.description} onChange={e => set('description', e.target.value)} required />
+              </div>
+            )}
 
+            {/* Obra selector */}
             <div className="col-span-2">
               <Label className="text-xs flex items-center gap-1">
-                <Building2 className="h-3 w-3" /> Obra
+                <Building2 className="h-3 w-3" /> Obra {form.type === 'receber' && '*'}
               </Label>
               <Select value={form.obraId || '_none'} onValueChange={v => handleObraSelect(v === '_none' ? '' : v)}>
                 <SelectTrigger className="text-sm">
@@ -166,16 +170,36 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
               </Select>
             </div>
 
-            <div>
+            {/* Cliente (counterpart) */}
+            <div className={form.type === 'receber' ? 'col-span-2' : ''}>
               <Label className="text-xs">{cLabel}</Label>
-              <Input value={form.counterpart} onChange={e => set('counterpart', e.target.value)} />
+              <Input
+                value={form.counterpart}
+                onChange={e => set('counterpart', e.target.value)}
+                readOnly={form.type === 'receber' && !!form.obraId}
+                className={form.type === 'receber' && form.obraId ? 'bg-muted/50' : ''}
+              />
             </div>
+
+            {/* For receber: Parcela field prominently */}
+            {form.type === 'receber' && (
+              <div className="col-span-2">
+                <Label className="text-xs">Parcela *</Label>
+                <Input
+                  value={form.category}
+                  onChange={e => set('category', e.target.value)}
+                  placeholder="Ex: Sinal, 1ª Medição, Entrega Final..."
+                  required
+                />
+              </div>
+            )}
+
             <div>
-              <Label className="text-xs">Valor (R$)</Label>
+              <Label className="text-xs">Valor (R$) *</Label>
               <Input type="number" step="0.01" value={form.amount} onChange={e => set('amount', e.target.value)} required />
             </div>
             <div>
-              <Label className="text-xs">Vencimento</Label>
+              <Label className="text-xs">Vencimento *</Label>
               <Input type="date" value={form.dueDate} onChange={e => set('dueDate', e.target.value)} required />
             </div>
             <div>
@@ -209,35 +233,19 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                 </Select>
               </div>
             )}
+            {form.type === 'pagar' && (
+              <div>
+                <Label className="text-xs">Categoria</Label>
+                <Select value={form.category} onValueChange={v => set('category', v)}>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
-              {form.type === 'receber' ? (
-                <>
-                  <Label className="text-xs">Parcela</Label>
-                  <Input value={form.category} onChange={e => set('category', e.target.value)} placeholder="Ex: 3/6, Sinal, Medição 2" />
-                </>
-              ) : (
-                <>
-                  <Label className="text-xs">Categoria</Label>
-                  <Select value={form.category} onValueChange={v => set('category', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </>
-              )}
-            </div>
-            <div>
-              <Label className="text-xs">Recorrência</Label>
-              <Select value={form.recurrence} onValueChange={v => set('recurrence', v)}>
-                <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {RECURRENCE_OPTIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Método de pagamento</Label>
+              <Label className="text-xs">Forma de Pagamento</Label>
               <Select value={form.paymentMethod} onValueChange={v => set('paymentMethod', v)}>
                 <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -246,6 +254,17 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                 </SelectContent>
               </Select>
             </div>
+            {form.type === 'pagar' && (
+              <div>
+                <Label className="text-xs">Recorrência</Label>
+                <Select value={form.recurrence} onValueChange={v => set('recurrence', v)}>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {RECURRENCE_OPTIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
               <Label className="text-xs">{form.type === 'pagar' ? 'Pago em' : 'Recebido em'}</Label>
               <Input type="date" value={form.paidAt} onChange={e => set('paidAt', e.target.value)} />
