@@ -1,7 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useObras } from '@/lib/obras-context';
-import { useFinance } from '@/lib/finance-context';
-import { Obra, OBRA_STATUS_LABELS } from '@/lib/types';
+import { useState } from 'react';
+import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
 import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
 import { Link } from 'react-router-dom';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
