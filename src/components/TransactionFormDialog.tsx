@@ -355,6 +355,40 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
               <Label className="text-xs">Observações</Label>
               <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} />
             </div>
+            {/* Attachment */}
+            <div className="col-span-2">
+              <Label className="text-xs">Comprovante</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              {attachmentUrl ? (
+                <div className="flex items-center gap-2 mt-1 p-2 rounded-md bg-muted/50 border">
+                  <FileText className="w-4 h-4 text-primary shrink-0" />
+                  <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline truncate flex-1">
+                    Ver comprovante
+                  </a>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAttachmentUrl(null)}>
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-1 gap-1.5 text-xs w-full h-9"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {uploading ? 'Enviando...' : 'Anexar comprovante (PDF/imagem)'}
+                </Button>
+              )}
+            </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
