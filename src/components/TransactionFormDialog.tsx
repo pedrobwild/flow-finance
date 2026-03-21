@@ -119,6 +119,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
