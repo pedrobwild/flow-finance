@@ -99,6 +99,12 @@ export default function TransactionTable({ type }: Props) {
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
       .filter(t => counterpartFilter === 'todos' || t.counterpart === counterpartFilter)
       .filter(t => {
+        if (billingFilter === 'todos') return true;
+        if (billingFilter === 'cobrada') return t.billingCount > 0;
+        if (billingFilter === 'nao_cobrada') return t.billingCount === 0;
+        return true;
+      })
+      .filter(t => {
         if (obraFilter === 'todos') return true;
         if (obraFilter === '_sem_obra') return !t.obraId;
         return t.obraId === obraFilter;
