@@ -86,16 +86,15 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         priority: transaction.priority as any,
         billingSentAt: transaction.billingSentAt || '',
       });
+      setAttachmentUrl(transaction.attachmentUrl || null);
     } else {
       const init = empty(defaultType, defaultObraId);
-      // Auto-fill counterpart if defaultObraId is set and type is receber
       if (defaultObraId) {
         const obra = obras.find(o => o.id === defaultObraId);
         if (obra && defaultType === 'receber') {
           init.counterpart = `${obra.clientName}${obra.condominium ? ` — ${obra.condominium}` : ''}${obra.unitNumber ? ` un. ${obra.unitNumber}` : ''}`;
         }
       }
-      // Apply prefill data from AI suggestions
       if (prefill) {
         if (prefill.description) init.description = prefill.description;
         if (prefill.counterpart) init.counterpart = prefill.counterpart;
@@ -104,8 +103,32 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         if (prefill.notes) init.notes = prefill.notes;
       }
       setForm(init);
+      setAttachmentUrl(null);
     }
   }, [transaction, open, defaultType, defaultObraId, obras, prefill]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Arquivo muito grande (máx. 10MB)');
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      setAttachmentUrl(urlData.publicUrl);
+      toast.success('Comprovante anexado');
+    } catch {
+      toast.error('Erro ao enviar arquivo');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const set = (key: string, value: string) => {
     setForm(f => ({ ...f, [key]: value }));
