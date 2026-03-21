@@ -6,7 +6,7 @@ import DashboardKPIs from '@/components/DashboardKPIs';
 import MorningBriefing from '@/components/MorningBriefing';
 import WeeklyCashProjection from '@/components/WeeklyCashProjection';
 import ObraCashBalance from '@/components/ObraCashBalance';
-import CashPressureConflicts from '@/components/CashPressureConflicts';
+
 import DecisionAlerts from '@/components/DecisionAlerts';
 import { motion } from 'framer-motion';
 
@@ -51,10 +51,6 @@ export default function Dashboard() {
       {/* === SALDO DE CAIXA POR OBRA + SEMÁFORO === */}
       <ObraCashBalance />
 
-      {/* === CONFLITOS + PRESSÃO DE CAIXA === */}
-      <motion.div {...section(0.22)}>
-        <CashPressureConflicts />
-      </motion.div>
 
       {/* === ALERTAS DE DECISÃO === */}
       <motion.div {...section(0.26)}>
