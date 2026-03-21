@@ -21,7 +21,7 @@ interface ScoreBreakdown {
 }
 
 export default function HealthScore() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
+  const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const today = todayISO();
 
