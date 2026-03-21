@@ -64,28 +64,93 @@ export default function ChatCommandDrawer() {
         content: m.content,
       }));
 
-      const { data, error } = await supabase.functions.invoke('chat-command', {
-        body: { messages: chatHistory },
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-command`;
+
+      const resp = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: chatHistory }),
       });
 
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error || `Erro ${resp.status}`);
+      }
 
-      const assistantMsg: Message = {
-        role: 'assistant',
-        content: data.content,
-        actionsExecuted: data.actions_executed,
-        timestamp: new Date(),
+      if (!resp.body) throw new Error('Sem resposta do servidor');
+
+      // Stream SSE
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let assistantContent = '';
+      let actionsExecuted: string[] = [];
+      let assistantMsgCreated = false;
+
+      const upsertAssistant = (content: string, actions?: string[]) => {
+        assistantContent = content;
+        setMessages(prev => {
+          if (!assistantMsgCreated) {
+            assistantMsgCreated = true;
+            return [...prev, {
+              role: 'assistant' as const,
+              content,
+              actionsExecuted: actions,
+              timestamp: new Date(),
+            }];
+          }
+          return prev.map((m, i) =>
+            i === prev.length - 1 && m.role === 'assistant'
+              ? { ...m, content, actionsExecuted: actions || m.actionsExecuted }
+              : m
+          );
+        });
       };
-      setMessages(prev => [...prev, assistantMsg]);
 
-      // If actions were executed, invalidate queries to refresh UI
-      if (data.actions_executed?.length > 0) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+
+            if (parsed.type === 'actions') {
+              actionsExecuted = parsed.actions;
+            } else if (parsed.type === 'delta') {
+              assistantContent += parsed.content;
+              upsertAssistant(assistantContent, actionsExecuted.length > 0 ? actionsExecuted : undefined);
+            } else if (parsed.type === 'done') {
+              // Ensure final state
+              if (assistantContent) {
+                upsertAssistant(assistantContent, actionsExecuted.length > 0 ? actionsExecuted : undefined);
+              }
+            }
+          } catch {
+            buffer = line + '\n' + buffer;
+            break;
+          }
+        }
+      }
+
+      // Refresh UI if actions were executed
+      if (actionsExecuted.length > 0) {
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
         queryClient.invalidateQueries({ queryKey: ['cash_balance'] });
         queryClient.invalidateQueries({ queryKey: ['obras'] });
         toast.success('Ações executadas com sucesso', {
-          description: data.actions_executed.map((a: string) => ACTION_LABELS[a] || a).join(', '),
+          description: actionsExecuted.map((a: string) => ACTION_LABELS[a] || a).join(', '),
         });
       }
     } catch (e) {
