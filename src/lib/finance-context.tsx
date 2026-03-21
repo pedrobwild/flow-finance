@@ -195,6 +195,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if ((updates as any).obraId !== undefined) db.obra_id = (updates as any).obraId;
       if (updates.billingSentAt !== undefined) db.billing_sent_at = updates.billingSentAt;
       if (updates.billingCount !== undefined) db.billing_count = updates.billingCount;
+      if (updates.attachmentUrl !== undefined) db.attachment_url = updates.attachmentUrl;
       const { error } = await supabase.from('transactions').update(db).eq('id', id);
       if (error) throw error;
     },
