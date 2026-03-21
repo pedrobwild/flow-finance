@@ -12,6 +12,8 @@ import { AlertTriangle } from 'lucide-react';
 import ObraDetailSheet from '@/components/ObraDetailSheet';
 import type { Obra, Transaction } from '@/lib/types';
 
+type Semaphore = 'pode-seguir' | 'atencao' | 'replanejar';
+
 interface ObraRow {
   id: string | null;
   code: string;
@@ -28,6 +30,7 @@ interface ObraRow {
   nextEntry: Transaction | null;
   nextExit: Transaction | null;
   obra: Obra | null;
+  semaphore: Semaphore;
 }
 
 const section = (delay: number) => ({
