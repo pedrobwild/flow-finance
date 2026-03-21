@@ -107,6 +107,7 @@ export default function TransactionTable({ type }: Props) {
       .filter(t => {
         if (obraFilter === 'todos') return true;
         if (obraFilter === '_sem_obra') return !t.obraId;
+        if (obraFilter === '_com_obra') return !!t.obraId;
         return t.obraId === obraFilter;
       })
       .filter(t => {
