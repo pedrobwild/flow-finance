@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingDown, Shield, Flame } from 'lucide-react';
@@ -19,7 +20,8 @@ interface RunwayAnalysis {
 }
 
 export default function CashRunwayCard() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
+  const { currentBalance, projectedBalance } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
 
   const analysis: RunwayAnalysis = useMemo(() => {

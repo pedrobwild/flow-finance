@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, addDays, getDayMonth, getWeekdayName, todayISO, daysBetween } from '@/lib/helpers';
 import type { PeriodRange } from './DashboardPeriodFilter';
 import {
@@ -30,7 +31,8 @@ interface DayPoint {
 }
 
 export default function CashFlowHeroChart({ period }: Props) {
-  const { transactions, projectedBalance, confirmTransaction } = useFinance();
+  const { projectedBalance, confirmTransaction } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
 

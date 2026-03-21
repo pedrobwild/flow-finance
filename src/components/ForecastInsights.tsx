@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Calendar, Zap, Lightbulb } from 'lucide-react';
@@ -13,7 +14,8 @@ interface ConcentrationRisk {
 }
 
 export default function ForecastInsights() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
+  const { currentBalance, projectedBalance } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
 
   const insights = useMemo(() => {

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowDownCircle, ArrowUpCircle, CheckCheck, CalendarClock } from 'lucide-react';
@@ -7,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export default function TodayTomorrowActions() {
-  const { transactions, confirmTransaction } = useFinance();
+  const { confirmTransaction } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
   const tomorrow = addDays(today, 1);
 

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
 import { ArrowUpRight, Users, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,7 +15,8 @@ const sect = (delay: number) => ({
 });
 
 export default function ContasReceber() {
-  const { transactions } = useFinance();
+  const { } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
 
   const insights = useMemo(() => {

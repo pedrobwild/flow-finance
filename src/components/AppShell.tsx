@@ -4,6 +4,8 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
+import { useObras } from '@/lib/obras-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +13,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { label: 'Obras', icon: Building2, path: '/obras' },
   { label: 'A Pagar', icon: ArrowDownCircle, path: '/pagar' },
   { label: 'A Receber', icon: ArrowUpCircle, path: '/receber' },
   { label: 'Fluxo', icon: TrendingUp, path: '/fluxo' },
@@ -26,10 +30,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { user, isAdmin, profile, signOut } = useAuth();
+  const { obras } = useObras();
+  const { selectedObraId, setSelectedObraId } = useObraFilter();
+
+  const activeObras = obras.filter(o => o.status === 'ativa');
 
   const initials = profile?.fullName
     ? profile.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() || '??';
+
+  const selectedObra = selectedObraId ? obras.find(o => o.id === selectedObraId) : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,6 +55,34 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
               <span className="font-bold text-sm hidden sm:block tracking-tight">BWILD Finance</span>
             </Link>
+
+            {/* Global Obra Filter */}
+            <div className="hidden sm:block ml-2">
+              <Select
+                value={selectedObraId ?? '__all__'}
+                onValueChange={v => setSelectedObraId(v === '__all__' ? null : v)}
+              >
+                <SelectTrigger className={cn(
+                  'h-8 w-[180px] text-xs border-dashed',
+                  selectedObraId && 'border-primary/50 bg-primary/5'
+                )}>
+                  <div className="flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__" className="text-xs font-medium">
+                    Visão Geral
+                  </SelectItem>
+                  {activeObras.map(o => (
+                    <SelectItem key={o.id} value={o.id} className="text-xs">
+                      {o.code} · {o.clientName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <nav className="hidden lg:flex items-center gap-1">
@@ -83,6 +121,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               </div>
               <DropdownMenuSeparator />
+              {isAdmin && (
+                <DropdownMenuItem onClick={() => navigate('/obras')} className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Área do Admin
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={signOut} className="gap-2 text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4" />
                 Sair
@@ -92,9 +136,35 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
+      {/* Mobile nav */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 top-14 z-30 bg-background/95 backdrop-blur-sm p-4">
           <nav className="space-y-1">
+            {/* Mobile obra filter */}
+            <div className="pb-3 mb-3 border-b">
+              <Select
+                value={selectedObraId ?? '__all__'}
+                onValueChange={v => setSelectedObraId(v === '__all__' ? null : v)}
+              >
+                <SelectTrigger className={cn(
+                  'h-9 w-full text-xs border-dashed',
+                  selectedObraId && 'border-primary/50 bg-primary/5'
+                )}>
+                  <div className="flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__" className="text-xs font-medium">Visão Geral</SelectItem>
+                  {activeObras.map(o => (
+                    <SelectItem key={o.id} value={o.id} className="text-xs">
+                      {o.code} · {o.clientName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {navItems.map(item => (
               <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}>
                 <Button

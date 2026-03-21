@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, daysBetween } from '@/lib/helpers';
 import { motion } from 'framer-motion';
 import {
@@ -16,7 +17,8 @@ interface Props {
 }
 
 export default function DashboardKPIs({ period }: Props) {
-  const { transactions, currentBalance, projectedBalance, updateCashBalance } = useFinance();
+  const { currentBalance, projectedBalance, updateCashBalance } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const [editingBalance, setEditingBalance] = useState(false);
   const [balanceInput, setBalanceInput] = useState('');
   const today = todayISO();

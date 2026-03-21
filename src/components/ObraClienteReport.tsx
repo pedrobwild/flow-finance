@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
 import { formatCurrency } from '@/lib/helpers';
 import { Building2, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
@@ -20,7 +21,7 @@ interface ObraSummary {
 }
 
 export default function ObraClienteReport() {
-  const { transactions } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const { obras } = useObras();
 
   const report = useMemo(() => {

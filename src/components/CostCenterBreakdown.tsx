@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { COST_CENTER_COLORS } from '@/lib/types';
@@ -8,7 +9,8 @@ import { cn } from '@/lib/utils';
 import { PieChart as PieIcon } from 'lucide-react';
 
 export default function CostCenterBreakdown() {
-  const { transactions } = useFinance();
+  const { } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
   const in30 = addDays(today, 30);
 
