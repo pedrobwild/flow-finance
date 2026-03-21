@@ -20,6 +20,7 @@ export interface Transaction {
   paymentMethod: PaymentMethod;
   notes: string;
   priority: Priority;
+  obraId: string | null;
 }
 
 export interface CashBalance {
