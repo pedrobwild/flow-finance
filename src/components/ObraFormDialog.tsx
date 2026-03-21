@@ -16,6 +16,7 @@ interface Props {
 
 const emptyForm = {
   clientName: '',
+  clientEmail: '',
   condominium: '',
   unitNumber: '',
   address: '',
@@ -41,6 +42,7 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
     if (obra) {
       setForm({
         clientName: obra.clientName,
+        clientEmail: obra.clientEmail || '',
         condominium: obra.condominium,
         unitNumber: obra.unitNumber,
         address: obra.address,
@@ -65,6 +67,7 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
     e.preventDefault();
     const data = {
       clientName: form.clientName,
+      clientEmail: form.clientEmail,
       condominium: form.condominium,
       unitNumber: form.unitNumber,
       address: form.address,
@@ -110,6 +113,10 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
               <div className="col-span-2">
                 <Label className="text-xs">Nome do Cliente *</Label>
                 <Input value={form.clientName} onChange={e => set('clientName', e.target.value)} required autoFocus />
+              </div>
+              <div className="col-span-2">
+                <Label className="text-xs">Email do Cliente</Label>
+                <Input type="email" value={form.clientEmail} onChange={e => set('clientEmail', e.target.value)} placeholder="cliente@email.com" />
               </div>
               <div>
                 <Label className="text-xs">Condomínio</Label>

@@ -40,6 +40,7 @@ export interface Obra {
   id: string;
   code: string;
   clientName: string;
+  clientEmail: string;
   condominium: string;
   unitNumber: string;
   address: string;

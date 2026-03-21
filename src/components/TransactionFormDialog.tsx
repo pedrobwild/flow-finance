@@ -56,7 +56,7 @@ const empty = (type: TransactionType, obraId?: string) => ({
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId, prefill }: Props) {
-  const { addTransaction, updateTransaction } = useFinance();
+  const { addTransaction, updateTransaction, addTransactions } = useFinance();
   const { obras } = useObras();
   const { data: customCategories = [] } = useCustomCategories();
   const isEdit = !!transaction;
@@ -64,6 +64,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
   const [uploading, setUploading] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [recurrenceCount, setRecurrenceCount] = useState(5);
 
   const activeObras = obras.filter(o => ACTIVE_OBRA_STATUSES.includes(o.status));
 
@@ -150,9 +151,21 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
   const cLabel = form.type === 'pagar' ? 'Fornecedor' : (form.obraId ? 'Obra / Cliente' : 'Origem / Pagador');
   const isObraReceber = form.type === 'receber' && !!form.obraId;
 
+  const generateRecurringDates = (startDate: string, recurrence: string, count: number): string[] => {
+    const dates: string[] = [];
+    for (let i = 1; i <= count; i++) {
+      const d = new Date(startDate + 'T12:00:00');
+      if (recurrence === 'mensal') d.setMonth(d.getMonth() + i);
+      else if (recurrence === 'semanal') d.setDate(d.getDate() + 7 * i);
+      else if (recurrence === 'trimestral') d.setMonth(d.getMonth() + 3 * i);
+      else if (recurrence === 'anual') d.setFullYear(d.getFullYear() + i);
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    return dates;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For receber with obra, use parcela (category) as description; without obra, use description field
     const description = form.type === 'receber' && form.obraId
       ? form.category || form.description || 'Parcela'
       : form.description || form.category;
@@ -178,6 +191,21 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       updateTransaction(transaction.id, data);
     } else {
       addTransaction(data);
+      // Auto-generate recurring transactions
+      if (form.recurrence !== 'única') {
+        const futureDates = generateRecurringDates(form.dueDate, form.recurrence, recurrenceCount);
+        const futureTxs = futureDates.map((date, i) => ({
+          ...data,
+          dueDate: date,
+          status: 'previsto',
+          paidAt: null,
+          notes: `${data.notes ? data.notes + ' · ' : ''}Recorrência ${i + 2}/${recurrenceCount + 1}`,
+        }));
+        if (futureTxs.length > 0) {
+          addTransactions(futureTxs);
+          toast.success(`${futureTxs.length} parcela(s) recorrente(s) criada(s)`);
+        }
+      }
     }
     onClose();
   };
@@ -339,6 +367,22 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                     {RECURRENCE_OPTIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+            {form.recurrence !== 'única' && !isEdit && (
+              <div>
+                <Label className="text-xs">Repetições futuras</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={24}
+                  value={recurrenceCount}
+                  onChange={e => setRecurrenceCount(Math.min(24, Math.max(1, parseInt(e.target.value) || 1)))}
+                  className="text-sm"
+                />
+                <p className="text-[9px] text-muted-foreground mt-0.5">
+                  Gera {recurrenceCount} parcela(s) adicional(is) automaticamente
+                </p>
               </div>
             )}
             <div>

@@ -157,6 +157,7 @@ export type Database = {
           actual_start_date: string | null
           address: string | null
           budget_target: number | null
+          client_email: string | null
           client_name: string
           code: string
           condominium: string
@@ -176,6 +177,7 @@ export type Database = {
           actual_start_date?: string | null
           address?: string | null
           budget_target?: number | null
+          client_email?: string | null
           client_name: string
           code: string
           condominium?: string
@@ -195,6 +197,7 @@ export type Database = {
           actual_start_date?: string | null
           address?: string | null
           budget_target?: number | null
+          client_email?: string | null
           client_name?: string
           code?: string
           condominium?: string
