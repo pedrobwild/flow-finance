@@ -47,6 +47,7 @@ interface FinanceContextType {
   currentBalance: CashBalance | null;
   isLoading: boolean;
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
+  addTransactions: (txs: Omit<Transaction, 'id'>[]) => Promise<void>;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   confirmTransaction: (id: string, actualAmount?: number, txType?: string) => void;
@@ -134,6 +135,33 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       toast.success('Transação criada com sucesso');
     },
     onError: () => toast.error('Erro ao criar transação'),
+  });
+
+  const addBulkMutation = useMutation({
+    mutationFn: async (txs: Omit<Transaction, 'id'>[]) => {
+      const rows = txs.map(tx => ({
+        type: tx.type,
+        description: tx.description,
+        counterpart: tx.counterpart,
+        amount: tx.amount,
+        due_date: tx.dueDate,
+        paid_at: tx.paidAt,
+        status: tx.status,
+        cost_center: tx.costCenter,
+        category: tx.category,
+        recurrence: tx.recurrence,
+        payment_method: tx.paymentMethod,
+        notes: tx.notes,
+        priority: tx.priority,
+        obra_id: (tx as any).obraId || null,
+      }));
+      const { error } = await supabase.from('transactions').insert(rows);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateTx();
+    },
+    onError: () => toast.error('Erro ao criar transações'),
   });
 
   const updateMutation = useMutation({
@@ -275,6 +303,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       currentBalance,
       isLoading,
       addTransaction: (tx) => addMutation.mutate(tx),
+      addTransactions: (txs) => addBulkMutation.mutateAsync(txs),
       updateTransaction: (id, updates) => updateMutation.mutate({ id, updates }),
       deleteTransaction: (id) => deleteMutation.mutate(id),
       confirmTransaction: (id, actualAmount, txType) => confirmMutation.mutate({ id, actualAmount, txType }),
