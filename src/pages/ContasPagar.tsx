@@ -15,8 +15,9 @@ const sect = (delay: number) => ({
 });
 
 export default function ContasPagar() {
-  const { } = useFinance();
+  const { currentBalance, projectedBalance } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
+  const { obras } = useObras();
   const today = todayISO();
 
   const insights = useMemo(() => {
