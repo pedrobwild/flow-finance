@@ -41,7 +41,7 @@ const sect = (delay: number) => ({
 
 export default function FluxoCaixa() {
   const { confirmTransaction } = useFinance();
-  const { filteredTransactions: transactions, isFiltered, selectedObraId, filteredBalance } = useObraFilter();
+  const { filteredTransactions: transactions, isFiltered, selectedObraId, filteredBalance, filteredProjectedBalance } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const [period, setPeriod] = useState(30);
   const [initialBalance, setInitialBalance] = useState(0);
