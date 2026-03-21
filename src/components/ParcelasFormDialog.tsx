@@ -78,6 +78,7 @@ export default function ParcelasFormDialog({ open, onClose, obraId, obraCode, cl
         obraId,
         billingSentAt: null,
         billingCount: 0,
+        attachmentUrl: null,
       }));
 
       await addTransactions(txs);

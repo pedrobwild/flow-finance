@@ -21,6 +21,7 @@ const emptyForm = {
   address: '',
   status: 'ativa' as ObraStatus,
   contractValue: '',
+  budgetTarget: '',
   paymentTerms: '',
   expectedStartDate: '',
   expectedEndDate: '',
