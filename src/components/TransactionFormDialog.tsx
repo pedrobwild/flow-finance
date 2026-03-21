@@ -236,5 +236,58 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Modal de seleção de Obra para OPEX */}
+    <Dialog open={obraModalOpen} onOpenChange={setObraModalOpen}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            Selecionar Obra
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Obra destino da despesa</Label>
+            <Input
+              value={form.obra}
+              onChange={e => setForm(f => ({ ...f, obra: e.target.value }))}
+              placeholder="Ex: Reforma Apt 302 — Vila Madalena"
+              autoFocus
+            />
+          </div>
+          {existingObras.length > 0 && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Obras anteriores</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {existingObras.map(obra => (
+                  <button
+                    key={obra}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, obra }))}
+                    className={`text-xs px-2 py-1 rounded-md border transition-colors ${
+                      form.obra === obra
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                    }`}
+                  >
+                    {obra}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => { setForm(f => ({ ...f, obra: '' })); setObraModalOpen(false); }}>
+              Pular
+            </Button>
+            <Button type="button" size="sm" onClick={() => setObraModalOpen(false)} disabled={!form.obra}>
+              Confirmar
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
