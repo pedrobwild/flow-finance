@@ -31,7 +31,6 @@ interface PressureItem {
 export default function CashPressureConflicts() {
   const { obras } = useObras();
   const { transactions, currentBalance } = useFinance();
-  const { stages } = useAllObraStages();
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
 
