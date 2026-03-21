@@ -79,7 +79,7 @@ EXEMPLOS DE INSIGHTS AVANÇADOS:
         model: "openai/gpt-5",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Dados financeiros de hoje:\n\n${financialSummary}` },
+          { role: "user", content: `Dados financeiros de hoje:\n\n${financialSummary}${marketContext ? `\n\n=== DADOS DE MERCADO EM TEMPO REAL (Perplexity) ===\n${marketContext}` : '\n\n(Dados de mercado indisponíveis hoje)'}` },
         ],
         tools: [
           {
