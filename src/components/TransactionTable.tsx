@@ -59,7 +59,7 @@ export default function TransactionTable({ type }: Props) {
 
   const clearFilters = () => {
     setSearch('');
-    setStatusFilter('todos');
+    setStatusFilter('pendentes');
     setPriorityFilter('todas');
     setCostCenterFilter('todos');
     setCounterpartFilter('todos');
