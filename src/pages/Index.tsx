@@ -6,7 +6,7 @@ import DashboardKPIs from '@/components/DashboardKPIs';
 import MorningBriefing from '@/components/MorningBriefing';
 import WeeklyCashProjection from '@/components/WeeklyCashProjection';
 import ObraCashBalance from '@/components/ObraCashBalance';
-
+import CashRunwayCard from '@/components/CashRunwayCard';
 import DecisionAlerts from '@/components/DecisionAlerts';
 import { motion } from 'framer-motion';
 
@@ -24,38 +24,48 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* === BRIEFING EXECUTIVO DA MANHÃ === */}
+    <div className="space-y-8 pb-8">
+      {/* === ROW 1: BRIEFING + RUNWAY side-by-side === */}
       <motion.div {...section(0)}>
-        <div className="flex justify-end mb-2">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-lg font-bold tracking-tight">Cockpit Financeiro</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Visão executiva em tempo real</p>
+          </div>
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
         </div>
-        <MorningBriefing />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <MorningBriefing />
+          </div>
+          <div className="lg:col-span-1">
+            <CashRunwayCard />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* === ALERTAS DE DECISÃO (prominent, early) === */}
+      <motion.div {...section(0.06)}>
+        <DecisionAlerts />
       </motion.div>
 
       {/* === AÇÕES IMEDIATAS === */}
-      <motion.div {...section(0.06)}>
+      <motion.div {...section(0.10)}>
         <TodayTomorrowActions />
       </motion.div>
 
       {/* === KPIs === */}
-      <motion.div {...section(0.10)}>
+      <motion.div {...section(0.14)}>
         <DashboardKPIs period={period} />
       </motion.div>
 
-      {/* === PROJEÇÃO SEMANAL COM ZONAS DE SEGURANÇA === */}
-      <motion.div {...section(0.14)}>
+      {/* === PROJEÇÃO SEMANAL === */}
+      <motion.div {...section(0.18)}>
         <WeeklyCashProjection />
       </motion.div>
 
-      {/* === SALDO DE CAIXA POR OBRA + SEMÁFORO === */}
+      {/* === SALDO POR OBRA === */}
       <ObraCashBalance />
-
-
-      {/* === ALERTAS DE DECISÃO === */}
-      <motion.div {...section(0.26)}>
-        <DecisionAlerts />
-      </motion.div>
     </div>
   );
 }

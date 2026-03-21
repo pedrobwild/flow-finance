@@ -45,7 +45,6 @@ export default function MorningBriefing() {
     lines.push(`Saldo projetado 30 dias: ${formatCurrency(proj30)}`);
     lines.push('');
 
-    // Per-obra data
     lines.push('=== OBRAS ATIVAS ===');
     activeObras.forEach(obra => {
       const fin = getObraFinancials(obra.id);
@@ -65,14 +64,12 @@ export default function MorningBriefing() {
       }
     });
 
-    // Corporate costs
     const corpPending = transactions.filter(t => !t.obraId && t.type === 'pagar' && t.status !== 'confirmado');
     if (corpPending.length > 0) {
       lines.push('');
       lines.push(`Custos corporativos pendentes: ${corpPending.length} itens, ${formatCurrency(corpPending.reduce((s, t) => s + t.amount, 0))}`);
     }
 
-    // Weekly outflows
     lines.push('');
     lines.push('=== FLUXO POR SEMANA (próximas 4 semanas) ===');
     for (let w = 0; w < 4; w++) {
@@ -85,8 +82,8 @@ export default function MorningBriefing() {
         .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
         .reduce((s, t) => s + t.amount, 0);
 
-      // Which obras have payments this week
-      const obrasThisWeek = activeObras
+      const activeObrasRef = obras.filter(o => o.status === 'ativa');
+      const obrasThisWeek = activeObrasRef
         .map(o => ({
           code: o.code,
           total: transactions.filter(t => t.obraId === o.id && t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we).reduce((s, t) => s + t.amount, 0),
@@ -99,7 +96,6 @@ export default function MorningBriefing() {
       }
     }
 
-    // Overdue items
     const overdue = transactions.filter(t => t.status === 'atrasado');
     if (overdue.length > 0) {
       lines.push('');
@@ -133,7 +129,6 @@ export default function MorningBriefing() {
     }
   }, [financialSummary]);
 
-  // Auto-fetch on first render
   useEffect(() => {
     if (!data && !loading && !error) {
       fetchBriefing();
@@ -157,20 +152,20 @@ export default function MorningBriefing() {
   };
 
   return (
-    <div className="card-elevated overflow-hidden">
+    <div className="card-elevated overflow-hidden h-full flex flex-col">
       {/* Header */}
-      <div className="p-5 pb-4 border-b bg-gradient-to-br from-card to-muted/30">
+      <div className="p-5 pb-4 border-b bg-gradient-to-br from-primary/[0.03] to-accent/[0.06]">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">
               {dateStr}
             </p>
-            <h1 className="text-xl font-bold leading-tight tracking-tight">
+            <h2 className="text-xl font-bold leading-tight tracking-tight">
               {greeting} 👋
-            </h1>
+            </h2>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
               <Sparkles className="w-3 h-3 text-accent" />
-              Briefing executivo da manhã
+              Briefing executivo gerado por IA
             </p>
           </div>
           <Button
@@ -186,7 +181,7 @@ export default function MorningBriefing() {
       </div>
 
       {/* Content */}
-      <div className="p-5">
+      <div className="p-5 flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
           {loading && (
             <motion.div
@@ -214,9 +209,10 @@ export default function MorningBriefing() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-center py-4"
+              className="text-center py-6"
             >
-              <p className="text-xs text-muted-foreground mb-2">{error}</p>
+              <AlertCircle className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground mb-3">{error}</p>
               <Button size="sm" variant="outline" onClick={fetchBriefing} className="text-xs h-7">
                 Tentar novamente
               </Button>
@@ -232,7 +228,7 @@ export default function MorningBriefing() {
               transition={{ duration: 0.4 }}
             >
               {/* Insights */}
-              <div className="space-y-2.5 mb-5">
+              <div className="space-y-2 mb-5">
                 {data.insights.map((insight, i) => (
                   <motion.div
                     key={i}
@@ -259,19 +255,19 @@ export default function MorningBriefing() {
                       Decisões sugeridas
                     </h3>
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     {data.suggestions.map((sug, i) => (
                       <Link
                         key={i}
                         to={sug.link}
-                        className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group"
+                        className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-all group border border-transparent hover:border-border"
                       >
-                        <div className="w-1 h-8 rounded-full bg-accent/40 group-hover:bg-accent transition-colors" />
+                        <div className="w-1 h-8 rounded-full bg-accent/30 group-hover:bg-accent transition-colors" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-foreground">{sug.action}</p>
                           <p className="text-[11px] text-muted-foreground truncate">{sug.detail}</p>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent transition-colors flex-shrink-0" />
+                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
                       </Link>
                     ))}
                   </div>
