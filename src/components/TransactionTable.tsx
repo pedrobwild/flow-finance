@@ -47,6 +47,7 @@ export default function TransactionTable({ type }: Props) {
   const [costCenterFilter, setCostCenterFilter] = useState('todos');
   const [counterpartFilter, setCounterpartFilter] = useState('todos');
   const [obraFilter, setObraFilter] = useState('todos');
+  const [costTypeFilter, setCostTypeFilter] = useState('todos');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [billingFilter, setBillingFilter] = useState('todos');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
@@ -59,7 +60,7 @@ export default function TransactionTable({ type }: Props) {
 
   const isPagar = type === 'pagar';
 
-  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || obraFilter !== 'todos' || !!dateRange?.from || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || obraFilter !== 'todos' || !!dateRange?.from || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
@@ -69,6 +70,7 @@ export default function TransactionTable({ type }: Props) {
     setCounterpartFilter('todos');
     setObraFilter('todos');
     setBillingFilter('todos');
+    setCostTypeFilter('todos');
     setDateRange(undefined);
   };
 
@@ -98,6 +100,12 @@ export default function TransactionTable({ type }: Props) {
       })
       .filter(t => priorityFilter === 'todas' || t.priority === priorityFilter)
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
+      .filter(t => {
+        if (costTypeFilter === 'todos') return true;
+        if (costTypeFilter === 'fixo') return t.recurrence !== 'única';
+        if (costTypeFilter === 'variavel') return t.recurrence === 'única';
+        return true;
+      })
       .filter(t => counterpartFilter === 'todos' || t.counterpart === counterpartFilter)
       .filter(t => {
         if (billingFilter === 'todos') return true;
@@ -263,6 +271,16 @@ export default function TransactionTable({ type }: Props) {
               <SelectContent>
                 <SelectItem value="todos">Centros</SelectItem>
                 {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+           )}
+          {isPagar && (
+            <Select value={costTypeFilter} onValueChange={setCostTypeFilter}>
+              <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Tipo Custo</SelectItem>
+                <SelectItem value="fixo">Fixo (recorrente)</SelectItem>
+                <SelectItem value="variavel">Variável (único)</SelectItem>
               </SelectContent>
             </Select>
           )}
