@@ -1,25 +1,20 @@
 import { useState, useMemo, useEffect, Fragment } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName } from '@/lib/helpers';
 import { Input } from '@/components/ui/input';
 import {
   AlertTriangle, ChevronRight, Calendar, TrendingDown, TrendingUp,
   ArrowDownRight, ArrowUpRight, Wallet, ShieldAlert, Eye, EyeOff,
-  CheckCircle2, BarChart3, Zap, Clock, ArrowRight, Building2, Layers
+  CheckCircle2, BarChart3, Zap, Clock, Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import CashFlowAreaChart from '@/components/CashFlowAreaChart';
-import { Transaction, OBRA_STATUS_LABELS, OBRA_STATUS_COLORS } from '@/lib/types';
+import { Transaction } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-
-type ViewMode = 'empresa' | 'por_obra' | 'comparativo';
 
 interface DayRow {
   date: string;
