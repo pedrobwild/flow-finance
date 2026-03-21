@@ -3,9 +3,12 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/lib/auth-context";
 import { FinanceProvider } from "@/lib/finance-context";
 import { ObrasProvider } from "@/lib/obras-context";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AppShell from "@/components/AppShell";
+import Login from "./pages/Login";
 import Index from "./pages/Index";
 import ContasPagar from "./pages/ContasPagar";
 import ContasReceber from "./pages/ContasReceber";
@@ -21,23 +24,42 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <FinanceProvider>
-        <ObrasProvider>
-          <BrowserRouter>
-            <AppShell>
+      <AuthProvider>
+        <FinanceProvider>
+          <ObrasProvider>
+            <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/pagar" element={<ContasPagar />} />
-                <Route path="/receber" element={<ContasReceber />} />
-                <Route path="/fluxo" element={<FluxoCaixa />} />
-                <Route path="/simulador" element={<Simulador />} />
-                <Route path="/obras" element={<Obras />} />
-                <Route path="*" element={<NotFound />} />
+                <Route path="/login" element={<Login />} />
+                <Route
+                  path="/*"
+                  element={
+                    <ProtectedRoute>
+                      <AppShell>
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/pagar" element={<ContasPagar />} />
+                          <Route path="/receber" element={<ContasReceber />} />
+                          <Route path="/fluxo" element={<FluxoCaixa />} />
+                          <Route path="/simulador" element={<Simulador />} />
+                          <Route
+                            path="/obras"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <Obras />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </AppShell>
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
-            </AppShell>
-          </BrowserRouter>
-        </ObrasProvider>
-      </FinanceProvider>
+            </BrowserRouter>
+          </ObrasProvider>
+        </FinanceProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
