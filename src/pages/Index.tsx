@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
-import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
 import { Link } from 'react-router-dom';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import TodayTomorrowActions from '@/components/TodayTomorrowActions';
@@ -12,7 +11,6 @@ import ActionList from '@/components/ActionList';
 import CostCenterBreakdown from '@/components/CostCenterBreakdown';
 import { Beaker, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 
 const section = (delay: number) => ({
   initial: { opacity: 0, y: 18, filter: 'blur(4px)' },
@@ -23,21 +21,12 @@ const section = (delay: number) => ({
 export default function Dashboard() {
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Bom dia' : today.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
-  const { getActiveObrasWithFinancials } = useObras();
 
   const [period, setPeriod] = useState<PeriodRange>({
     from: todayISO(),
     to: addDays(todayISO(), 30),
     label: '30d',
   });
-
-  const activeObras = getActiveObrasWithFinancials();
-
-  const overdueObras = useMemo(() => {
-    return activeObras.filter(o => o.totalOverdueReceivable > 0);
-  }, [activeObras]);
-
-  const totalOverdueReceivable = overdueObras.reduce((s, o) => s + o.totalOverdueReceivable, 0);
 
   return (
     <div className="space-y-6">
@@ -76,61 +65,6 @@ export default function Dashboard() {
           <ActionList />
         </motion.div>
       </div>
-
-      {/* Obras em andamento */}
-      {activeObras.length > 0 && (
-        <motion.div {...section(0.33)} className="space-y-3">
-          {/* Overdue alert */}
-          {overdueObras.length > 0 && (
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-destructive/[0.06] border border-destructive/15 text-sm">
-              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-              <p>
-                <span className="font-semibold text-destructive">{overdueObras.length} obra(s)</span>
-                <span className="text-muted-foreground"> com parcelas atrasadas: </span>
-                <span className="font-mono font-bold text-destructive">{formatCurrency(totalOverdueReceivable)}</span>
-                <span className="text-muted-foreground"> a cobrar</span>
-              </p>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-primary" />
-              Obras em andamento
-            </h2>
-            <Link to="/obras" className="text-xs text-primary hover:underline">Ver todas →</Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {activeObras.slice(0, 6).map(obra => {
-              const receivedPct = obra.totalContractValue > 0 ? Math.round(obra.totalReceived / obra.totalContractValue * 100) : 0;
-              return (
-                <Link key={obra.id} to="/obras" className="card-elevated p-3 hover:border-primary/30 transition-colors block">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-mono text-[10px] text-primary font-semibold">{obra.code}</span>
-                    <span className="text-[10px] text-muted-foreground">{OBRA_STATUS_LABELS[obra.status]}</span>
-                  </div>
-                  <p className="text-xs font-medium truncate">{obra.clientName}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full bg-success rounded-full transition-all" style={{ width: `${receivedPct}%` }} />
-                    </div>
-                    <span className="text-[10px] font-mono text-muted-foreground">{receivedPct}%</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Margem: <span className={cn('font-mono font-semibold', obra.grossMarginPercentage >= 0 ? 'text-success' : 'text-destructive')}>
-                      {obra.grossMarginPercentage.toFixed(0)}%
-                    </span>
-                    {obra.nextReceivable && (
-                      <> · Próx: {formatCurrency(obra.nextReceivable.amount)}</>
-                    )}
-                  </p>
-                </Link>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
 
       {/* Simulator CTA */}
       <motion.div {...section(0.36)}>
