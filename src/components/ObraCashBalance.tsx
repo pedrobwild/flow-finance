@@ -321,6 +321,12 @@ export default function ObraCashBalance() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2 min-w-0">
+                        <span className={cn(
+                          'w-2.5 h-2.5 rounded-full shrink-0',
+                          row.semaphore === 'pode-seguir' && 'bg-success',
+                          row.semaphore === 'atencao' && 'bg-warning',
+                          row.semaphore === 'replanejar' && 'bg-destructive pulse-alert',
+                        )} />
                         <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0 shrink-0">
                           {row.code}
                         </Badge>
