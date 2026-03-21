@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
+import { Obra } from '@/lib/types';
 import {
   Transaction, TransactionType, STATUS_OPTIONS, PRIORITY_OPTIONS, COST_CENTERS,
   STATUS_LABELS, PRIORITY_LABELS, PRIORITY_CLASSES,
@@ -21,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import TransactionFormDialog from './TransactionFormDialog';
+import ObraDetailSheet from './ObraDetailSheet';
 
 interface Props { type: TransactionType; }
 
@@ -42,6 +44,7 @@ export default function TransactionTable({ type }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [actualAmount, setActualAmount] = useState('');
+  const [detailObra, setDetailObra] = useState<Obra | null>(null);
 
   const isPagar = type === 'pagar';
 
@@ -396,7 +399,16 @@ export default function TransactionTable({ type }: Props) {
                         <>
                           <td className="px-3 py-3 text-xs">
                             {obraCode ? (
-                              <Badge variant="outline" className="text-[10px] font-mono">{obraCode}</Badge>
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] font-mono cursor-pointer hover:bg-primary/10 transition-colors"
+                                onClick={() => {
+                                  const obra = obras.find(o => o.id === tx.obraId);
+                                  if (obra) setDetailObra(obra);
+                                }}
+                              >
+                                {obraCode}
+                              </Badge>
                             ) : (
                               <span className="text-muted-foreground/40">—</span>
                             )}
@@ -483,6 +495,9 @@ export default function TransactionTable({ type }: Props) {
         transaction={editingTx}
         defaultType={type}
       />
+
+      {/* Obra Detail Sheet */}
+      <ObraDetailSheet obra={detailObra} onClose={() => setDetailObra(null)} />
 
       {/* Delete confirmation dialog */}
       <Dialog open={!!deleteConfirm} onOpenChange={(v) => !v && setDeleteConfirm(null)}>
