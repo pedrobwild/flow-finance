@@ -23,7 +23,7 @@ interface Props {
   defaultObraId?: string;
 }
 
-const ACTIVE_OBRA_STATUSES: ObraStatus[] = ['contratada', 'em_execucao'];
+const ACTIVE_OBRA_STATUSES: ObraStatus[] = ['ativa'];
 
 const empty = (type: TransactionType, obraId?: string) => ({
   type,

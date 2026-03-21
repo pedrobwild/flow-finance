@@ -127,15 +127,9 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
 
   const getActiveObrasWithFinancials = useCallback((): (Obra & ObraFinancials)[] => {
     return obras
-      .filter(o => o.status === 'em_execucao' || o.status === 'contratada')
+      .filter(o => o.status === 'ativa')
       .map(o => ({ ...o, ...computeObraFinancials(o, transactions) }))
       .sort((a, b) => {
-        // em_execucao first
-        const statusOrder: Record<string, number> = { em_execucao: 0, contratada: 1 };
-        const sa = statusOrder[a.status] ?? 9;
-        const sb = statusOrder[b.status] ?? 9;
-        if (sa !== sb) return sa - sb;
-        // Then by next receivable date
         const da = a.nextReceivable?.dueDate || '9999';
         const db = b.nextReceivable?.dueDate || '9999';
         return da.localeCompare(db);

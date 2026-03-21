@@ -61,7 +61,7 @@ export default function Obras() {
           .includes(search.toLowerCase())
       )
       .sort((a, b) => {
-        const order: Record<string, number> = { em_execucao: 0, contratada: 1, proposta: 2, pausada: 3, concluida: 4, cancelada: 5 };
+        const order: Record<string, number> = { ativa: 0, finalizada: 1 };
         return (order[a.status] ?? 9) - (order[b.status] ?? 9);
       });
   }, [obras, search, statusFilter]);
@@ -135,7 +135,7 @@ export default function Obras() {
           >
             Todas ({obras.length})
           </Button>
-          {(['em_execucao', 'contratada', 'concluida', 'pausada', 'proposta', 'cancelada'] as ObraStatus[]).map(s => {
+          {(['ativa', 'finalizada'] as ObraStatus[]).map(s => {
             const count = statusCounts[s] || 0;
             if (count === 0 && s !== statusFilter) return null;
             return (

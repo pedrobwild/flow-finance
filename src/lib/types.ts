@@ -31,7 +31,7 @@ export interface CashBalance {
   notes: string;
 }
 
-export type ObraStatus = 'proposta' | 'contratada' | 'em_execucao' | 'concluida' | 'pausada' | 'cancelada';
+export type ObraStatus = 'ativa' | 'finalizada';
 
 export interface Obra {
   id: string;
@@ -51,26 +51,16 @@ export interface Obra {
   createdAt: string;
 }
 
-export const OBRA_STATUS_OPTIONS: ObraStatus[] = [
-  'proposta', 'contratada', 'em_execucao', 'concluida', 'pausada', 'cancelada'
-];
+export const OBRA_STATUS_OPTIONS: ObraStatus[] = ['ativa', 'finalizada'];
 
 export const OBRA_STATUS_LABELS: Record<ObraStatus, string> = {
-  proposta: 'Proposta',
-  contratada: 'Contratada',
-  em_execucao: 'Em Execução',
-  concluida: 'Concluída',
-  pausada: 'Pausada',
-  cancelada: 'Cancelada',
+  ativa: 'Ativa',
+  finalizada: 'Finalizada',
 };
 
 export const OBRA_STATUS_COLORS: Record<ObraStatus, { bg: string; text: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-  proposta: { bg: 'bg-muted', text: 'text-muted-foreground', variant: 'outline' },
-  contratada: { bg: 'bg-blue-500/10', text: 'text-blue-600', variant: 'default' },
-  em_execucao: { bg: 'bg-success/10', text: 'text-success', variant: 'default' },
-  concluida: { bg: 'bg-muted', text: 'text-muted-foreground', variant: 'secondary' },
-  pausada: { bg: 'bg-warning/10', text: 'text-warning', variant: 'outline' },
-  cancelada: { bg: 'bg-destructive/10', text: 'text-destructive', variant: 'destructive' },
+  ativa: { bg: 'bg-success/10', text: 'text-success', variant: 'default' },
+  finalizada: { bg: 'bg-muted', text: 'text-muted-foreground', variant: 'secondary' },
 };
 
 export interface ObraFinancials {
