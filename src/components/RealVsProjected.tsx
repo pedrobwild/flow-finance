@@ -193,6 +193,6 @@ export default function RealVsProjected() {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </motion.div>
+    </div>
   );
 }
