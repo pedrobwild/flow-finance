@@ -221,11 +221,21 @@ export default function MorningBriefing() {
     }
   }, [financialSummary]);
 
+  // Auto-fetch on mount, auto-retry once on failure
+  const [retried, setRetried] = useState(false);
   useEffect(() => {
     if (!data && !loading && !error) {
       fetchBriefing();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (error && !retried && !loading) {
+      setRetried(true);
+      const timer = setTimeout(() => fetchBriefing(), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, retried, loading, fetchBriefing]);
 
   const now = new Date();
   const greeting = now.getHours() < 12 ? 'Bom dia' : now.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
