@@ -84,17 +84,14 @@ export default function TransactionTable({ type }: Props) {
   };
 
   const filtered = useMemo(() => {
-    const today = todayISO();
-
     return transactions
       .filter(t => t.type === type)
-      // Company view: hide confirmed past transactions (only future matters)
+      // Default "pendentes" filter: hide paid/confirmed items
       .filter(t => {
-        if (isFiltered) return true;
-        if (t.status === 'confirmado' && t.dueDate < today) return false;
-        return true;
+        if (statusFilter === 'pendentes') return t.status !== 'confirmado';
+        if (statusFilter === 'todos') return true;
+        return t.status === statusFilter;
       })
-      .filter(t => statusFilter === 'todos' || t.status === statusFilter)
       .filter(t => priorityFilter === 'todas' || t.priority === priorityFilter)
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
       .filter(t => counterpartFilter === 'todos' || t.counterpart === counterpartFilter)
