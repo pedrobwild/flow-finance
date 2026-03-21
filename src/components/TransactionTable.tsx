@@ -43,7 +43,7 @@ export default function TransactionTable({ type }: Props) {
   const [costCenterFilter, setCostCenterFilter] = useState('todos');
   const [counterpartFilter, setCounterpartFilter] = useState('todos');
   const [obraFilter, setObraFilter] = useState('todos');
-  const [periodFilter, setPeriodFilter] = useState('todos');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
