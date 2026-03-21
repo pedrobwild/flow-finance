@@ -111,9 +111,9 @@ export default function RealVsProjected() {
         )}
       </div>
 
-      <div style={{ width: '100%', height: 208 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+      <ChartWrapper height={208}>
+        {(width) => (
+          <AreaChart data={chartData} width={width} height={208} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="realGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.2} />
@@ -190,8 +190,8 @@ export default function RealVsProjected() {
               )}
             />
           </AreaChart>
-        </ResponsiveContainer>
-      </div>
+        )}
+      </ChartWrapper>
     </div>
   );
 }
