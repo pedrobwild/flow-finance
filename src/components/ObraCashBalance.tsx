@@ -190,8 +190,8 @@ export default function ObraCashBalance() {
       <motion.div {...section(0.24)}>
         <Card className="card-elevated">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Saldo de Caixa por Obra</CardTitle>
-            <CardDescription className="text-xs">Como cada obra está impactando o caixa da empresa</CardDescription>
+            <CardTitle className="text-sm font-semibold">Impacto no Caixa por Obra</CardTitle>
+            <CardDescription className="text-xs">Quanto cada obra contribui ou consome do caixa da empresa</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {/* Desktop table */}
