@@ -5,6 +5,7 @@ import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
 import { ArrowUpRight, Users, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TransactionTable from '@/components/TransactionTable';
+import ObraClienteReport from '@/components/ObraClienteReport';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 16, filter: 'blur(4px)' } as const,
