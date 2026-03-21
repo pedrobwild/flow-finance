@@ -386,6 +386,21 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
         defaultType={txFormType}
         defaultObraId={obra.id}
       />
+
+      <StageFormDialog
+        open={stageFormOpen}
+        onClose={() => { setStageFormOpen(false); setEditingStage(null); }}
+        obraId={obra.id}
+        stage={editingStage}
+        onSave={(data) => {
+          if (editingStage) {
+            updateStage(editingStage.id, data);
+          } else {
+            addStage(data);
+          }
+        }}
+        nextSortOrder={stages.length}
+      />
     </>
   );
 }
