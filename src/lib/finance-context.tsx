@@ -50,7 +50,7 @@ interface FinanceContextType {
   addTransactions: (txs: Omit<Transaction, 'id'>[]) => Promise<void>;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
-  confirmTransaction: (id: string, actualAmount?: number, txType?: string) => void;
+  confirmTransaction: (id: string, actualAmount?: number, txType?: string, paidAt?: string) => void;
   updateCashBalance: (amount: number, date?: string) => void;
   projectedBalance: (date: string) => number;
   getTransactionsByObra: (obraId: string | null) => Transaction[];
@@ -204,10 +204,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   });
 
   const confirmMutation = useMutation({
-    mutationFn: async ({ id, actualAmount, txType }: { id: string; actualAmount?: number; txType?: string }) => {
+    mutationFn: async ({ id, actualAmount, txType, paidAt }: { id: string; actualAmount?: number; txType?: string; paidAt?: string }) => {
       const updateData: any = {
         status: 'confirmado',
-        paid_at: todayISO(),
+        paid_at: paidAt || todayISO(),
       };
       if (actualAmount !== undefined) {
         updateData.amount = actualAmount;
@@ -306,7 +306,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       addTransactions: (txs) => addBulkMutation.mutateAsync(txs),
       updateTransaction: (id, updates) => updateMutation.mutate({ id, updates }),
       deleteTransaction: (id) => deleteMutation.mutate(id),
-      confirmTransaction: (id, actualAmount, txType) => confirmMutation.mutate({ id, actualAmount, txType }),
+      confirmTransaction: (id, actualAmount, txType, paidAt) => confirmMutation.mutate({ id, actualAmount, txType, paidAt }),
       updateCashBalance: (amount, date) => balanceMutation.mutate({ amount, date: date || todayISO() }),
       projectedBalance,
       getTransactionsByObra,

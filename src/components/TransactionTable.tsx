@@ -30,7 +30,7 @@ const STATUS_ORDER: Record<string, number> = { atrasado: 0, pendente: 1, previst
 
 export default function TransactionTable({ type }: Props) {
   const { confirmTransaction, deleteTransaction } = useFinance();
-  const { filteredTransactions: transactions } = useObraFilter();
+  const { filteredTransactions: transactions, isFiltered } = useObraFilter();
   const { obras } = useObras();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
@@ -44,6 +44,7 @@ export default function TransactionTable({ type }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [actualAmount, setActualAmount] = useState('');
+  const [confirmPaidAt, setConfirmPaidAt] = useState(todayISO());
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
 
   const isPagar = type === 'pagar';
@@ -87,6 +88,12 @@ export default function TransactionTable({ type }: Props) {
 
     return transactions
       .filter(t => t.type === type)
+      // Company view: hide confirmed past transactions (only future matters)
+      .filter(t => {
+        if (isFiltered) return true; // Obra view: show everything
+        if (t.status === 'confirmado' && t.dueDate < today) return false;
+        return true;
+      })
       .filter(t => statusFilter === 'todos' || t.status === statusFilter)
       .filter(t => priorityFilter === 'todas' || t.priority === priorityFilter)
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
@@ -114,7 +121,7 @@ export default function TransactionTable({ type }: Props) {
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, periodFilter]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, periodFilter, isFiltered]);
 
   const totals = useMemo(() => {
     const today = todayISO();
@@ -440,6 +447,7 @@ export default function TransactionTable({ type }: Props) {
                               onClick={() => {
                                 setConfirmTx(tx);
                                 setActualAmount(tx.amount.toString());
+                                setConfirmPaidAt(todayISO());
                               }}
                               title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}
                             >
@@ -536,28 +544,41 @@ export default function TransactionTable({ type }: Props) {
               </span>
             </DialogDescription>
           </DialogHeader>
-          <div className="py-2">
-            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-              Valor {confirmTx?.type === 'pagar' ? 'pago' : 'recebido'} (R$)
-            </label>
-            <Input
-              type="number"
-              step="0.01"
-              value={actualAmount}
-              onChange={(e) => setActualAmount(e.target.value)}
-              className="font-mono text-base"
-              autoFocus
-            />
-            {confirmTx && parseFloat(actualAmount) !== confirmTx.amount && actualAmount !== '' && (
-              <p className="text-[11px] mt-1.5 text-muted-foreground">
-                Diferença: <span className={cn(
-                  'font-mono font-semibold',
-                  parseFloat(actualAmount) > confirmTx.amount ? 'text-success' : 'text-destructive'
-                )}>
-                  {parseFloat(actualAmount) > confirmTx.amount ? '+' : ''}{formatCurrency(parseFloat(actualAmount) - confirmTx.amount)}
-                </span>
-              </p>
-            )}
+          <div className="py-2 space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                Valor {confirmTx?.type === 'pagar' ? 'pago' : 'recebido'} (R$)
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                value={actualAmount}
+                onChange={(e) => setActualAmount(e.target.value)}
+                className="font-mono text-base"
+                autoFocus
+              />
+              {confirmTx && parseFloat(actualAmount) !== confirmTx.amount && actualAmount !== '' && (
+                <p className="text-[11px] mt-1.5 text-muted-foreground">
+                  Diferença: <span className={cn(
+                    'font-mono font-semibold',
+                    parseFloat(actualAmount) > confirmTx.amount ? 'text-success' : 'text-destructive'
+                  )}>
+                    {parseFloat(actualAmount) > confirmTx.amount ? '+' : ''}{formatCurrency(parseFloat(actualAmount) - confirmTx.amount)}
+                  </span>
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                Data do {confirmTx?.type === 'pagar' ? 'pagamento' : 'recebimento'}
+              </label>
+              <Input
+                type="date"
+                value={confirmPaidAt}
+                onChange={(e) => setConfirmPaidAt(e.target.value)}
+                className="text-sm"
+              />
+            </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" size="sm" onClick={() => setConfirmTx(null)}>
@@ -567,11 +588,11 @@ export default function TransactionTable({ type }: Props) {
               size="sm"
               onClick={() => {
                 if (confirmTx && actualAmount) {
-                  confirmTransaction(confirmTx.id, parseFloat(actualAmount), confirmTx.type);
+                  confirmTransaction(confirmTx.id, parseFloat(actualAmount), confirmTx.type, confirmPaidAt);
                   setConfirmTx(null);
                 }
               }}
-              disabled={!actualAmount || parseFloat(actualAmount) <= 0}
+              disabled={!actualAmount || parseFloat(actualAmount) <= 0 || !confirmPaidAt}
             >
               Confirmar e atualizar saldo
             </Button>

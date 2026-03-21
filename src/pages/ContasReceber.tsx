@@ -16,11 +16,15 @@ const sect = (delay: number) => ({
 
 export default function ContasReceber() {
   const { } = useFinance();
-  const { filteredTransactions: transactions } = useObraFilter();
+  const { filteredTransactions: transactions, isFiltered } = useObraFilter();
   const today = todayISO();
 
   const insights = useMemo(() => {
-    const receber = transactions.filter(t => t.type === 'receber');
+    let receber = transactions.filter(t => t.type === 'receber');
+    // Company view: exclude confirmed past transactions
+    if (!isFiltered) {
+      receber = receber.filter(t => !(t.status === 'confirmado' && t.dueDate < today));
+    }
     const pending = receber.filter(t => t.status !== 'confirmado');
     const overdue = receber.filter(t => t.status === 'atrasado');
     const confirmed = receber.filter(t => t.status === 'confirmado');
@@ -56,7 +60,7 @@ export default function ContasReceber() {
       avgDaysOverdue, topClients, totalNext7, next7Count: next7.length,
       conversionRate,
     };
-  }, [transactions, today]);
+  }, [transactions, today, isFiltered]);
 
   return (
     <div className="space-y-6">
