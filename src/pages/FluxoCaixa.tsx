@@ -5,7 +5,7 @@ import { useObras } from '@/lib/obras-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName } from '@/lib/helpers';
 import { Input } from '@/components/ui/input';
 import {
-  AlertTriangle, ChevronRight, Calendar, TrendingDown, TrendingUp,
+  AlertTriangle, ChevronRight, Calendar, TrendingUp,
   ArrowDownRight, ArrowUpRight, Wallet, ShieldAlert, Eye, EyeOff,
   CheckCircle2, BarChart3, Zap, Clock, Building2
 } from 'lucide-react';
@@ -15,6 +15,7 @@ import CashFlowAreaChart from '@/components/CashFlowAreaChart';
 import { Transaction } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 interface DayRow {
   date: string;
@@ -37,28 +38,19 @@ const sect = (delay: number) => ({
 });
 
 export default function FluxoCaixa() {
-  const { transactions, currentBalance, confirmTransaction, getTransactionsByObra } = useFinance();
-  const { obras, getObraFinancials, getActiveObrasWithFinancials } = useObras();
+  const { currentBalance, confirmTransaction } = useFinance();
+  const { filteredTransactions: transactions, isFiltered, selectedObraId } = useObraFilter();
+  const { obras, getObraFinancials } = useObras();
   const [period, setPeriod] = useState(30);
   const [initialBalance, setInitialBalance] = useState(0);
   const [alertThreshold, setAlertThreshold] = useState(20000);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const [showControls, setShowControls] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('empresa');
-  const [selectedObraId, setSelectedObraId] = useState<string>('');
   const today = todayISO();
 
   useEffect(() => {
     if (currentBalance) setInitialBalance(currentBalance.amount);
   }, [currentBalance]);
-
-  // When switching to por_obra, auto-select first active obra
-  useEffect(() => {
-    if (viewMode === 'por_obra' && !selectedObraId) {
-      const active = obras.filter(o => o.status === 'ativa');
-      if (active.length > 0) setSelectedObraId(active[0].id);
-    }
-  }, [viewMode, obras, selectedObraId]);
 
   const toggleDay = (date: string) => {
     setExpandedDays(prev => {
@@ -68,20 +60,20 @@ export default function FluxoCaixa() {
     });
   };
 
-  // Filter transactions based on view mode
-  const filteredTransactions = useMemo(() => {
-    if (viewMode === 'por_obra' && selectedObraId) {
-      return transactions.filter(t => t.obraId === selectedObraId);
-    }
-    return transactions;
-  }, [transactions, viewMode, selectedObraId]);
+  // When filtered by obra, initial balance is 0 (obra starts from zero)
+  const effectiveInitialBalance = isFiltered ? 0 : initialBalance;
 
-  // For obra view, initial balance is 0
-  const effectiveInitialBalance = viewMode === 'por_obra' ? 0 : initialBalance;
+  // Selected obra info for KPIs
+  const selectedObra = useMemo(() => {
+    if (!selectedObraId) return null;
+    const obra = obras.find(o => o.id === selectedObraId);
+    if (!obra) return null;
+    return { ...obra, ...getObraFinancials(obra.id) };
+  }, [selectedObraId, obras, getObraFinancials]);
 
   const overduePayables = useMemo(() =>
-    filteredTransactions.filter(t => t.type === 'pagar' && t.status === 'atrasado' && t.dueDate < today),
-    [filteredTransactions, today]
+    transactions.filter(t => t.type === 'pagar' && t.status === 'atrasado' && t.dueDate < today),
+    [transactions, today]
   );
   const overduePayablesTotal = overduePayables.reduce((s, t) => s + t.amount, 0);
 
@@ -91,7 +83,7 @@ export default function FluxoCaixa() {
 
     for (let i = 0; i < period; i++) {
       const date = addDays(today, i);
-      const dayTxs = filteredTransactions.filter(t =>
+      const dayTxs = transactions.filter(t =>
         t.status !== 'confirmado' && t.dueDate === date
       );
       const entradas = dayTxs.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
@@ -110,7 +102,7 @@ export default function FluxoCaixa() {
       });
     }
     return result;
-  }, [filteredTransactions, effectiveInitialBalance, overduePayablesTotal, period, today]);
+  }, [transactions, effectiveInitialBalance, overduePayablesTotal, period, today]);
 
   const finalBalance = days.length > 0 ? days[days.length - 1].accumulated : effectiveInitialBalance;
   const minDay = days.length > 0 ? days.reduce((min, d) => d.accumulated < min.accumulated ? d : min, days[0]) : null;
@@ -150,33 +142,20 @@ export default function FluxoCaixa() {
     return maxStreak;
   }, [days]);
 
-  // Selected obra info for "por_obra" KPIs
-  const selectedObra = useMemo(() => {
-    if (viewMode !== 'por_obra' || !selectedObraId) return null;
-    const obra = obras.find(o => o.id === selectedObraId);
-    if (!obra) return null;
-    return { ...obra, ...getObraFinancials(obra.id) };
-  }, [viewMode, selectedObraId, obras, getObraFinancials]);
-
-  // Comparative view data
-  const activeObrasFinancials = useMemo(() => {
-    if (viewMode !== 'comparativo') return [];
-    return getActiveObrasWithFinancials();
-  }, [viewMode, getActiveObrasWithFinancials]);
-
-  const activeObras = useMemo(() =>
-    obras.filter(o => o.status === 'ativa'),
-    [obras]
-  );
-
   return (
     <div className="space-y-5">
       {/* Header */}
       <motion.div {...sect(0)} className="flex flex-col sm:flex-row items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold leading-tight">Fluxo de Caixa</h1>
-          <p className="text-muted-foreground text-sm mt-1 flex items-center gap-2">
+          <p className="text-muted-foreground text-sm mt-1 flex items-center gap-2 flex-wrap">
             Projeção de {period} dias · {daysWithMovement} com movimentação
+            {isFiltered && selectedObra && (
+              <Badge variant="outline" className="text-[10px] border-primary/50 bg-primary/5">
+                <Building2 className="w-3 h-3 mr-1" />
+                {selectedObra.code} · {selectedObra.clientName}
+              </Badge>
+            )}
             {coverageRatio >= 100 ? (
               <span className="inline-flex items-center gap-1 text-success text-[10px] font-semibold bg-success/10 rounded-full px-2 py-0.5">
                 <CheckCircle2 className="w-3 h-3" /> Cobertura OK
@@ -188,58 +167,18 @@ export default function FluxoCaixa() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* View mode selector */}
-          <div className="flex items-center border rounded-lg overflow-hidden">
-            {([
-              { key: 'empresa' as ViewMode, label: 'Empresa', icon: Layers },
-              { key: 'por_obra' as ViewMode, label: 'Por Obra', icon: Building2 },
-              { key: 'comparativo' as ViewMode, label: 'Comparativo', icon: BarChart3 },
-            ]).map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setViewMode(key)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all',
-                  viewMode === key
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background text-muted-foreground hover:bg-muted'
-                )}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Obra selector (only in por_obra mode) */}
-          {viewMode === 'por_obra' && (
-            <Select value={selectedObraId} onValueChange={setSelectedObraId}>
-              <SelectTrigger className="h-8 w-[200px] text-xs">
-                <SelectValue placeholder="Selecione uma obra" />
-              </SelectTrigger>
-              <SelectContent>
-                {activeObras.map(o => (
-                  <SelectItem key={o.id} value={o.id} className="text-xs">
-                    {o.code} · {o.clientName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          {/* Period selector */}
-          <div className="flex items-center gap-1.5">
-            {([15, 30, 45] as const).map(p => (
-              <Button
-                key={p} size="sm"
-                variant={period === p ? 'default' : 'outline'}
-                className={cn('h-8 px-3 text-xs font-medium transition-all', period === p && 'shadow-sm')}
-                onClick={() => setPeriod(p)}
-              >
-                {p}d
-              </Button>
-            ))}
+        <div className="flex items-center gap-1.5">
+          {([15, 30, 45] as const).map(p => (
+            <Button
+              key={p} size="sm"
+              variant={period === p ? 'default' : 'outline'}
+              className={cn('h-8 px-3 text-xs font-medium transition-all', period === p && 'shadow-sm')}
+              onClick={() => setPeriod(p)}
+            >
+              {p}d
+            </Button>
+          ))}
+          {!isFiltered && (
             <Button
               size="sm" variant="ghost"
               className="h-8 px-2 text-muted-foreground"
@@ -247,13 +186,13 @@ export default function FluxoCaixa() {
             >
               {showControls ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
-          </div>
+          )}
         </div>
       </motion.div>
 
-      {/* Collapsible controls (only in empresa mode) */}
+      {/* Collapsible controls (only in general view) */}
       <AnimatePresence>
-        {showControls && viewMode === 'empresa' && (
+        {showControls && !isFiltered && (
           <motion.div
             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
@@ -275,80 +214,9 @@ export default function FluxoCaixa() {
         )}
       </AnimatePresence>
 
-      {/* ============ COMPARATIVO VIEW ============ */}
-      {viewMode === 'comparativo' && (
-        <motion.div {...sect(0.06)}>
-          {activeObrasFinancials.length === 0 ? (
-            <div className="card-elevated p-8 text-center">
-              <Building2 className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Nenhuma obra ativa para comparar</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {activeObrasFinancials.map(obra => {
-                const statusColor = OBRA_STATUS_COLORS[obra.status];
-                return (
-                  <div key={obra.id} className="card-elevated p-4 space-y-3 hover:ring-1 hover:ring-primary/20 transition-all cursor-pointer"
-                    onClick={() => { setViewMode('por_obra'); setSelectedObraId(obra.id); }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-muted-foreground">{obra.code}</span>
-                        <Badge variant={statusColor.variant} className={cn('text-[9px]', statusColor.bg, statusColor.text)}>
-                          {OBRA_STATUS_LABELS[obra.status]}
-                        </Badge>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold truncate">{obra.clientName}</p>
-                    {obra.condominium && (
-                      <p className="text-[11px] text-muted-foreground truncate">{obra.condominium}{obra.unitNumber ? ` — Un. ${obra.unitNumber}` : ''}</p>
-                    )}
-
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className="text-muted-foreground">Contrato</span>
-                        <span className="font-mono font-bold">{formatCurrency(obra.totalContractValue)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={obra.receivedPercentage} className="h-1.5 flex-1 [&>div]:bg-success" />
-                        <span className="text-[10px] font-mono font-semibold text-success">{obra.receivedPercentage.toFixed(0)}%</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 pt-1">
-                        <div className="text-center">
-                          <p className="text-[9px] text-muted-foreground uppercase">Recebido</p>
-                          <p className="text-[11px] font-mono font-bold text-success">{formatCurrency(obra.totalReceived)}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[9px] text-muted-foreground uppercase">Gasto</p>
-                          <p className="text-[11px] font-mono font-bold text-destructive">{formatCurrency(obra.totalPaidCost)}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[9px] text-muted-foreground uppercase">Saldo</p>
-                          <p className={cn('text-[11px] font-mono font-bold', obra.obraNetCashFlow >= 0 ? 'text-success' : 'text-destructive')}>
-                            {formatCurrency(obra.obraNetCashFlow)}
-                          </p>
-                        </div>
-                      </div>
-                      {obra.grossMarginPercentage > 0 && (
-                        <div className="flex items-center justify-between text-[10px] pt-1 border-t">
-                          <span className="text-muted-foreground">Margem projetada</span>
-                          <span className={cn('font-mono font-bold', obra.grossMarginPercentage >= 30 ? 'text-success' : obra.grossMarginPercentage >= 15 ? 'text-warning' : 'text-destructive')}>
-                            {obra.grossMarginPercentage.toFixed(0)}% · {formatCurrency(obra.grossMargin)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </motion.div>
-      )}
-
       {/* KPI cards */}
       <motion.div {...sect(0.06)} className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        {viewMode === 'por_obra' && selectedObra ? (
+        {isFiltered && selectedObra ? (
           <>
             {/* Obra-specific KPIs */}
             <div className="card-elevated p-4 relative overflow-hidden">
@@ -392,7 +260,6 @@ export default function FluxoCaixa() {
               </p>
               <p className="text-[10px] font-mono mt-0.5 text-muted-foreground">{formatCurrency(selectedObra.grossMargin)}</p>
             </div>
-            {/* Saldo atual da obra */}
             <div className={cn('card-elevated p-4', selectedObra.obraNetCashFlow < 0 && 'ring-1 ring-destructive/20')}>
               <div className="flex items-center gap-2 mb-2">
                 <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center', selectedObra.obraNetCashFlow >= 0 ? 'bg-success/10' : 'bg-destructive/10')}>
@@ -407,7 +274,7 @@ export default function FluxoCaixa() {
           </>
         ) : (
           <>
-            {/* Company KPIs (default) */}
+            {/* Company KPIs */}
             <div className="card-elevated p-4 relative overflow-hidden">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -463,7 +330,7 @@ export default function FluxoCaixa() {
       <motion.div {...sect(0.1)} className="card-elevated p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">
-            Cobertura de saídas por entradas {viewMode === 'por_obra' && selectedObra ? `· ${selectedObra.code}` : ''}
+            Cobertura de saídas por entradas
           </span>
           <span className={cn('text-xs font-bold font-mono', coverageRatio >= 100 ? 'text-success' : coverageRatio >= 70 ? 'text-warning' : 'text-destructive')}>
             {coverageRatio.toFixed(0)}%
@@ -529,7 +396,7 @@ export default function FluxoCaixa() {
 
       {/* Chart */}
       <motion.div {...sect(0.16)}>
-        <CashFlowAreaChart days={days} threshold={viewMode === 'empresa' ? alertThreshold : 0} />
+        <CashFlowAreaChart days={days} threshold={isFiltered ? 0 : alertThreshold} />
       </motion.div>
 
       {/* Weekly breakdown */}
@@ -581,10 +448,7 @@ export default function FluxoCaixa() {
             <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center"><Calendar className="w-3.5 h-3.5 text-muted-foreground" /></div>
             <div>
               <h2 className="font-semibold text-sm">Timeline Dia a Dia</h2>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {viewMode === 'por_obra' && selectedObra ? `Obra ${selectedObra.code} · ` : ''}
-                Clique em um dia para expandir as transações
-              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Clique em um dia para expandir as transações</p>
             </div>
           </div>
           <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium">
@@ -608,7 +472,7 @@ export default function FluxoCaixa() {
             <tbody>
               {days.map((day) => {
                 const isDanger = day.accumulated < 0;
-                const isWarn = !isDanger && day.accumulated < alertThreshold;
+                const isWarn = !isDanger && !isFiltered && day.accumulated < alertThreshold;
                 return (
                   <Fragment key={day.date}>
                     <tr
@@ -616,7 +480,7 @@ export default function FluxoCaixa() {
                         'border-b transition-colors group',
                         day.txCount > 0 && 'cursor-pointer hover:bg-muted/40',
                         isDanger && 'bg-destructive/[0.04]',
-                        isWarn && viewMode === 'empresa' && 'bg-warning/[0.04]',
+                        isWarn && 'bg-warning/[0.04]',
                         day.isToday && 'bg-accent/[0.06] border-l-2 border-l-accent',
                         day.isWeekend && !day.isToday && !isDanger && 'opacity-50'
                       )}
@@ -650,7 +514,7 @@ export default function FluxoCaixa() {
                       <td className={cn('px-3 py-2.5 text-right font-mono text-xs font-medium', day.saldoDia > 0 ? 'text-success' : day.saldoDia < 0 ? 'text-destructive' : 'text-muted-foreground/40')}>
                         {day.saldoDia !== 0 ? (day.saldoDia > 0 ? '+' : '') + formatCurrency(day.saldoDia) : '—'}
                       </td>
-                      <td className={cn('px-3 pr-5 py-2.5 text-right font-mono text-xs font-bold', isDanger ? 'text-destructive' : isWarn && viewMode === 'empresa' ? 'text-warning' : '')}>
+                      <td className={cn('px-3 pr-5 py-2.5 text-right font-mono text-xs font-bold', isDanger ? 'text-destructive' : isWarn ? 'text-warning' : '')}>
                         <div className="flex items-center justify-end gap-1.5">
                           {formatCurrency(day.accumulated)}
                           {isDanger && <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />}
@@ -674,7 +538,7 @@ export default function FluxoCaixa() {
                                       <p className="font-medium truncate">{tx.description}</p>
                                       {tx.counterpart && <p className="text-[10px] text-muted-foreground truncate">{tx.counterpart}</p>}
                                     </div>
-                                    {tx.obraId && viewMode !== 'por_obra' && (
+                                    {tx.obraId && !isFiltered && (
                                       <Badge variant="outline" className="text-[9px] shrink-0">{obras.find(o => o.id === tx.obraId)?.code || '—'}</Badge>
                                     )}
                                     {(tx.priority === 'crítica' || tx.priority === 'alta') && (
