@@ -192,6 +192,28 @@ export default function MorningBriefing() {
     info: 'bg-accent/5 border-accent/15',
   };
 
+  const categoryIcon: Record<string, React.ReactNode> = {
+    cobranca: <Phone className="w-4 h-4 text-warning flex-shrink-0" />,
+    desconto: <Percent className="w-4 h-4 text-accent flex-shrink-0" />,
+    fornecedor: <Truck className="w-4 h-4 text-muted-foreground flex-shrink-0" />,
+    cronograma: <Calendar className="w-4 h-4 text-primary flex-shrink-0" />,
+    caixa: <PiggyBank className="w-4 h-4 text-destructive flex-shrink-0" />,
+    margem: <TrendingDown className="w-4 h-4 text-warning flex-shrink-0" />,
+  };
+
+  const urgencyLabel: Record<string, { text: string; className: string }> = {
+    hoje: { text: 'Hoje', className: 'bg-destructive/10 text-destructive' },
+    esta_semana: { text: 'Esta semana', className: 'bg-warning/10 text-warning' },
+    proximo: { text: 'Em breve', className: 'bg-muted text-muted-foreground' },
+  };
+
+  const getInsightIcon = (insight: Insight) => {
+    if (insight.category && categoryIcon[insight.category]) {
+      return categoryIcon[insight.category];
+    }
+    return severityIcon[insight.severity];
+  };
+
   return (
     <div className="card-elevated overflow-hidden h-full flex flex-col">
       {/* Header */}
