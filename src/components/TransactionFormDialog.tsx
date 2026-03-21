@@ -40,6 +40,7 @@ const empty = (type: TransactionType, obraId?: string) => ({
   paymentMethod: '_none',
   notes: '',
   priority: 'normal' as const,
+  billingSentAt: '',
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId }: Props) {
