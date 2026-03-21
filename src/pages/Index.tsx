@@ -65,8 +65,7 @@ export default function Dashboard() {
         <DashboardKPIs period={period} />
       </motion.div>
 
-      {/* === REAL VS PROJETADO === */}
-      <RealVsProjected />
+      {/* Real vs Projetado oculto por decisão do usuário */}
 
       {/* === RUNWAY === */}
       <CashRunwayChart />
