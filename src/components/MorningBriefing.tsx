@@ -430,6 +430,9 @@ export default function MorningBriefing() {
           )}
         </AnimatePresence>
       </div>
+      </div>
+      </div>
+      )}
 
       {/* Transaction form pre-filled from AI suggestions */}
       {txFormDefaults && (
