@@ -306,7 +306,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       addTransactions: (txs) => addBulkMutation.mutateAsync(txs),
       updateTransaction: (id, updates) => updateMutation.mutate({ id, updates }),
       deleteTransaction: (id) => deleteMutation.mutate(id),
-      confirmTransaction: (id, actualAmount, txType) => confirmMutation.mutate({ id, actualAmount, txType }),
+      confirmTransaction: (id, actualAmount, txType, paidAt) => confirmMutation.mutate({ id, actualAmount, txType, paidAt }),
       updateCashBalance: (amount, date) => balanceMutation.mutate({ amount, date: date || todayISO() }),
       projectedBalance,
       getTransactionsByObra,
