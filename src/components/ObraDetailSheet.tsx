@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
   DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, Plus,
-  Check, Pencil, Trash2, AlertTriangle, Layers, GripVertical,
+  Check, Pencil, AlertTriangle,
 } from 'lucide-react';
 import TransactionFormDialog from './TransactionFormDialog';
 import {
