@@ -15,12 +15,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Building2 } from 'lucide-react';
 
+interface PrefillData {
+  description?: string;
+  counterpart?: string;
+  amount?: number;
+  category?: string;
+  notes?: string;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
   transaction: Transaction | null;
   defaultType: TransactionType;
   defaultObraId?: string;
+  prefill?: PrefillData;
 }
 
 const ACTIVE_OBRA_STATUSES: ObraStatus[] = ['ativa'];
