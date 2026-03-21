@@ -210,6 +210,7 @@ export default function MorningBriefing() {
     cronograma: <Calendar className="w-4 h-4 text-primary flex-shrink-0" />,
     caixa: <PiggyBank className="w-4 h-4 text-destructive flex-shrink-0" />,
     margem: <TrendingDown className="w-4 h-4 text-warning flex-shrink-0" />,
+    mercado: <Globe className="w-4 h-4 text-primary flex-shrink-0" />,
   };
 
   const urgencyLabel: Record<string, { text: string; className: string }> = {
