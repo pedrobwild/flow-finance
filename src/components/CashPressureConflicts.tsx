@@ -1,12 +1,10 @@
 import { useMemo } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
-import { useAllObraStages } from '@/hooks/use-obra-stages';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
-import { STAGE_STATUS_LABELS, STAGE_STATUS_COLORS } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Flame, Calendar, AlertTriangle, Building2, Layers } from 'lucide-react';
+import { Flame, Calendar, AlertTriangle, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface ConflictWeek {
@@ -33,38 +31,11 @@ interface PressureItem {
 export default function CashPressureConflicts() {
   const { obras } = useObras();
   const { transactions, currentBalance } = useFinance();
-  const { stages } = useAllObraStages();
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
 
   const activeObras = useMemo(() => obras.filter(o => o.status === 'ativa'), [obras]);
 
-  // Stage conflicts: multiple obras entering same expensive stage type in overlapping periods
-  const stageConflicts = useMemo(() => {
-    const upcoming = stages.filter(s =>
-      s.status !== 'concluida' && s.estimatedStartDate &&
-      s.estimatedStartDate >= today && s.estimatedStartDate <= addDays(today, 42)
-    );
-    // Group by stage name
-    const byName = new Map<string, typeof upcoming>();
-    upcoming.forEach(s => {
-      const arr = byName.get(s.name) || [];
-      arr.push(s);
-      byName.set(s.name, arr);
-    });
-
-    const conflicts: { stageName: string; obras: { code: string; client: string; value: number; date: string }[]; totalValue: number }[] = [];
-    byName.forEach((items, name) => {
-      if (items.length >= 2) {
-        const obraDetails = items.map(s => {
-          const obra = activeObras.find(o => o.id === s.obraId);
-          return { code: obra?.code || '?', client: obra?.clientName || '?', value: s.estimatedValue, date: getDayMonth(s.estimatedStartDate!) };
-        });
-        conflicts.push({ stageName: name, obras: obraDetails, totalValue: obraDetails.reduce((s, o) => s + o.value, 0) });
-      }
-    });
-    return conflicts.sort((a, b) => b.totalValue - a.totalValue).slice(0, 3);
-  }, [stages, activeObras, today]);
 
   // Conflict detection: weeks where multiple obras compete for cash
   const conflicts = useMemo((): ConflictWeek[] => {
@@ -149,7 +120,7 @@ export default function CashPressureConflicts() {
     });
   }, [transactions, activeObras, today, bal]);
 
-  if (conflicts.length === 0 && pressureItems.length === 0 && stageConflicts.length === 0) return null;
+  if (conflicts.length === 0 && pressureItems.length === 0) return null;
 
   const severityConfig = {
     critical: { bg: 'bg-destructive/5', border: 'border-destructive/20', text: 'text-destructive', label: 'Crítico' },
@@ -165,43 +136,6 @@ export default function CashPressureConflicts() {
 
   return (
     <div className="card-elevated">
-      {/* Stage conflicts */}
-      {stageConflicts.length > 0 && (
-        <div className="p-4 border-b">
-          <div className="flex items-center gap-2 mb-3">
-            <Layers className="w-4 h-4 text-accent" />
-            <h2 className="text-sm font-semibold">Etapas que disputam caixa</h2>
-          </div>
-          <p className="text-[11px] text-muted-foreground mb-3">
-            Múltiplas obras entrando na mesma etapa simultaneamente
-          </p>
-          <div className="space-y-2">
-            {stageConflicts.map((sc, i) => (
-              <motion.div
-                key={sc.stageName}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06, duration: 0.3 }}
-                className="rounded-lg border border-accent/20 bg-accent/5 p-3"
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold">{sc.stageName}</span>
-                  <span className="text-xs font-mono font-bold text-accent">{formatCurrency(sc.totalValue)}</span>
-                </div>
-                <div className="space-y-0.5">
-                  {sc.obras.map((o, j) => (
-                    <div key={j} className="flex items-center justify-between text-[11px]">
-                      <span><span className="font-mono text-muted-foreground">{o.code}</span> · {o.client} <span className="text-muted-foreground">({o.date})</span></span>
-                      <span className="font-mono text-muted-foreground">{formatCurrency(o.value)}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Cash conflicts section */}
       {conflicts.length > 0 && (
         <div className="p-4 border-b">
