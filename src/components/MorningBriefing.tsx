@@ -319,20 +319,30 @@ export default function MorningBriefing() {
                     </h3>
                   </div>
                   <div className="space-y-1">
-                    {data.suggestions.map((sug, i) => (
-                      <Link
-                        key={i}
-                        to={sug.link}
-                        className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-all group border border-transparent hover:border-border"
-                      >
-                        <div className="w-1 h-8 rounded-full bg-accent/30 group-hover:bg-accent transition-colors" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-foreground">{sug.action}</p>
-                          <p className="text-[11px] text-muted-foreground truncate">{sug.detail}</p>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                      </Link>
-                    ))}
+                    {data.suggestions.map((sug, i) => {
+                      const urg = sug.urgency ? urgencyLabel[sug.urgency] : null;
+                      return (
+                        <Link
+                          key={i}
+                          to={sug.link}
+                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-all group border border-transparent hover:border-border"
+                        >
+                          <div className="w-1 h-8 rounded-full bg-accent/30 group-hover:bg-accent transition-colors" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-semibold text-foreground">{sug.action}</p>
+                              {urg && (
+                                <span className={cn('text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full', urg.className)}>
+                                  {urg.text}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground line-clamp-2">{sug.detail}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               )}
