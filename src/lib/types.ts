@@ -84,7 +84,7 @@ export interface ObraFinancials {
 }
 
 export const COST_CENTERS: CostCenter[] = [
-  'OPEX', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
+  'Operação', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
 ];
 
 export const STATUS_OPTIONS: TransactionStatus[] = ['previsto', 'pendente', 'confirmado', 'atrasado'];
