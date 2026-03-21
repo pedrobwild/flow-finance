@@ -156,6 +156,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         notes: tx.notes,
         priority: tx.priority,
         obra_id: (tx as any).obraId || null,
+        billing_sent_at: tx.billingSentAt || null,
       }));
       const { error } = await supabase.from('transactions').insert(rows);
       if (error) throw error;
