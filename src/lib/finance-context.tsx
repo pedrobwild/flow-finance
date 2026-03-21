@@ -27,6 +27,7 @@ function rowToTransaction(row: any): Transaction {
     obraId: row.obra_id || null,
     billingSentAt: row.billing_sent_at || null,
     billingCount: Number(row.billing_count) || 0,
+    attachmentUrl: row.attachment_url || null,
   };
   tx.status = computeStatus(tx);
   return tx;

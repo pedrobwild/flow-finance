@@ -49,6 +49,7 @@ function rowToObra(row: any): Obra {
     address: row.address || '',
     status: row.status as ObraStatus,
     contractValue: Number(row.contract_value) || 0,
+    budgetTarget: Number(row.budget_target) || 0,
     paymentTerms: row.payment_terms || '',
     expectedStartDate: row.expected_start_date || null,
     expectedEndDate: row.expected_end_date || null,
