@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { GitCompareArrows } from 'lucide-react';
 
 export default function RealVsProjected() {
@@ -64,7 +64,7 @@ export default function RealVsProjected() {
     : null;
 
   return (
-    <div className="bg-card rounded-xl border shadow-sm p-5">
+    <div className="card-elevated p-5" style={{ minHeight: '320px' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -86,85 +86,54 @@ export default function RealVsProjected() {
         )}
       </div>
 
-      <ResponsiveContainer width="100%" height={208}>
-        <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id="rvpRealGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.2} />
-              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="rvpProjGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.1} />
-              <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
-            </linearGradient>
-          </defs>
+      <AreaChart data={chartData} width={560} height={208} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="rvpRealGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.2} />
+            <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="rvpProjGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.1} />
+            <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+          </linearGradient>
+        </defs>
 
-          <XAxis
-            dataKey="label"
-            tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
-            axisLine={false}
-            tickLine={false}
-            interval={6}
-          />
-          <YAxis
-            tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
-            width={40}
-          />
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+          axisLine={false}
+          tickLine={false}
+          interval={6}
+        />
+        <YAxis
+          tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+          width={40}
+        />
 
-          <Tooltip
-            content={({ active, payload }) => {
-              if (!active || !payload?.length) return null;
-              const d = payload[0]?.payload;
-              return (
-                <div className="bg-popover border rounded-lg p-2.5 shadow-lg">
-                  <p className="text-[10px] text-muted-foreground mb-1">{d.label}{d.isToday ? ' (hoje)' : ''}</p>
-                  {d.real !== null && (
-                    <p className="text-xs font-bold text-accent">Real: {formatCurrency(d.real)}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">Projetado: {formatCurrency(d.projetado)}</p>
-                  {d.real !== null && (
-                    <p className={`text-[10px] font-semibold mt-0.5 ${d.real - d.projetado >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      Desvio: {d.real - d.projetado >= 0 ? '+' : ''}{formatCurrency(d.real - d.projetado)}
-                    </p>
-                  )}
-                </div>
-              );
-            }}
-          />
+        <Tooltip
+          content={({ active, payload }) => {
+            if (!active || !payload?.length) return null;
+            const d = payload[0]?.payload;
+            return (
+              <div className="bg-popover border rounded-lg p-2.5 shadow-lg">
+                <p className="text-[10px] text-muted-foreground mb-1">{d.label}{d.isToday ? ' (hoje)' : ''}</p>
+                {d.real !== null && (
+                  <p className="text-xs font-bold text-accent">Real: {formatCurrency(d.real)}</p>
+                )}
+                <p className="text-xs text-muted-foreground">Projetado: {formatCurrency(d.projetado)}</p>
+              </div>
+            );
+          }}
+        />
 
-          <Area
-            type="monotone"
-            dataKey="projetado"
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth={1.5}
-            strokeDasharray="4 3"
-            fill="url(#rvpProjGrad)"
-            dot={false}
-            name="Projetado"
-          />
-          <Area
-            type="monotone"
-            dataKey="real"
-            stroke="hsl(var(--accent))"
-            strokeWidth={2}
-            fill="url(#rvpRealGrad)"
-            dot={false}
-            connectNulls={false}
-            name="Real"
-          />
+        <Area type="monotone" dataKey="projetado" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} strokeDasharray="4 3" fill="url(#rvpProjGrad)" dot={false} name="Projetado" />
+        <Area type="monotone" dataKey="real" stroke="hsl(var(--accent))" strokeWidth={2} fill="url(#rvpRealGrad)" dot={false} connectNulls={false} name="Real" />
 
-          <Legend
-            verticalAlign="bottom"
-            height={24}
-            formatter={(value: string) => (
-              <span className="text-[10px] text-muted-foreground">{value}</span>
-            )}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+        <Legend verticalAlign="bottom" height={24} formatter={(value: string) => <span className="text-[10px] text-muted-foreground">{value}</span>} />
+      </AreaChart>
     </div>
   );
 }
