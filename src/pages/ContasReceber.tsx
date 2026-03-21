@@ -47,7 +47,7 @@ export default function ContasReceber() {
     return {
       totalPending, totalOverdue, totalConfirmed,
       pendingCount: pending.length, overdueCount: overdue.length, confirmedCount: confirmed.length,
-      avgDaysOverdue, topClients, totalNext7, next7Count: next7.length,
+      avgDaysOverdue, totalNext7, next7Count: next7.length,
       conversionRate,
     };
   }, [transactions, today, isFiltered]);
