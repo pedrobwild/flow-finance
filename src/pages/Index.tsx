@@ -65,11 +65,11 @@ export default function Dashboard() {
         <DashboardKPIs period={period} />
       </motion.div>
 
-      {/* === RUNWAY === */}
-      <CashRunwayChart />
-
       {/* === REAL VS PROJETADO === */}
       <RealVsProjected />
+
+      {/* === RUNWAY === */}
+      <CashRunwayChart />
 
       {/* === PROJEÇÃO SEMANAL === */}
       <motion.div {...section(0.28)}>
