@@ -29,6 +29,7 @@ export default function TransactionTable({ type }: Props) {
   const [statusFilter, setStatusFilter] = useState('todos');
   const [priorityFilter, setPriorityFilter] = useState('todas');
   const [costCenterFilter, setCostCenterFilter] = useState('todos');
+  const [counterpartFilter, setCounterpartFilter] = useState('todos');
   const [periodFilter, setPeriodFilter] = useState('todos');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -36,15 +37,21 @@ export default function TransactionTable({ type }: Props) {
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [actualAmount, setActualAmount] = useState('');
 
-  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || (type === 'pagar' && costCenterFilter !== 'todos') || periodFilter !== 'todos' || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || (type === 'pagar' && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || periodFilter !== 'todos' || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
     setStatusFilter('todos');
     setPriorityFilter('todas');
     setCostCenterFilter('todos');
+    setCounterpartFilter('todos');
     setPeriodFilter('todos');
   };
+
+  const uniqueCounterparts = useMemo(() => {
+    const set = new Set(transactions.filter(t => t.type === 'receber').map(t => t.counterpart).filter(Boolean));
+    return Array.from(set).sort();
+  }, [transactions]);
 
   const filtered = useMemo(() => {
     const today = todayISO();
@@ -61,6 +68,7 @@ export default function TransactionTable({ type }: Props) {
       .filter(t => statusFilter === 'todos' || t.status === statusFilter)
       .filter(t => priorityFilter === 'todas' || t.priority === priorityFilter)
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
+      .filter(t => counterpartFilter === 'todos' || t.counterpart === counterpartFilter)
       .filter(t => {
         if (periodFilter === 'todos') return true;
         if (periodFilter === 'semana') return t.dueDate <= eow;
@@ -79,7 +87,7 @@ export default function TransactionTable({ type }: Props) {
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, periodFilter]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, periodFilter]);
 
   const totals = useMemo(() => {
     const today = todayISO();
@@ -208,6 +216,15 @@ export default function TransactionTable({ type }: Props) {
               <SelectContent>
                 <SelectItem value="todos">Centros</SelectItem>
                 {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+          {!isPagar && uniqueCounterparts.length > 0 && (
+            <Select value={counterpartFilter} onValueChange={setCounterpartFilter}>
+              <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Obra / Cliente</SelectItem>
+                {uniqueCounterparts.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           )}
