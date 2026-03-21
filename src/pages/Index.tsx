@@ -67,10 +67,10 @@ export default function Dashboard() {
 
       {/* === RUNWAY + REAL VS PROJETADO === */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div {...section(0.22)}>
+        <motion.div {...section(0.22)} className="min-w-0">
           <CashRunwayChart />
         </motion.div>
-        <motion.div {...section(0.24)}>
+        <motion.div {...section(0.24)} className="min-w-0">
           <RealVsProjected />
         </motion.div>
       </div>
