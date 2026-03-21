@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowDownCircle, ArrowUpCircle, CheckCheck, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function TodayTomorrowActions() {
   const { confirmTransaction } = useFinance();
@@ -40,9 +41,16 @@ export default function TodayTomorrowActions() {
 
   return (
     <div className="card-elevated overflow-hidden">
-      <div className="px-4 py-3 border-b flex items-center gap-2">
-        <CalendarClock className="w-4 h-4 text-accent" />
-        <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">Ações Imediatas</h2>
+      <div className="px-4 py-3 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+            <CalendarClock className="w-3.5 h-3.5 text-accent" />
+          </div>
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">Ações Imediatas</h2>
+            <p className="text-[10px] text-muted-foreground">Pendências para hoje e amanhã</p>
+          </div>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
         {groups.map(group => {
@@ -51,7 +59,10 @@ export default function TodayTomorrowActions() {
             return (
               <div key={group.date} className="p-4">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{group.label}</p>
-                <p className="text-xs text-muted-foreground py-3 text-center">Nenhuma pendência ✓</p>
+                <div className="flex items-center justify-center py-6 text-muted-foreground/60">
+                  <Check className="w-4 h-4 mr-1.5" />
+                  <span className="text-xs">Nenhuma pendência</span>
+                </div>
               </div>
             );
           }
@@ -61,27 +72,11 @@ export default function TodayTomorrowActions() {
           return (
             <div key={group.date} className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <div>
+                <div className="flex items-center gap-2">
                   <p className="text-xs font-bold uppercase tracking-wider">{group.label}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {group.pagar.length > 0 && (
-                      <span className="text-[10px] text-destructive font-medium font-mono">−{formatCurrency(group.totalPagar)}</span>
-                    )}
-                    {group.pagar.length > 0 && group.receber.length > 0 && (
-                      <span className="text-[10px] text-muted-foreground">·</span>
-                    )}
-                    {group.receber.length > 0 && (
-                      <span className="text-[10px] text-success font-medium font-mono">+{formatCurrency(group.totalReceber)}</span>
-                    )}
-                    {group.pagar.length > 0 && group.receber.length > 0 && (
-                      <>
-                        <span className="text-[10px] text-muted-foreground">=</span>
-                        <span className={cn('text-[10px] font-bold font-mono', netFlow >= 0 ? 'text-success' : 'text-destructive')}>
-                          {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow)}
-                        </span>
-                      </>
-                    )}
-                  </div>
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 font-mono">
+                    {total}
+                  </Badge>
                 </div>
                 {total > 1 && (
                   <Button
@@ -96,7 +91,28 @@ export default function TodayTomorrowActions() {
                 )}
               </div>
 
-              <div className="space-y-1">
+              {/* Net flow summary */}
+              <div className="flex items-center gap-2 mb-3 p-2 rounded-md bg-muted/40 border border-border/50">
+                {group.pagar.length > 0 && (
+                  <span className="text-[10px] text-destructive font-medium font-mono">−{formatCurrency(group.totalPagar)}</span>
+                )}
+                {group.pagar.length > 0 && group.receber.length > 0 && (
+                  <span className="text-[10px] text-muted-foreground">·</span>
+                )}
+                {group.receber.length > 0 && (
+                  <span className="text-[10px] text-success font-medium font-mono">+{formatCurrency(group.totalReceber)}</span>
+                )}
+                {group.pagar.length > 0 && group.receber.length > 0 && (
+                  <>
+                    <span className="text-[10px] text-muted-foreground">=</span>
+                    <span className={cn('text-[10px] font-bold font-mono', netFlow >= 0 ? 'text-success' : 'text-destructive')}>
+                      {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow)}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
                 <AnimatePresence mode="popLayout">
                   {[...group.pagar, ...group.receber].map(tx => (
                     <motion.div
@@ -106,12 +122,14 @@ export default function TodayTomorrowActions() {
                       exit={{ opacity: 0, x: 12, height: 0 }}
                       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                       className={cn(
-                        'flex items-center gap-2.5 p-2.5 rounded-lg transition-colors group/item',
-                        tx.type === 'pagar' ? 'bg-destructive/5 hover:bg-destructive/10' : 'bg-success/5 hover:bg-success/10'
+                        'flex items-center gap-2.5 p-2.5 rounded-lg transition-colors group/item border border-transparent',
+                        tx.type === 'pagar'
+                          ? 'bg-destructive/5 hover:bg-destructive/10 hover:border-destructive/15'
+                          : 'bg-success/5 hover:bg-success/10 hover:border-success/15'
                       )}
                     >
                       <div className={cn(
-                        'w-6 h-6 rounded-full flex items-center justify-center shrink-0',
+                        'w-7 h-7 rounded-full flex items-center justify-center shrink-0',
                         tx.type === 'pagar' ? 'bg-destructive/15' : 'bg-success/15'
                       )}>
                         {tx.type === 'pagar'
@@ -131,7 +149,7 @@ export default function TodayTomorrowActions() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-6 w-6 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity active:scale-90"
+                        className="h-7 w-7 shrink-0 opacity-0 group-hover/item:opacity-100 sm:opacity-0 max-sm:opacity-100 transition-opacity active:scale-90"
                         onClick={() => confirmTransaction(tx.id)}
                       >
                         <Check className="w-3.5 h-3.5 text-success" />

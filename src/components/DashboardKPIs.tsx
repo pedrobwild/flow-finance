@@ -76,6 +76,7 @@ export default function DashboardKPIs({ period }: Props) {
       icon: Wallet,
       color: 'text-accent',
       bgIcon: 'bg-accent/10',
+      accentLine: 'bg-accent',
       ringColor: '',
       isBalance: true,
     },
@@ -85,6 +86,7 @@ export default function DashboardKPIs({ period }: Props) {
       icon: ArrowDownCircle,
       color: 'text-destructive',
       bgIcon: 'bg-destructive/10',
+      accentLine: 'bg-destructive',
       ringColor: stats.overduePayable > 0 ? 'ring-1 ring-destructive/20' : '',
       subtitle: `${stats.countPagar} transações`,
       overdue: stats.overduePayable > 0 ? `+${formatCurrency(stats.overduePayableTotal)} atrasado` : undefined,
@@ -95,6 +97,7 @@ export default function DashboardKPIs({ period }: Props) {
       icon: ArrowUpCircle,
       color: 'text-success',
       bgIcon: 'bg-success/10',
+      accentLine: 'bg-success',
       ringColor: stats.overdueReceivable > 0 ? 'ring-1 ring-warning/20' : '',
       subtitle: `${stats.countReceber} transações`,
       overdue: stats.overdueReceivable > 0 ? `${formatCurrency(stats.overdueReceivableTotal)} em atraso` : undefined,
@@ -105,6 +108,7 @@ export default function DashboardKPIs({ period }: Props) {
       icon: TrendingUp,
       color: stats.saldoLiquido >= 0 ? 'text-success' : 'text-destructive',
       bgIcon: stats.saldoLiquido >= 0 ? 'bg-success/10' : 'bg-destructive/10',
+      accentLine: stats.saldoLiquido >= 0 ? 'bg-success' : 'bg-destructive',
       ringColor: '',
       subtitle: `Projeção final: ${formatCurrency(stats.projectedEnd)}`,
     },
@@ -119,17 +123,15 @@ export default function DashboardKPIs({ period }: Props) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className={cn(
-            'card-elevated p-4 relative overflow-hidden group hover:shadow-md transition-shadow duration-200',
+            'card-elevated p-4 relative overflow-hidden group hover:shadow-md transition-all duration-200',
             card.ringColor,
             card.label === 'Saldo Atual' && stats.balAge !== null && stats.balAge > 3 && 'ring-1 ring-warning/40'
           )}
         >
-          {/* Subtle top accent line */}
+          {/* Top accent line */}
           <div className={cn(
-            'absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-60',
-            card.color === 'text-accent' && 'bg-accent',
-            card.color === 'text-destructive' && 'bg-destructive',
-            card.color === 'text-success' && 'bg-success',
+            'absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-70 transition-opacity group-hover:opacity-100',
+            card.accentLine,
           )} />
 
           <div className="flex items-center justify-between mb-3">

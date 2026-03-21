@@ -77,8 +77,8 @@ export default function CashRunwayCard() {
         : 'safe';
 
   const severityConfig = {
-    critical: { bg: 'bg-destructive', text: 'text-destructive-foreground', icon: Flame, label: 'QUEBRA DE CAIXA IMINENTE', border: 'border-destructive' },
-    warning: { bg: 'bg-warning', text: 'text-warning-foreground', icon: AlertTriangle, label: 'ATENÇÃO — CAIXA APERTADO', border: 'border-warning' },
+    critical: { bg: 'bg-destructive', text: 'text-destructive-foreground', icon: Flame, label: 'QUEBRA IMINENTE', border: 'border-destructive' },
+    warning: { bg: 'bg-warning', text: 'text-warning-foreground', icon: AlertTriangle, label: 'CAIXA APERTADO', border: 'border-warning' },
     caution: { bg: 'bg-accent/10', text: 'text-accent', icon: TrendingDown, label: 'MONITORAR', border: 'border-accent' },
     safe: { bg: 'bg-success/10', text: 'text-success', icon: Shield, label: 'CAIXA SAUDÁVEL', border: 'border-success' },
   };
@@ -99,20 +99,20 @@ export default function CashRunwayCard() {
       {/* Status header */}
       <div className={cn('px-4 py-2.5 flex items-center gap-2', config.bg)}>
         <Icon className={cn('w-4 h-4', config.text)} />
-        <span className={cn('text-[10px] font-bold tracking-wider uppercase', config.text)}>{config.label}</span>
+        <span className={cn('text-[10px] font-bold tracking-[0.15em] uppercase', config.text)}>{config.label}</span>
       </div>
 
-      <div className="p-4 space-y-4 flex-1">
-        {/* Primary metric: Runway */}
-        <div className="text-center py-2">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Runway de Caixa</p>
+      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+        {/* Primary metric */}
+        <div className="text-center py-3">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Runway de Caixa</p>
           <p className={cn(
-            'text-4xl font-bold tracking-tight font-mono leading-none',
+            'text-5xl font-bold tracking-tighter font-mono leading-none',
             severity === 'critical' ? 'text-destructive' : severity === 'warning' ? 'text-warning' : 'text-foreground'
           )}>
             {analysis.runwayDays !== null ? `${analysis.runwayDays}` : '∞'}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1.5">
+          <p className="text-[10px] text-muted-foreground mt-2">
             {analysis.runwayDays !== null
               ? `dias · queima ${formatCurrency(analysis.avgDailyBurn)}/dia`
               : 'Entradas superam saídas'}
@@ -127,28 +127,28 @@ export default function CashRunwayCard() {
               <span className="text-xs font-semibold text-destructive">Negativo em {analysis.daysUntilNegative}d</span>
             </div>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              {getDayMonth(analysis.dateOfNegative!)} cruza zero. Mínimo: <span className="font-semibold text-destructive">{formatCurrency(analysis.minBalance)}</span> em {getDayMonth(analysis.minBalanceDate)}.
+              {getDayMonth(analysis.dateOfNegative!)} cruza zero. Mín: <span className="font-semibold text-destructive">{formatCurrency(analysis.minBalance)}</span>
             </p>
           </div>
         )}
 
         {/* Burn metrics */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           {[
             { label: 'Saídas 30d', value: formatCurrency(analysis.totalOutNext30), color: 'text-destructive' },
             { label: 'Entradas 30d', value: formatCurrency(analysis.totalInNext30), color: 'text-success' },
             { label: 'Queima Líq.', value: `${analysis.netBurn > 0 ? '−' : '+'}${formatCurrency(Math.abs(analysis.netBurn))}`, color: analysis.netBurn > 0 ? 'text-destructive' : 'text-success' },
           ].map(m => (
-            <div key={m.label} className="text-center p-2 rounded-lg bg-muted/40">
-              <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{m.label}</p>
-              <p className={cn('text-xs font-bold font-mono mt-0.5', m.color)}>{m.value}</p>
+            <div key={m.label} className="text-center p-2 rounded-lg bg-muted/30 border border-border/40">
+              <p className="text-[8px] text-muted-foreground uppercase tracking-wider leading-tight">{m.label}</p>
+              <p className={cn('text-[11px] font-bold font-mono mt-1', m.color)}>{m.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Min balance highlight */}
+        {/* Min balance */}
         {analysis.daysUntilNegative === null && (
-          <div className="bg-muted/40 rounded-lg p-3">
+          <div className="bg-muted/30 rounded-lg p-2.5 border border-border/40">
             <p className="text-[10px] text-muted-foreground">
               Ponto mais apertado: <span className="font-semibold text-foreground">{formatCurrency(analysis.minBalance)}</span> em {getDayMonth(analysis.minBalanceDate)}
               {analysis.minBalance < 20000 && <span className="text-warning ml-1">— margem baixa</span>}
