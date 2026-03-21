@@ -187,7 +187,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
             </div>
 
             {/* For receber: Parcela field prominently */}
-            {form.type === 'receber' && (
+            {form.type === 'receber' && form.obraId && (
               <div className="col-span-2">
                 <Label className="text-xs">Parcela *</Label>
                 <Input
@@ -197,6 +197,28 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                   required
                 />
               </div>
+            )}
+            {form.type === 'receber' && !form.obraId && (
+              <>
+                <div className="col-span-2">
+                  <Label className="text-xs">Descrição *</Label>
+                  <Input
+                    value={form.description}
+                    onChange={e => set('description', e.target.value)}
+                    placeholder="Ex: Rendimento aplicação, Estorno cartão..."
+                    required
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs">Categoria</Label>
+                  <Select value={form.category} onValueChange={v => set('category', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             <div>
