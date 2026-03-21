@@ -12,7 +12,6 @@ import {
   Check, Pencil, Trash2, AlertTriangle, Layers, GripVertical,
 } from 'lucide-react';
 import TransactionFormDialog from './TransactionFormDialog';
-import StageFormDialog from './StageFormDialog';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip as RechartsTooltip, ReferenceLine,
