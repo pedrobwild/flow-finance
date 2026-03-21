@@ -28,6 +28,8 @@ import { ptBR } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import TransactionFormDialog from './TransactionFormDialog';
 import ObraDetailSheet from './ObraDetailSheet';
+import AuditLogDrawer from './AuditLogDrawer';
+import CustomCategoriesManager from './CustomCategoriesManager';
 
 interface Props { type: TransactionType; }
 
