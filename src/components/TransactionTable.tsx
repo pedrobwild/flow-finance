@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
+import { Obra } from '@/lib/types';
 import {
   Transaction, TransactionType, STATUS_OPTIONS, PRIORITY_OPTIONS, COST_CENTERS,
   STATUS_LABELS, PRIORITY_LABELS, PRIORITY_CLASSES,
