@@ -17,11 +17,22 @@ interface Insight {
   category?: 'cobranca' | 'desconto' | 'fornecedor' | 'cronograma' | 'caixa' | 'margem' | 'mercado';
 }
 
+interface SuggestionPrefill {
+  type?: TransactionType;
+  description?: string;
+  counterpart?: string;
+  amount?: number;
+  category?: string;
+  notes?: string;
+  obraCode?: string;
+}
+
 interface Suggestion {
   action: string;
   detail: string;
   urgency?: 'hoje' | 'esta_semana' | 'proximo';
   link: string;
+  prefill?: SuggestionPrefill;
 }
 
 interface BriefingData {
