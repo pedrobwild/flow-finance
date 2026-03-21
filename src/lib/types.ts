@@ -23,6 +23,7 @@ export interface Transaction {
   obraId: string | null;
   billingSentAt: string | null;
   billingCount: number;
+  attachmentUrl: string | null;
 }
 
 export interface CashBalance {
