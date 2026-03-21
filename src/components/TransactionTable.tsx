@@ -107,6 +107,7 @@ export default function TransactionTable({ type }: Props) {
       .filter(t => {
         if (obraFilter === 'todos') return true;
         if (obraFilter === '_sem_obra') return !t.obraId;
+        if (obraFilter === '_com_obra') return !!t.obraId;
         return t.obraId === obraFilter;
       })
       .filter(t => {
@@ -266,6 +267,16 @@ export default function TransactionTable({ type }: Props) {
                 <SelectItem value="todos">Cobrança</SelectItem>
                 <SelectItem value="cobrada">Cobrada</SelectItem>
                 <SelectItem value="nao_cobrada">Não cobrada</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          {!isPagar && (
+            <Select value={obraFilter} onValueChange={setObraFilter}>
+              <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Tipo</SelectItem>
+                <SelectItem value="_com_obra">De obra</SelectItem>
+                <SelectItem value="_sem_obra">Avulsa</SelectItem>
               </SelectContent>
             </Select>
           )}
