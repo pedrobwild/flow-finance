@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
+import { useObras } from '@/lib/obras-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
-import { ArrowDownRight, Building2, Clock, AlertTriangle, TrendingDown, Layers } from 'lucide-react';
+import { ArrowDownRight, Building2, Clock, AlertTriangle, TrendingDown, Layers, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TransactionTable from '@/components/TransactionTable';
 
@@ -14,8 +15,9 @@ const sect = (delay: number) => ({
 });
 
 export default function ContasPagar() {
-  const { } = useFinance();
+  const { currentBalance, projectedBalance } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
+  const { obras } = useObras();
   const today = todayISO();
 
   const insights = useMemo(() => {
@@ -80,7 +82,16 @@ export default function ContasPagar() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-4 text-xs">
+          {currentBalance && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50">
+              <Wallet className="w-3.5 h-3.5 text-primary" />
+              <span className="text-muted-foreground">Saldo atual:</span>
+              <span className={cn('font-bold font-mono', currentBalance.amount >= 0 ? 'text-success' : 'text-destructive')}>
+                {formatCurrency(currentBalance.amount)}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <TrendingDown className="w-3.5 h-3.5 text-success" />
             <span>Taxa de pagamento: <span className="font-bold text-foreground">{insights.paymentRate}%</span></span>
