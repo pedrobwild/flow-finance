@@ -283,6 +283,7 @@ export default function TransactionTable({ type }: Props) {
                 <SelectItem value="variavel">Variável (único)</SelectItem>
               </SelectContent>
             </Select>
+          )}
           {!isPagar && (
             <Select value={billingFilter} onValueChange={setBillingFilter}>
               <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
