@@ -46,6 +46,7 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
         address: obra.address,
         status: obra.status,
         contractValue: obra.contractValue.toString(),
+        budgetTarget: obra.budgetTarget ? obra.budgetTarget.toString() : '',
         paymentTerms: obra.paymentTerms,
         expectedStartDate: obra.expectedStartDate || '',
         expectedEndDate: obra.expectedEndDate || '',
