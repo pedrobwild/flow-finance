@@ -42,6 +42,7 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
     if (obra) {
       setForm({
         clientName: obra.clientName,
+        clientEmail: obra.clientEmail || '',
         condominium: obra.condominium,
         unitNumber: obra.unitNumber,
         address: obra.address,
