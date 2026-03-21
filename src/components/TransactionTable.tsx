@@ -478,7 +478,7 @@ export default function TransactionTable({ type }: Props) {
                             >
                               <Send className="w-3.5 h-3.5 text-primary" />
                             </Button>
-                          )}
+                          {!isConfirmed && (
                             <Button
                               size="icon"
                               variant="ghost"
