@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
+import { useAllObraStages } from '@/hooks/use-obra-stages';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
+import { STAGE_STATUS_LABELS, STAGE_STATUS_COLORS } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Flame, Calendar, AlertTriangle, Building2 } from 'lucide-react';
+import { Flame, Calendar, AlertTriangle, Building2, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface ConflictWeek {
