@@ -164,21 +164,22 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
             </div>
             {form.type === 'pagar' && (
               <div>
-                {['Materiais de Obra', 'Mão de Obra Terceirizada'].includes(form.category) ? (
-                  <>
-                    <Label className="text-xs">Obra</Label>
-                    <Input value={form.costCenter} onChange={e => set('costCenter', e.target.value)} placeholder="Ex: Reforma Apt 302 — Vila Madalena" />
-                  </>
-                ) : (
-                  <>
-                    <Label className="text-xs">Centro de Custo</Label>
-                    <Select value={form.costCenter} onValueChange={v => set('costCenter', v)}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </>
+                <Label className="text-xs">Centro de Custo</Label>
+                <Select value={form.costCenter} onValueChange={v => set('costCenter', v)}>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {form.costCenter === 'OPEX' && form.obra && (
+                  <button
+                    type="button"
+                    onClick={() => setObraModalOpen(true)}
+                    className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <Building2 className="h-3 w-3" />
+                    Obra: {form.obra}
+                  </button>
                 )}
               </div>
             )}
