@@ -59,11 +59,29 @@ export default function ContasPagar() {
     // Payment rate
     const paymentRate = pagar.length > 0 ? Math.round(confirmed.length / pagar.length * 100) : 0;
 
+    // Fixed vs Variable costs (fixed = recurring, variable = única)
+    const fixedCosts = pending.filter(t => t.recurrence !== 'única');
+    const variableCosts = pending.filter(t => t.recurrence === 'única');
+    const totalFixed = fixedCosts.reduce((s, t) => s + t.amount, 0);
+    const totalVariable = variableCosts.reduce((s, t) => s + t.amount, 0);
+    const fixedPct = totalPending > 0 ? Math.round(totalFixed / totalPending * 100) : 0;
+    const variablePct = totalPending > 0 ? Math.round(totalVariable / totalPending * 100) : 0;
+
+    // Top fixed cost categories
+    const fixedCatMap = new Map<string, number>();
+    fixedCosts.forEach(t => fixedCatMap.set(t.category, (fixedCatMap.get(t.category) || 0) + t.amount));
+    const topFixedCategories = [...fixedCatMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([name, amount]) => ({ name, amount }));
+
     return {
       totalPending, totalOverdue, totalConfirmed,
       pendingCount: pending.length, overdueCount: overdue.length, confirmedCount: confirmed.length,
       avgDaysOverdue, topSuppliers, topCategories, totalNext7, next7Count: next7.length,
       paymentRate,
+      totalFixed, totalVariable, fixedCount: fixedCosts.length, variableCount: variableCosts.length,
+      fixedPct, variablePct, topFixedCategories,
     };
   }, [transactions, today]);
 
