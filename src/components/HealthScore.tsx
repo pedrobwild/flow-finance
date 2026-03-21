@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
 import { todayISO, addDays, daysBetween, formatCurrency } from '@/lib/helpers';
 import { motion } from 'framer-motion';
