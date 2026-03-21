@@ -104,7 +104,7 @@ export default function WeeklyCashProjection() {
       }
     }
     return result;
-  }, [filteredTransactions, projectedBalance, currentBalance, today, granularity, days, weeks, safetyMargin]);
+  }, [filteredTransactions, filteredProjectedBalance, baseBalance, today, granularity, days, weeks, safetyMargin]);
 
   const dangerCount = data.filter(d => d.zone === 'danger').length;
   const attentionCount = data.filter(d => d.zone === 'attention').length;
