@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import TransactionFormDialog from './TransactionFormDialog';
+import ObraDetailSheet from './ObraDetailSheet';
 
 interface Props { type: TransactionType; }
 
