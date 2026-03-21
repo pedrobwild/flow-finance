@@ -258,15 +258,32 @@ export default function TransactionTable({ type }: Props) {
               </SelectContent>
             </Select>
           )}
-          <Select value={periodFilter} onValueChange={setPeriodFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Período</SelectItem>
-              <SelectItem value="semana">Esta semana</SelectItem>
-              <SelectItem value="mes">Este mês</SelectItem>
-              <SelectItem value="proximo">Mês que vem</SelectItem>
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("h-8 text-xs gap-1.5 font-normal", !dateRange?.from && "text-muted-foreground")}>
+                <CalendarIcon className="w-3.5 h-3.5" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>{format(dateRange.from, "dd/MM", { locale: ptBR })} – {format(dateRange.to, "dd/MM", { locale: ptBR })}</>
+                  ) : (
+                    format(dateRange.from, "dd/MM/yy", { locale: ptBR })
+                  )
+                ) : (
+                  "Período"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
           {hasActiveFilters && (
             <Button
               size="sm"
