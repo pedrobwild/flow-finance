@@ -43,7 +43,9 @@ export default function TransactionTable({ type }: Props) {
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [actualAmount, setActualAmount] = useState('');
 
-  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || (type === 'pagar' && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || obraFilter !== 'todos' || periodFilter !== 'todos' || search.length > 0;
+  const isPagar = type === 'pagar';
+
+  const hasActiveFilters = statusFilter !== 'todos' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || obraFilter !== 'todos' || periodFilter !== 'todos' || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
@@ -124,8 +126,7 @@ export default function TransactionTable({ type }: Props) {
     return { total, overdueCount: overdue.length, overdueTotal, next7Total, next7Count: next7.length, confirmedTotal, confirmedCount: confirmed.length };
   }, [filtered]);
 
-  const cLabel = type === 'pagar' ? 'Fornecedor' : 'Obra / Cliente';
-  const isPagar = type === 'pagar';
+  const cLabel = isPagar ? 'Fornecedor' : 'Obra / Cliente';
 
   const handleDelete = () => {
     if (deleteConfirm) {
@@ -225,13 +226,15 @@ export default function TransactionTable({ type }: Props) {
               {STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Prioridades</SelectItem>
-              {PRIORITY_OPTIONS.map(p => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {isPagar && (
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Prioridades</SelectItem>
+                {PRIORITY_OPTIONS.map(p => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
           {/* Obra filter */}
           <Select value={obraFilter} onValueChange={setObraFilter}>
             <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -305,7 +308,7 @@ export default function TransactionTable({ type }: Props) {
             <thead>
               <tr className="border-b bg-muted/30">
                 <th className="text-left pl-5 pr-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Prior.</th>
+                {isPagar && <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Prior.</th>}
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Vencimento</th>
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Descrição</th>
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{cLabel}</th>
@@ -348,11 +351,13 @@ export default function TransactionTable({ type }: Props) {
                           {STATUS_LABELS[tx.status]}
                         </span>
                       </td>
-                      <td className="px-3 py-3">
-                        <span className={cn('status-badge text-[10px]', PRIORITY_CLASSES[tx.priority])}>
-                          {PRIORITY_LABELS[tx.priority]}
-                        </span>
-                      </td>
+                      {isPagar && (
+                        <td className="px-3 py-3">
+                          <span className={cn('status-badge text-[10px]', PRIORITY_CLASSES[tx.priority])}>
+                            {PRIORITY_LABELS[tx.priority]}
+                          </span>
+                        </td>
+                      )}
                       <td className="px-3 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           {isDueToday && <Clock className="w-3 h-3 text-warning" />}
