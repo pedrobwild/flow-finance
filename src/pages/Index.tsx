@@ -49,7 +49,6 @@ export default function Dashboard() {
         </motion.div>
         <motion.div {...section(0.08)} className="space-y-6">
           <HealthScore />
-          <ObraRanking />
         </motion.div>
       </div>
 
