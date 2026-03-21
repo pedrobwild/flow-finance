@@ -29,14 +29,12 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
   const [txFormType, setTxFormType] = useState<'pagar' | 'receber'>('receber');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
-  if (!obra) return null;
-
-  const fin = getObraFinancials(obra.id);
-  const obraTxs = transactions.filter(t => t.obraId === obra.id);
+  const fin = obra ? getObraFinancials(obra.id) : null;
+  const obraTxs = obra ? transactions.filter(t => t.obraId === obra.id) : [];
   const receivables = obraTxs.filter(t => t.type === 'receber').sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const payables = obraTxs.filter(t => t.type === 'pagar').sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  const statusColor = OBRA_STATUS_COLORS[obra.status];
-  const parcDiff = fin.totalContractValue > 0 && Math.abs(fin.totalReceivable - fin.totalContractValue) > 1;
+  const statusColor = obra ? OBRA_STATUS_COLORS[obra.status] : null;
+  const parcDiff = fin && fin.totalContractValue > 0 && Math.abs(fin.totalReceivable - fin.totalContractValue) > 1;
 
   // Mini cash flow chart data
   const chartData = useMemo(() => {
