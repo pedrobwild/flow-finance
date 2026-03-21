@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
-import { useObraStages } from '@/hooks/use-obra-stages';
-import { Obra, OBRA_STATUS_LABELS, OBRA_STATUS_COLORS, STATUS_LABELS, ObraFinancials, Transaction, ObraStage, STAGE_STATUS_LABELS, STAGE_STATUS_COLORS } from '@/lib/types';
+import { Obra, OBRA_STATUS_LABELS, OBRA_STATUS_COLORS, STATUS_LABELS, ObraFinancials, Transaction } from '@/lib/types';
 import { formatCurrency, formatDateFull, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -10,10 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
   DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, Plus,
-  Check, Pencil, Trash2, AlertTriangle, Layers, GripVertical,
+  Check, Pencil, AlertTriangle,
 } from 'lucide-react';
 import TransactionFormDialog from './TransactionFormDialog';
-import StageFormDialog from './StageFormDialog';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip as RechartsTooltip, ReferenceLine,
@@ -30,10 +28,8 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
   const [txFormOpen, setTxFormOpen] = useState(false);
   const [txFormType, setTxFormType] = useState<'pagar' | 'receber'>('receber');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [stageFormOpen, setStageFormOpen] = useState(false);
-  const [editingStage, setEditingStage] = useState<ObraStage | null>(null);
 
-  const { stages, addStage, updateStage, deleteStage } = useObraStages(obra?.id ?? null);
+
 
   const fin = obra ? getObraFinancials(obra.id) : null;
   const obraTxs = obra ? transactions.filter(t => t.obraId === obra.id) : [];
@@ -143,78 +139,6 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
                 <p className="bg-muted/50 p-2 rounded-md">{obra.paymentTerms}</p>
               </div>
             )}
-
-            {/* Stages Timeline */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-accent" />
-                  Etapas da Obra ({stages.length})
-                </h3>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs gap-1"
-                  onClick={() => { setEditingStage(null); setStageFormOpen(true); }}
-                >
-                  <Plus className="w-3 h-3" /> Etapa
-                </Button>
-              </div>
-              {stages.length === 0 ? (
-                <p className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg text-center">
-                  Nenhuma etapa cadastrada. Adicione etapas para rastrear cronograma e fornecedores.
-                </p>
-              ) : (
-                <div className="space-y-1.5">
-                  {stages.map((stage, i) => {
-                    const sc = STAGE_STATUS_COLORS[stage.status];
-                    return (
-                      <div
-                        key={stage.id}
-                        className="flex items-center gap-2.5 p-2.5 rounded-lg border hover:bg-muted/30 transition-colors group"
-                      >
-                        <span className="text-[10px] text-muted-foreground font-mono w-4">{i + 1}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold">{stage.name}</span>
-                            <Badge variant="outline" className={cn('text-[9px] px-1.5 py-0', sc.text, sc.bg)}>
-                              {STAGE_STATUS_LABELS[stage.status]}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
-                            {stage.supplier && <span>{stage.supplier}</span>}
-                            {stage.estimatedValue > 0 && (
-                              <span className="font-mono">{formatCurrency(stage.estimatedValue)}</span>
-                            )}
-                            {stage.estimatedStartDate && (
-                              <span>{getDayMonth(stage.estimatedStartDate)}{stage.estimatedEndDate ? `–${getDayMonth(stage.estimatedEndDate)}` : ''}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6"
-                            onClick={() => { setEditingStage(stage); setStageFormOpen(true); }}
-                          >
-                            <Pencil className="w-3 h-3 text-muted-foreground" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6"
-                            onClick={() => deleteStage(stage.id)}
-                          >
-                            <Trash2 className="w-3 h-3 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
 
             {/* Receivables Table */}
             <div>
@@ -387,20 +311,6 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
         defaultObraId={obra.id}
       />
 
-      <StageFormDialog
-        open={stageFormOpen}
-        onClose={() => { setStageFormOpen(false); setEditingStage(null); }}
-        obraId={obra.id}
-        stage={editingStage}
-        onSave={(data) => {
-          if (editingStage) {
-            updateStage(editingStage.id, data);
-          } else {
-            addStage(data);
-          }
-        }}
-        nextSortOrder={stages.length}
-      />
     </>
   );
 }
