@@ -64,6 +64,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
   const [uploading, setUploading] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [recurrenceCount, setRecurrenceCount] = useState(5);
 
   const activeObras = obras.filter(o => ACTIVE_OBRA_STATUSES.includes(o.status));
 
