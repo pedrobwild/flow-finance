@@ -44,6 +44,7 @@ export default function TransactionTable({ type }: Props) {
   const [counterpartFilter, setCounterpartFilter] = useState('todos');
   const [obraFilter, setObraFilter] = useState('todos');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [billingFilter, setBillingFilter] = useState('todos');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
