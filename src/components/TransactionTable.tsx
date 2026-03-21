@@ -37,15 +37,21 @@ export default function TransactionTable({ type }: Props) {
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [actualAmount, setActualAmount] = useState('');
 
-  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || (type === 'pagar' && costCenterFilter !== 'todos') || periodFilter !== 'todos' || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || (type === 'pagar' && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || periodFilter !== 'todos' || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
     setStatusFilter('todos');
     setPriorityFilter('todas');
     setCostCenterFilter('todos');
+    setCounterpartFilter('todos');
     setPeriodFilter('todos');
   };
+
+  const uniqueCounterparts = useMemo(() => {
+    const set = new Set(transactions.filter(t => t.type === 'receber').map(t => t.counterpart).filter(Boolean));
+    return Array.from(set).sort();
+  }, [transactions]);
 
   const filtered = useMemo(() => {
     const today = todayISO();
