@@ -63,7 +63,7 @@ export default function TransactionTable({ type }: Props) {
     setCostCenterFilter('todos');
     setCounterpartFilter('todos');
     setObraFilter('todos');
-    setPeriodFilter('todos');
+    setDateRange(undefined);
   };
 
   const obrasWithTx = useMemo(() => {
