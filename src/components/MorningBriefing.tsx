@@ -221,11 +221,21 @@ export default function MorningBriefing() {
     }
   }, [financialSummary]);
 
+  // Auto-fetch on mount, auto-retry once on failure
+  const [retried, setRetried] = useState(false);
   useEffect(() => {
     if (!data && !loading && !error) {
       fetchBriefing();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (error && !retried && !loading) {
+      setRetried(true);
+      const timer = setTimeout(() => fetchBriefing(), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, retried, loading, fetchBriefing]);
 
   const now = new Date();
   const greeting = now.getHours() < 12 ? 'Bom dia' : now.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
@@ -283,6 +293,16 @@ export default function MorningBriefing() {
             <h2 className="text-xs font-bold">Briefing IA · {greeting}</h2>
             <p className="text-[10px] text-muted-foreground">{dateStr}</p>
           </div>
+          {loading && !expanded && (
+            <span className="text-[10px] text-muted-foreground ml-2 hidden sm:inline animate-pulse">
+              Gerando briefing…
+            </span>
+          )}
+          {error && !loading && !expanded && (
+            <span className="text-[10px] text-destructive ml-2 hidden sm:inline">
+              Falhou — clique ↻ para tentar novamente
+            </span>
+          )}
           {data && !expanded && (
             <span className="text-[10px] text-muted-foreground ml-2 hidden sm:inline">
               {data.insights.length} insight(s) · {data.suggestions.length} sugestão(ões)
@@ -294,7 +314,7 @@ export default function MorningBriefing() {
             size="sm"
             variant="ghost"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-            onClick={(e) => { e.stopPropagation(); fetchBriefing(); }}
+            onClick={(e) => { e.stopPropagation(); setRetried(false); fetchBriefing(); }}
             disabled={loading}
           >
             <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
