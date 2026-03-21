@@ -36,32 +36,6 @@ export default function CashPressureConflicts() {
 
   const activeObras = useMemo(() => obras.filter(o => o.status === 'ativa'), [obras]);
 
-  // Stage conflicts: multiple obras entering same expensive stage type in overlapping periods
-  const stageConflicts = useMemo(() => {
-    const upcoming = stages.filter(s =>
-      s.status !== 'concluida' && s.estimatedStartDate &&
-      s.estimatedStartDate >= today && s.estimatedStartDate <= addDays(today, 42)
-    );
-    // Group by stage name
-    const byName = new Map<string, typeof upcoming>();
-    upcoming.forEach(s => {
-      const arr = byName.get(s.name) || [];
-      arr.push(s);
-      byName.set(s.name, arr);
-    });
-
-    const conflicts: { stageName: string; obras: { code: string; client: string; value: number; date: string }[]; totalValue: number }[] = [];
-    byName.forEach((items, name) => {
-      if (items.length >= 2) {
-        const obraDetails = items.map(s => {
-          const obra = activeObras.find(o => o.id === s.obraId);
-          return { code: obra?.code || '?', client: obra?.clientName || '?', value: s.estimatedValue, date: getDayMonth(s.estimatedStartDate!) };
-        });
-        conflicts.push({ stageName: name, obras: obraDetails, totalValue: obraDetails.reduce((s, o) => s + o.value, 0) });
-      }
-    });
-    return conflicts.sort((a, b) => b.totalValue - a.totalValue).slice(0, 3);
-  }, [stages, activeObras, today]);
 
   // Conflict detection: weeks where multiple obras compete for cash
   const conflicts = useMemo((): ConflictWeek[] => {
