@@ -58,7 +58,7 @@ export default function SimuladorPage() {
   const [newDesc, setNewDesc] = useState('');
   const [newAmount, setNewAmount] = useState('');
   const [newDate, setNewDate] = useState(addDays(today, 7));
-  const [newCostCenter, setNewCostCenter] = useState<CostCenter>('OPEX');
+  const [newCostCenter, setNewCostCenter] = useState<CostCenter>('Operação');
 
   const manipulable = useMemo(() =>
     transactions
