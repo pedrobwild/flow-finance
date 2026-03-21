@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
 import { todayISO, addDays, daysBetween, formatCurrency } from '@/lib/helpers';
 import { motion } from 'framer-motion';
@@ -21,7 +21,7 @@ interface ScoreBreakdown {
 }
 
 export default function HealthScore() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
+  const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const today = todayISO();
 

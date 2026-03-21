@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import { useFinance } from '@/lib/finance-context';
-import { useObras } from '@/lib/obras-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, daysBetween } from '@/lib/helpers';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
 import { motion } from 'framer-motion';
@@ -8,8 +7,7 @@ import { Fuel, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function CashRunwayChart() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
-  const { obras } = useObras();
+  const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
 
