@@ -88,10 +88,7 @@ export default function RealVsProjected() {
     : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    <div
       className="card-elevated p-5"
     >
       <div className="flex items-center justify-between mb-4">
