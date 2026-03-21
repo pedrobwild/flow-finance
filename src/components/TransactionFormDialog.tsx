@@ -30,6 +30,7 @@ const empty = (type: TransactionType) => ({
   paidAt: '',
   status: 'pendente' as const,
   costCenter: 'OPEX' as const,
+  obra: '',
   category: 'Outros',
   recurrence: 'única' as const,
   paymentMethod: '_none',
