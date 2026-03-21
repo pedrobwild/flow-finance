@@ -19,7 +19,6 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch current data context for the AI
     const [{ data: obras }, { data: transactions }, { data: cashBalance }] = await Promise.all([
       supabase.from("obras").select("*").order("code"),
       supabase.from("transactions").select("*").order("due_date"),
@@ -70,19 +69,12 @@ IMPORTANTE: Quando o usuário disser algo como "as parcelas passadas do cliente 
         type: "function",
         function: {
           name: "confirm_transactions",
-          description: "Confirma (marca como pago) uma ou mais transações pelo ID. Use quando o usuário disser que parcelas foram pagas, recebidas ou confirmadas.",
+          description: "Confirma (marca como pago) uma ou mais transações pelo ID.",
           parameters: {
             type: "object",
             properties: {
-              transaction_ids: {
-                type: "array",
-                items: { type: "string" },
-                description: "Lista de IDs das transações a confirmar",
-              },
-              paid_date: {
-                type: "string",
-                description: "Data do pagamento no formato YYYY-MM-DD. Se não informado, usa hoje.",
-              },
+              transaction_ids: { type: "array", items: { type: "string" } },
+              paid_date: { type: "string" },
             },
             required: ["transaction_ids"],
             additionalProperties: false,
@@ -93,19 +85,19 @@ IMPORTANTE: Quando o usuário disser algo como "as parcelas passadas do cliente 
         type: "function",
         function: {
           name: "create_transaction",
-          description: "Cria uma nova transação no sistema. Use quando o usuário pedir para registrar um pagamento, recebimento ou lançamento.",
+          description: "Cria uma nova transação no sistema.",
           parameters: {
             type: "object",
             properties: {
               type: { type: "string", enum: ["pagar", "receber"] },
               description: { type: "string" },
-              counterpart: { type: "string", description: "Nome do cliente ou fornecedor" },
+              counterpart: { type: "string" },
               amount: { type: "number" },
-              due_date: { type: "string", description: "YYYY-MM-DD" },
+              due_date: { type: "string" },
               category: { type: "string" },
-              obra_id: { type: "string", description: "ID da obra, se aplicável" },
+              obra_id: { type: "string" },
               notes: { type: "string" },
-              status: { type: "string", enum: ["pendente", "previsto", "confirmado"], description: "Default: pendente" },
+              status: { type: "string", enum: ["pendente", "previsto", "confirmado"] },
             },
             required: ["type", "description", "amount", "due_date"],
             additionalProperties: false,
@@ -116,14 +108,14 @@ IMPORTANTE: Quando o usuário disser algo como "as parcelas passadas do cliente 
         type: "function",
         function: {
           name: "update_billing",
-          description: "Atualiza o contador de cobranças de uma transação recebível. Use quando o usuário disser que enviou cobrança.",
+          description: "Atualiza o contador de cobranças de uma transação recebível.",
           parameters: {
             type: "object",
             properties: {
               transaction_id: { type: "string" },
               billing_count: { type: "number" },
-              billing_sent_at: { type: "string", description: "YYYY-MM-DD" },
-              notes: { type: "string", description: "Observação sobre a cobrança" },
+              billing_sent_at: { type: "string" },
+              notes: { type: "string" },
             },
             required: ["transaction_id"],
             additionalProperties: false,
@@ -134,7 +126,7 @@ IMPORTANTE: Quando o usuário disser algo como "as parcelas passadas do cliente 
         type: "function",
         function: {
           name: "update_transaction",
-          description: "Atualiza campos de uma transação existente. Use para alterar valor, data, status, descrição, etc.",
+          description: "Atualiza campos de uma transação existente.",
           parameters: {
             type: "object",
             properties: {
@@ -161,51 +153,16 @@ IMPORTANTE: Quando o usuário disser algo como "as parcelas passadas do cliente 
       },
     ];
 
-    // First AI call - understand intent
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        tools,
-      }),
-    });
+    // Helper to execute tool calls
+    async function executeToolCalls(toolCalls: any[]) {
+      const results: any[] = [];
+      const actionsExecuted: string[] = [];
 
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em instantes." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI error:", status, t);
-      throw new Error("Erro na IA");
-    }
-
-    const aiData = await response.json();
-    const choice = aiData.choices?.[0]?.message;
-
-    // If there are tool calls, execute them
-    if (choice?.tool_calls?.length) {
-      const toolResults: any[] = [];
-
-      for (const toolCall of choice.tool_calls) {
+      for (const toolCall of toolCalls) {
         const fn = toolCall.function;
         const args = JSON.parse(fn.arguments);
         let result: any;
+        actionsExecuted.push(fn.name);
 
         try {
           switch (fn.name) {
@@ -274,54 +231,157 @@ IMPORTANTE: Quando o usuário disser algo como "as parcelas passadas do cliente 
           result = { error: e instanceof Error ? e.message : "Erro ao executar ação" };
         }
 
-        toolResults.push({
+        results.push({
           role: "tool",
           tool_call_id: toolCall.id,
           content: JSON.stringify(result),
         });
       }
 
-      // Second AI call with tool results to generate final response
-      const followUp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...messages,
-            choice,
-            ...toolResults,
-          ],
-        }),
-      });
-
-      if (!followUp.ok) {
-        const t = await followUp.text();
-        console.error("Follow-up error:", followUp.status, t);
-        throw new Error("Erro ao gerar resposta");
-      }
-
-      const followUpData = await followUp.json();
-      const finalContent = followUpData.choices?.[0]?.message?.content || "Ações executadas com sucesso.";
-
-      return new Response(JSON.stringify({
-        content: finalContent,
-        actions_executed: choice.tool_calls.map((tc: any) => tc.function.name),
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return { results, actionsExecuted };
     }
 
-    // No tool calls - just conversation
-    return new Response(JSON.stringify({
-      content: choice?.content || "Não entendi. Pode reformular?",
-      actions_executed: [],
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // First AI call - understand intent (non-streaming to check for tool calls)
+    const firstResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        tools,
+      }),
+    });
+
+    if (!firstResponse.ok) {
+      const status = firstResponse.status;
+      if (status === 429) {
+        return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (status === 402) {
+        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw new Error("Erro na IA");
+    }
+
+    const aiData = await firstResponse.json();
+    const choice = aiData.choices?.[0]?.message;
+
+    // Build the messages for the streaming call
+    let streamMessages: any[];
+    let actionsExecuted: string[] = [];
+
+    if (choice?.tool_calls?.length) {
+      // Execute tools, then stream the follow-up
+      const { results, actionsExecuted: actions } = await executeToolCalls(choice.tool_calls);
+      actionsExecuted = actions;
+      streamMessages = [
+        { role: "system", content: systemPrompt },
+        ...messages,
+        choice,
+        ...results,
+      ];
+    } else if (choice?.content) {
+      // No tool calls and we already have content — just return it as a simple stream-like SSE
+      const body = new ReadableStream({
+        start(controller) {
+          const enc = new TextEncoder();
+          if (actionsExecuted.length > 0) {
+            controller.enqueue(enc.encode(`data: ${JSON.stringify({ type: "actions", actions: actionsExecuted })}\n\n`));
+          }
+          // Send entire content as one chunk (already complete)
+          controller.enqueue(enc.encode(`data: ${JSON.stringify({ type: "delta", content: choice.content })}\n\n`));
+          controller.enqueue(enc.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+          controller.close();
+        },
+      });
+      return new Response(body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+      });
+    } else {
+      // Fallback
+      streamMessages = [
+        { role: "system", content: systemPrompt },
+        ...messages,
+      ];
+    }
+
+    // Streaming AI call for the final response
+    const streamResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: streamMessages,
+        stream: true,
+      }),
+    });
+
+    if (!streamResponse.ok || !streamResponse.body) {
+      throw new Error("Erro ao gerar resposta streaming");
+    }
+
+    // Transform the OpenAI SSE stream into our custom SSE format
+    const reader = streamResponse.body.getReader();
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+
+    const body = new ReadableStream({
+      async start(controller) {
+        // Send actions event first if any
+        if (actionsExecuted.length > 0) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "actions", actions: actionsExecuted })}\n\n`));
+        }
+
+        let buffer = "";
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let newlineIdx: number;
+            while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+              let line = buffer.slice(0, newlineIdx);
+              buffer = buffer.slice(newlineIdx + 1);
+              if (line.endsWith("\r")) line = line.slice(0, -1);
+              if (!line.startsWith("data: ")) continue;
+              const jsonStr = line.slice(6).trim();
+              if (jsonStr === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "delta", content })}\n\n`));
+                }
+              } catch {
+                // partial JSON, put back
+                buffer = line + "\n" + buffer;
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Stream read error:", e);
+        }
+
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+        controller.close();
+      },
+    });
+
+    return new Response(body, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
     });
   } catch (e) {
     console.error("chat-command error:", e);
