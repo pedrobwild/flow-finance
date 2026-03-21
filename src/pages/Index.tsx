@@ -24,7 +24,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 pb-8">
-      {/* === ROW 1: BRIEFING + RUNWAY side-by-side === */}
+      {/* === ROW 1: BRIEFING === */}
       <motion.div {...section(0)}>
         <div className="flex items-center justify-between mb-4">
           <div>
