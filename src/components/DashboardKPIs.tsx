@@ -34,7 +34,7 @@ export default function DashboardKPIs({ period }: Props) {
 
     const totalPagar = filtered.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
     const totalReceber = filtered.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
-    const saldoLiquido = totalReceber - totalPagar;
+    const saldoLiquido = bal + totalReceber - totalPagar;
 
     const overduePayable = transactions.filter(t => t.status === 'atrasado' && t.type === 'pagar');
     const overdueReceivable = transactions.filter(t => t.status === 'atrasado' && t.type === 'receber');
