@@ -31,6 +31,66 @@ export interface CashBalance {
   notes: string;
 }
 
+export type ObraStatus = 'proposta' | 'contratada' | 'em_execucao' | 'concluida' | 'pausada' | 'cancelada';
+
+export interface Obra {
+  id: string;
+  code: string;
+  clientName: string;
+  condominium: string;
+  unitNumber: string;
+  address: string;
+  status: ObraStatus;
+  contractValue: number;
+  paymentTerms: string;
+  expectedStartDate: string | null;
+  expectedEndDate: string | null;
+  actualStartDate: string | null;
+  actualEndDate: string | null;
+  notes: string;
+  createdAt: string;
+}
+
+export const OBRA_STATUS_OPTIONS: ObraStatus[] = [
+  'proposta', 'contratada', 'em_execucao', 'concluida', 'pausada', 'cancelada'
+];
+
+export const OBRA_STATUS_LABELS: Record<ObraStatus, string> = {
+  proposta: 'Proposta',
+  contratada: 'Contratada',
+  em_execucao: 'Em Execução',
+  concluida: 'Concluída',
+  pausada: 'Pausada',
+  cancelada: 'Cancelada',
+};
+
+export const OBRA_STATUS_COLORS: Record<ObraStatus, { bg: string; text: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+  proposta: { bg: 'bg-muted', text: 'text-muted-foreground', variant: 'outline' },
+  contratada: { bg: 'bg-blue-500/10', text: 'text-blue-600', variant: 'default' },
+  em_execucao: { bg: 'bg-success/10', text: 'text-success', variant: 'default' },
+  concluida: { bg: 'bg-muted', text: 'text-muted-foreground', variant: 'secondary' },
+  pausada: { bg: 'bg-warning/10', text: 'text-warning', variant: 'outline' },
+  cancelada: { bg: 'bg-destructive/10', text: 'text-destructive', variant: 'destructive' },
+};
+
+export interface ObraFinancials {
+  totalContractValue: number;
+  totalReceivable: number;
+  totalReceived: number;
+  totalPendingReceivable: number;
+  totalOverdueReceivable: number;
+  receivedPercentage: number;
+  totalCost: number;
+  totalPaidCost: number;
+  totalPendingCost: number;
+  grossMargin: number;
+  grossMarginPercentage: number;
+  currentMargin: number;
+  obraNetCashFlow: number;
+  nextReceivable: Transaction | null;
+  nextPayable: Transaction | null;
+}
+
 export const COST_CENTERS: CostCenter[] = [
   'OPEX', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
 ];

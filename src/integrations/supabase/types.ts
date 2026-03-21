@@ -43,31 +43,55 @@ export type Database = {
       }
       obras: {
         Row: {
+          actual_end_date: string | null
+          actual_start_date: string | null
+          address: string | null
           client_name: string
           code: string
           condominium: string
+          contract_value: number
           created_at: string
+          expected_end_date: string | null
+          expected_start_date: string | null
           id: string
+          notes: string | null
+          payment_terms: string | null
           status: string
           unit_number: string
           updated_at: string
         }
         Insert: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          address?: string | null
           client_name: string
           code: string
           condominium?: string
+          contract_value?: number
           created_at?: string
+          expected_end_date?: string | null
+          expected_start_date?: string | null
           id?: string
+          notes?: string | null
+          payment_terms?: string | null
           status?: string
           unit_number?: string
           updated_at?: string
         }
         Update: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          address?: string | null
           client_name?: string
           code?: string
           condominium?: string
+          contract_value?: number
           created_at?: string
+          expected_end_date?: string | null
+          expected_start_date?: string | null
           id?: string
+          notes?: string | null
+          payment_terms?: string | null
           status?: string
           unit_number?: string
           updated_at?: string

@@ -4,7 +4,7 @@ import { useObras } from '@/lib/obras-context';
 import {
   Transaction, TransactionType, STATUS_OPTIONS, PRIORITY_OPTIONS, COST_CENTERS,
   RECURRENCE_OPTIONS, PAGAR_CATEGORIES, RECEBER_CATEGORIES, PAYMENT_METHODS,
-  STATUS_LABELS, PRIORITY_LABELS,
+  STATUS_LABELS, PRIORITY_LABELS, ObraStatus,
 } from '@/lib/types';
 import { todayISO } from '@/lib/helpers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -20,9 +20,12 @@ interface Props {
   onClose: () => void;
   transaction: Transaction | null;
   defaultType: TransactionType;
+  defaultObraId?: string;
 }
 
-const empty = (type: TransactionType) => ({
+const ACTIVE_OBRA_STATUSES: ObraStatus[] = ['contratada', 'em_execucao'];
+
+const empty = (type: TransactionType, obraId?: string) => ({
   type,
   description: '',
   counterpart: '',
@@ -31,7 +34,7 @@ const empty = (type: TransactionType) => ({
   paidAt: '',
   status: 'pendente' as const,
   costCenter: 'OPEX' as const,
-  obraId: '',
+  obraId: obraId || '',
   category: 'Outros',
   recurrence: 'única' as const,
   paymentMethod: '_none',
@@ -39,14 +42,13 @@ const empty = (type: TransactionType) => ({
   priority: 'normal' as const,
 });
 
-export default function TransactionFormDialog({ open, onClose, transaction, defaultType }: Props) {
+export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId }: Props) {
   const { addTransaction, updateTransaction } = useFinance();
   const { obras } = useObras();
   const isEdit = !!transaction;
-  const [form, setForm] = useState(empty(defaultType));
-  const [obraModalOpen, setObraModalOpen] = useState(false);
+  const [form, setForm] = useState(empty(defaultType, defaultObraId));
 
-  const activeObras = obras.filter(o => o.status === 'ativa');
+  const activeObras = obras.filter(o => ACTIVE_OBRA_STATUSES.includes(o.status));
 
   useEffect(() => {
     if (transaction) {
@@ -67,18 +69,22 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         priority: transaction.priority as any,
       });
     } else {
-      setForm(empty(defaultType));
+      const init = empty(defaultType, defaultObraId);
+      // Auto-fill counterpart if defaultObraId is set and type is receber
+      if (defaultObraId) {
+        const obra = obras.find(o => o.id === defaultObraId);
+        if (obra && defaultType === 'receber') {
+          init.counterpart = `${obra.clientName}${obra.condominium ? ` — ${obra.condominium}` : ''}${obra.unitNumber ? ` un. ${obra.unitNumber}` : ''}`;
+        }
+      }
+      setForm(init);
     }
-  }, [transaction, open, defaultType]);
+  }, [transaction, open, defaultType, defaultObraId, obras]);
 
   const set = (key: string, value: string) => {
     setForm(f => ({ ...f, [key]: value }));
-    if (key === 'costCenter' && value === 'OPEX') {
-      setObraModalOpen(true);
-    }
   };
 
-  // For receber, when obra is selected, auto-fill counterpart
   const handleObraSelect = (obraId: string) => {
     setForm(f => {
       const obra = obras.find(o => o.id === obraId);
@@ -90,7 +96,6 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
     });
   };
 
-  const selectedObra = obras.find(o => o.id === form.obraId);
   const categories = form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES;
   const cLabel = form.type === 'pagar' ? 'Fornecedor' : 'Obra / Cliente';
 
@@ -121,7 +126,6 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
   };
 
   return (
-    <>
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -136,7 +140,6 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
               <Input value={form.description} onChange={e => set('description', e.target.value)} required />
             </div>
 
-            {/* Obra selector — shown for both pagar and receber */}
             <div className="col-span-2">
               <Label className="text-xs flex items-center gap-1">
                 <Building2 className="h-3 w-3" /> Obra
@@ -253,6 +256,5 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         </form>
       </DialogContent>
     </Dialog>
-    </>
   );
 }

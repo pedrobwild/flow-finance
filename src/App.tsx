@@ -37,18 +37,11 @@ const App = () => (
                       <AppShell>
                         <Routes>
                           <Route path="/" element={<Index />} />
+                          <Route path="/obras" element={<Obras />} />
                           <Route path="/pagar" element={<ContasPagar />} />
                           <Route path="/receber" element={<ContasReceber />} />
                           <Route path="/fluxo" element={<FluxoCaixa />} />
                           <Route path="/simulador" element={<Simulador />} />
-                          <Route
-                            path="/obras"
-                            element={
-                              <ProtectedRoute requireAdmin>
-                                <Obras />
-                              </ProtectedRoute>
-                            }
-                          />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppShell>

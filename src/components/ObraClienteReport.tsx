@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObras } from '@/lib/obras-context';
 import { formatCurrency } from '@/lib/helpers';
 import { Building2, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface ClientSummary {
+interface ObraSummary {
+  obraId: string;
+  obraCode: string;
   name: string;
   pending: number;
   overdue: number;
@@ -18,15 +21,20 @@ interface ClientSummary {
 
 export default function ObraClienteReport() {
   const { transactions } = useFinance();
+  const { obras } = useObras();
 
   const report = useMemo(() => {
     const receber = transactions.filter(t => t.type === 'receber');
-    const map = new Map<string, ClientSummary>();
+    const map = new Map<string, ObraSummary>();
 
     receber.forEach(t => {
-      const key = t.counterpart || 'Sem identificação';
+      const obraId = t.obraId || '_none';
+      const obra = obras.find(o => o.id === obraId);
+      const key = obraId;
+      const name = obra ? `${obra.code} · ${obra.clientName}` : (t.counterpart || 'Sem identificação');
       const entry = map.get(key) || {
-        name: key, pending: 0, overdue: 0, confirmed: 0, total: 0,
+        obraId, obraCode: obra?.code || '', name,
+        pending: 0, overdue: 0, confirmed: 0, total: 0,
         pendingCount: 0, overdueCount: 0, confirmedCount: 0, totalCount: 0,
       };
       entry.total += t.amount;
@@ -45,7 +53,7 @@ export default function ObraClienteReport() {
     });
 
     return [...map.values()].sort((a, b) => b.total - a.total);
-  }, [transactions]);
+  }, [transactions, obras]);
 
   const grandTotal = useMemo(() => report.reduce((s, r) => ({
     pending: s.pending + r.pending,
@@ -64,7 +72,7 @@ export default function ObraClienteReport() {
             <Building2 className="w-3.5 h-3.5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold">Resumo por Obra / Cliente</p>
+            <p className="text-sm font-semibold">Resumo por Obra</p>
             <p className="text-[10px] text-muted-foreground">{report.length} obra(s) com recebíveis registrados</p>
           </div>
         </div>
@@ -74,7 +82,7 @@ export default function ObraClienteReport() {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border/50 bg-muted/30">
-              <th className="text-left font-medium text-muted-foreground px-4 py-2.5">Obra / Cliente</th>
+              <th className="text-left font-medium text-muted-foreground px-4 py-2.5">Obra</th>
               <th className="text-right font-medium text-muted-foreground px-4 py-2.5">
                 <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" /> Pendente</span>
               </th>
@@ -92,7 +100,7 @@ export default function ObraClienteReport() {
             {report.map((r) => {
               const pct = r.total > 0 ? Math.round(r.confirmed / r.total * 100) : 0;
               return (
-                <tr key={r.name} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
+                <tr key={r.obraId} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
                   <td className="px-4 py-2.5 font-medium text-foreground max-w-[200px] truncate">{r.name}</td>
                   <td className="px-4 py-2.5 text-right font-mono">
                     {r.pending > 0 ? (
