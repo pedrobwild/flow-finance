@@ -204,10 +204,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   });
 
   const confirmMutation = useMutation({
-    mutationFn: async ({ id, actualAmount, txType }: { id: string; actualAmount?: number; txType?: string }) => {
+    mutationFn: async ({ id, actualAmount, txType, paidAt }: { id: string; actualAmount?: number; txType?: string; paidAt?: string }) => {
       const updateData: any = {
         status: 'confirmado',
-        paid_at: todayISO(),
+        paid_at: paidAt || todayISO(),
       };
       if (actualAmount !== undefined) {
         updateData.amount = actualAmount;
