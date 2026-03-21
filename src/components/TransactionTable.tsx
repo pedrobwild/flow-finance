@@ -60,7 +60,7 @@ export default function TransactionTable({ type }: Props) {
 
   const isPagar = type === 'pagar';
 
-  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || obraFilter !== 'todos' || !!dateRange?.from || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || (!isFiltered && obraFilter !== 'todos') || !!dateRange?.from || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
@@ -136,7 +136,7 @@ export default function TransactionTable({ type }: Props) {
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, dateRange]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, costTypeFilter, counterpartFilter, obraFilter, billingFilter, dateRange]);
 
   const totals = useMemo(() => {
     const today = todayISO();
@@ -294,7 +294,7 @@ export default function TransactionTable({ type }: Props) {
               </SelectContent>
             </Select>
           )}
-          {!isPagar && (
+          {!isPagar && !isFiltered && (
             <Select value={obraFilter} onValueChange={setObraFilter}>
               <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
