@@ -183,15 +183,17 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs">Prioridade</Label>
-              <Select value={form.priority} onValueChange={v => set('priority', v)}>
-                <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PRIORITY_OPTIONS.map(p => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            {form.type === 'pagar' && (
+              <div>
+                <Label className="text-xs">Prioridade</Label>
+                <Select value={form.priority} onValueChange={v => set('priority', v)}>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PRIORITY_OPTIONS.map(p => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {form.type === 'pagar' && (
               <div>
                 <Label className="text-xs">Centro de Custo</Label>
