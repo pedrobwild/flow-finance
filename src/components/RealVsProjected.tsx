@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { motion } from 'framer-motion';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { GitCompareArrows } from 'lucide-react';
 
 export default function RealVsProjected() {
