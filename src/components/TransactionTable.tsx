@@ -245,17 +245,6 @@ export default function TransactionTable({ type }: Props) {
               </SelectContent>
             </Select>
           )}
-          {/* Obra filter */}
-          <Select value={obraFilter} onValueChange={setObraFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todas obras</SelectItem>
-              <SelectItem value="_sem_obra">{isPagar ? 'Corporativo' : 'Sem obra'}</SelectItem>
-              {obrasWithTx.map(o => (
-                <SelectItem key={o.id} value={o.id}>{o.code} · {o.clientName}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           {isPagar && (
             <Select value={costCenterFilter} onValueChange={setCostCenterFilter}>
               <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
