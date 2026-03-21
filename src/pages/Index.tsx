@@ -4,8 +4,6 @@ import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardP
 import TodayTomorrowActions from '@/components/TodayTomorrowActions';
 import DashboardKPIs from '@/components/DashboardKPIs';
 import CashFlowHeroChart from '@/components/CashFlowHeroChart';
-import ObraCashBalance from '@/components/ObraCashBalance';
-import DecisionAlerts from '@/components/DecisionAlerts';
 import { motion } from 'framer-motion';
 
 const section = (delay: number) => ({
@@ -51,14 +49,6 @@ export default function Dashboard() {
       <motion.div {...section(0.18)}>
         <CashFlowHeroChart period={period} />
       </motion.div>
-
-      {/* === METADE INFERIOR === */}
-
-      {/* Saldo de caixa por obra */}
-      <ObraCashBalance />
-
-      {/* Alertas de decisão */}
-      <DecisionAlerts />
     </div>
   );
 }
