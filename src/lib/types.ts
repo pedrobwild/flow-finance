@@ -105,8 +105,8 @@ export const STAGE_STATUS_COLORS: Record<StageStatus, { bg: string; text: string
   adiada: { bg: 'bg-warning/10', text: 'text-warning' },
 };
 
-
-  export interface ObraFinancials {
+export interface ObraFinancials {
+  totalContractValue: number;
   totalReceivable: number;
   totalReceived: number;
   totalPendingReceivable: number;
