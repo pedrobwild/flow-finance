@@ -432,12 +432,26 @@ export default function TransactionTable({ type }: Props) {
                                 {obraCode}
                               </Badge>
                             ) : (
-                              <span className="text-muted-foreground/40">—</span>
+                              <Badge variant="secondary" className="text-[10px] font-normal bg-accent/50 text-accent-foreground">
+                                Avulsa
+                              </Badge>
                             )}
                           </td>
-                          <td className="px-3 py-3 max-w-[160px] truncate text-xs font-medium">{tx.counterpart || '—'}</td>
+                          <td className="px-3 py-3 max-w-[160px] truncate text-xs font-medium">
+                            {tx.obraId ? (tx.counterpart || '—') : (
+                              <span className="flex items-center gap-1.5">
+                                <span>{tx.counterpart || tx.description || '—'}</span>
+                              </span>
+                            )}
+                          </td>
                           <td className="px-3 py-3 max-w-[140px]">
-                            <p className="text-xs truncate">{tx.category || tx.description}</p>
+                            {tx.obraId ? (
+                              <p className="text-xs truncate">{tx.category || tx.description}</p>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] font-normal border-dashed">
+                                {tx.category || 'Outros'}
+                              </Badge>
+                            )}
                           </td>
                           <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">
                             {tx.paymentMethod ? (
