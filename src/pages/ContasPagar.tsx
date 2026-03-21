@@ -4,7 +4,7 @@ import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
-import { ArrowDownRight, Building2, Clock, AlertTriangle, TrendingDown, Layers, Wallet } from 'lucide-react';
+import { ArrowDownRight, Building2, Clock, AlertTriangle, TrendingDown, Layers, Wallet, Repeat, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TransactionTable from '@/components/TransactionTable';
 
@@ -59,11 +59,29 @@ export default function ContasPagar() {
     // Payment rate
     const paymentRate = pagar.length > 0 ? Math.round(confirmed.length / pagar.length * 100) : 0;
 
+    // Fixed vs Variable costs (fixed = recurring, variable = única)
+    const fixedCosts = pending.filter(t => t.recurrence !== 'única');
+    const variableCosts = pending.filter(t => t.recurrence === 'única');
+    const totalFixed = fixedCosts.reduce((s, t) => s + t.amount, 0);
+    const totalVariable = variableCosts.reduce((s, t) => s + t.amount, 0);
+    const fixedPct = totalPending > 0 ? Math.round(totalFixed / totalPending * 100) : 0;
+    const variablePct = totalPending > 0 ? Math.round(totalVariable / totalPending * 100) : 0;
+
+    // Top fixed cost categories
+    const fixedCatMap = new Map<string, number>();
+    fixedCosts.forEach(t => fixedCatMap.set(t.category, (fixedCatMap.get(t.category) || 0) + t.amount));
+    const topFixedCategories = [...fixedCatMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([name, amount]) => ({ name, amount }));
+
     return {
       totalPending, totalOverdue, totalConfirmed,
       pendingCount: pending.length, overdueCount: overdue.length, confirmedCount: confirmed.length,
       avgDaysOverdue, topSuppliers, topCategories, totalNext7, next7Count: next7.length,
       paymentRate,
+      totalFixed, totalVariable, fixedCount: fixedCosts.length, variableCount: variableCosts.length,
+      fixedPct, variablePct, topFixedCategories,
     };
   }, [transactions, today]);
 
@@ -202,7 +220,84 @@ export default function ContasPagar() {
         </motion.div>
       )}
 
-      {/* Upcoming payments strip */}
+      {/* Fixed vs Variable costs */}
+      {(insights.fixedCount > 0 || insights.variableCount > 0) && (
+        <motion.div {...sect(0.08)} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Fixed costs */}
+          <div className="card-elevated p-4 border-l-[3px] border-l-primary">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Repeat className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold">Custos Fixos</p>
+                <p className="text-[10px] text-muted-foreground">Recorrentes (mensal, semanal, etc.)</p>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-xl font-bold font-mono text-foreground">{formatCurrency(insights.totalFixed)}</span>
+              <span className="text-[10px] text-muted-foreground">{insights.fixedCount} lançamento(s) · {insights.fixedPct}%</span>
+            </div>
+            {insights.topFixedCategories.length > 0 && (
+              <div className="space-y-1 mt-2 pt-2 border-t border-border/50">
+                {insights.topFixedCategories.map(c => (
+                  <div key={c.name} className="flex items-center justify-between">
+                    <span className="text-[10px] text-muted-foreground truncate flex-1 mr-2">{c.name}</span>
+                    <span className="text-[10px] font-mono font-medium text-foreground">{formatCurrency(c.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Variable costs */}
+          <div className="card-elevated p-4 border-l-[3px] border-l-accent-foreground/40">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Zap className="w-3.5 h-3.5 text-accent-foreground" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold">Custos Variáveis</p>
+                <p className="text-[10px] text-muted-foreground">Pagamentos únicos / avulsos</p>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-xl font-bold font-mono text-foreground">{formatCurrency(insights.totalVariable)}</span>
+              <span className="text-[10px] text-muted-foreground">{insights.variableCount} lançamento(s) · {insights.variablePct}%</span>
+            </div>
+            {/* Stacked bar showing fixed vs variable */}
+            <div className="mt-2 pt-2 border-t border-border/50">
+              <p className="text-[10px] text-muted-foreground mb-1">Composição pendente</p>
+              <div className="h-2.5 rounded-full bg-muted overflow-hidden flex">
+                {insights.fixedPct > 0 && (
+                  <div
+                    className="h-full bg-primary/60 transition-all duration-700"
+                    style={{ width: `${insights.fixedPct}%` }}
+                  />
+                )}
+                {insights.variablePct > 0 && (
+                  <div
+                    className="h-full bg-accent-foreground/30 transition-all duration-700"
+                    style={{ width: `${insights.variablePct}%` }}
+                  />
+                )}
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-primary/60" />
+                  <span className="text-[10px] text-muted-foreground">Fixo {insights.fixedPct}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-accent-foreground/30" />
+                  <span className="text-[10px] text-muted-foreground">Variável {insights.variablePct}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+
       {insights.next7Count > 0 && (
         <motion.div {...sect(0.10)} className="card-elevated p-3 flex items-center gap-3 border-l-[3px] border-l-warning">
           <div className="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
