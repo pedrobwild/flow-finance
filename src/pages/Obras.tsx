@@ -135,7 +135,7 @@ export default function Obras() {
           >
             Todas ({obras.length})
           </Button>
-          {(['em_execucao', 'contratada', 'concluida', 'pausada', 'proposta', 'cancelada'] as ObraStatus[]).map(s => {
+          {(['ativa', 'finalizada'] as ObraStatus[]).map(s => {
             const count = statusCounts[s] || 0;
             if (count === 0 && s !== statusFilter) return null;
             return (

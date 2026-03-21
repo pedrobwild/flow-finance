@@ -170,7 +170,7 @@ export default function FluxoCaixa() {
   }, [viewMode, getActiveObrasWithFinancials]);
 
   const activeObras = useMemo(() =>
-    obras.filter(o => o.status === 'em_execucao' || o.status === 'contratada'),
+    obras.filter(o => o.status === 'ativa'),
     [obras]
   );
 
