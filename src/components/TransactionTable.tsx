@@ -12,15 +12,20 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
-  Clock, AlertTriangle, CalendarDays, X,
+  Clock, AlertTriangle, CalendarDays, X, CalendarIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { DateRange } from 'react-day-picker';
 import TransactionFormDialog from './TransactionFormDialog';
 import ObraDetailSheet from './ObraDetailSheet';
 
