@@ -65,15 +65,11 @@ export default function Dashboard() {
         <DashboardKPIs period={period} />
       </motion.div>
 
-      {/* === RUNWAY + REAL VS PROJETADO === */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div {...section(0.22)}>
-          <CashRunwayChart />
-        </motion.div>
-        <motion.div {...section(0.24)}>
-          <RealVsProjected />
-        </motion.div>
-      </div>
+      {/* === RUNWAY === */}
+      <CashRunwayChart />
+
+      {/* === REAL VS PROJETADO === */}
+      <RealVsProjected />
 
       {/* === PROJEÇÃO SEMANAL === */}
       <motion.div {...section(0.28)}>

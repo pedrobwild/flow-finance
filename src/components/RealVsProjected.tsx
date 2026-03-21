@@ -88,10 +88,7 @@ export default function RealVsProjected() {
     : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    <div
       className="card-elevated p-5"
     >
       <div className="flex items-center justify-between mb-4">
@@ -115,7 +112,7 @@ export default function RealVsProjected() {
         )}
       </div>
 
-      <div className="h-52">
+      <div style={{ width: '100%', height: 208 }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <defs>
@@ -196,6 +193,6 @@ export default function RealVsProjected() {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </motion.div>
+    </div>
   );
 }
