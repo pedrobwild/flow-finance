@@ -165,7 +165,44 @@ export default function CashPressureConflicts() {
 
   return (
     <div className="card-elevated">
-      {/* Conflicts section */}
+      {/* Stage conflicts */}
+      {stageConflicts.length > 0 && (
+        <div className="p-4 border-b">
+          <div className="flex items-center gap-2 mb-3">
+            <Layers className="w-4 h-4 text-accent" />
+            <h2 className="text-sm font-semibold">Etapas que disputam caixa</h2>
+          </div>
+          <p className="text-[11px] text-muted-foreground mb-3">
+            Múltiplas obras entrando na mesma etapa simultaneamente
+          </p>
+          <div className="space-y-2">
+            {stageConflicts.map((sc, i) => (
+              <motion.div
+                key={sc.stageName}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06, duration: 0.3 }}
+                className="rounded-lg border border-accent/20 bg-accent/5 p-3"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-semibold">{sc.stageName}</span>
+                  <span className="text-xs font-mono font-bold text-accent">{formatCurrency(sc.totalValue)}</span>
+                </div>
+                <div className="space-y-0.5">
+                  {sc.obras.map((o, j) => (
+                    <div key={j} className="flex items-center justify-between text-[11px]">
+                      <span><span className="font-mono text-muted-foreground">{o.code}</span> · {o.client} <span className="text-muted-foreground">({o.date})</span></span>
+                      <span className="font-mono text-muted-foreground">{formatCurrency(o.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Cash conflicts section */}
       {conflicts.length > 0 && (
         <div className="p-4 border-b">
           <div className="flex items-center gap-2 mb-3">
