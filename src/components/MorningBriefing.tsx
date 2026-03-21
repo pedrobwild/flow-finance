@@ -266,37 +266,46 @@ export default function MorningBriefing() {
     return severityIcon[insight.severity];
   };
 
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className="card-elevated overflow-hidden h-full flex flex-col">
-      {/* Header */}
-      <div className="p-5 pb-4 border-b bg-gradient-to-br from-primary/[0.03] to-accent/[0.06]">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">
-              {dateStr}
-            </p>
-            <h2 className="text-xl font-bold leading-tight tracking-tight">
-              {greeting} 👋
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-accent" />
-              Briefing executivo gerado por IA
-            </p>
+    <div className="card-elevated overflow-hidden">
+      {/* Collapsible Header */}
+      <button
+        onClick={() => setExpanded(prev => !prev)}
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-accent" />
           </div>
+          <div className="text-left">
+            <h2 className="text-xs font-bold">Briefing IA · {greeting}</h2>
+            <p className="text-[10px] text-muted-foreground">{dateStr}</p>
+          </div>
+          {data && !expanded && (
+            <span className="text-[10px] text-muted-foreground ml-2 hidden sm:inline">
+              {data.insights.length} insight(s) · {data.suggestions.length} sugestão(ões)
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
           <Button
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-            onClick={fetchBriefing}
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+            onClick={(e) => { e.stopPropagation(); fetchBriefing(); }}
             disabled={loading}
           >
-            <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+            <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
           </Button>
+          <ChevronRight className={cn('w-4 h-4 text-muted-foreground transition-transform duration-200', expanded && 'rotate-90')} />
         </div>
-      </div>
+      </button>
 
-      {/* Content */}
-      <div className="p-5 flex-1 overflow-y-auto">
+      {/* Collapsible Content */}
+      {expanded && (
+      <div className="px-4 pb-4 pt-4 border-t">
         <AnimatePresence mode="wait">
           {loading && (
             <motion.div
@@ -420,6 +429,8 @@ export default function MorningBriefing() {
           )}
         </AnimatePresence>
       </div>
+      )}
+
 
       {/* Transaction form pre-filled from AI suggestions */}
       {txFormDefaults && (
