@@ -16,6 +16,7 @@ interface Props {
 
 const emptyForm = {
   clientName: '',
+  clientEmail: '',
   condominium: '',
   unitNumber: '',
   address: '',
