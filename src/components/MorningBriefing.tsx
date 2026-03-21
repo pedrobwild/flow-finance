@@ -308,8 +308,13 @@ export default function MorningBriefing() {
               {data.insights.length} insight(s) · {data.suggestions.length} sugestão(ões)
             </span>
           )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="ghost"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-            onClick={(e) => { e.stopPropagation(); fetchBriefing(); }}
+            onClick={(e) => { e.stopPropagation(); setRetried(false); fetchBriefing(); }}
             disabled={loading}
           >
             <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
