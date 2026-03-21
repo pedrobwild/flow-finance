@@ -294,7 +294,7 @@ export default function TransactionTable({ type }: Props) {
               </SelectContent>
             </Select>
           )}
-          {!isPagar && (
+          {!isPagar && !isFiltered && (
             <Select value={obraFilter} onValueChange={setObraFilter}>
               <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
