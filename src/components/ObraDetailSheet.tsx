@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
-import { useObraStages } from '@/hooks/use-obra-stages';
-import { Obra, OBRA_STATUS_LABELS, OBRA_STATUS_COLORS, STATUS_LABELS, ObraFinancials, Transaction, ObraStage, STAGE_STATUS_LABELS, STAGE_STATUS_COLORS } from '@/lib/types';
+import { Obra, OBRA_STATUS_LABELS, OBRA_STATUS_COLORS, STATUS_LABELS, ObraFinancials, Transaction } from '@/lib/types';
 import { formatCurrency, formatDateFull, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
