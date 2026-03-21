@@ -392,10 +392,18 @@ export default function TransactionTable({ type }: Props) {
                       )}
                     >
                       <td className="pl-5 pr-3 py-3">
-                        <span className={cn('status-badge text-[10px]', `status-${tx.status}`)}>
+                        <span className={cn(
+                          'status-badge text-[10px]',
+                          `status-${tx.status}`,
+                          isConfirmed && isPagar && 'bg-success/10 text-success border-success/20'
+                        )}>
                           {isOverdue && <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse mr-1" />}
-                          {STATUS_LABELS[tx.status]}
+                          {isConfirmed && isPagar && <Check className="w-3 h-3 mr-1" />}
+                          {isConfirmed && isPagar ? 'Pago' : STATUS_LABELS[tx.status]}
                         </span>
+                        {isConfirmed && tx.paidAt && (
+                          <p className="text-[10px] text-muted-foreground mt-0.5 pl-0.5">{formatDateFull(tx.paidAt)}</p>
+                        )}
                       </td>
                       {isPagar && (
                         <td className="px-3 py-3">
