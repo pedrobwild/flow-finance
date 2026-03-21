@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo } from 'react'; 
 import { motion } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
