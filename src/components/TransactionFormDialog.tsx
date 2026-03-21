@@ -39,12 +39,27 @@ const empty = (type: TransactionType) => ({
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType }: Props) {
-  const { addTransaction, updateTransaction } = useFinance();
+  const { addTransaction, updateTransaction, transactions } = useFinance();
   const isEdit = !!transaction;
   const [form, setForm] = useState(empty(defaultType));
+  const [obraModalOpen, setObraModalOpen] = useState(false);
+
+  const existingObras = useMemo(() => {
+    const obrasSet = new Set(
+      transactions
+        .filter(t => t.type === 'pagar' && t.costCenter === 'OPEX' && t.notes)
+        .map(t => {
+          const match = t.notes.match(/\[Obra: (.+?)\]/);
+          return match ? match[1] : null;
+        })
+        .filter(Boolean) as string[]
+    );
+    return Array.from(obrasSet).sort();
+  }, [transactions]);
 
   useEffect(() => {
     if (transaction) {
+      const obraMatch = transaction.notes.match(/\[Obra: (.+?)\]/);
       setForm({
         type: transaction.type,
         description: transaction.description,
@@ -54,10 +69,11 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         paidAt: transaction.paidAt || '',
         status: transaction.status as any,
         costCenter: transaction.costCenter as any,
+        obra: obraMatch ? obraMatch[1] : '',
         category: transaction.category,
         recurrence: transaction.recurrence as any,
         paymentMethod: transaction.paymentMethod || '_none',
-        notes: transaction.notes,
+        notes: transaction.notes.replace(/\s*\[Obra: .+?\]/, ''),
         priority: transaction.priority as any,
       });
     } else {
@@ -65,7 +81,12 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
     }
   }, [transaction, open, defaultType]);
 
-  const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
+  const set = (key: string, value: string) => {
+    setForm(f => ({ ...f, [key]: value }));
+    if (key === 'costCenter' && value === 'OPEX') {
+      setObraModalOpen(true);
+    }
+  };
   const categories = form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES;
   const cLabel = form.type === 'pagar' ? 'Fornecedor' : 'Obra / Cliente';
 
