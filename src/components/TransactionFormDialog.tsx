@@ -180,8 +180,9 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
               <Input
                 value={form.counterpart}
                 onChange={e => set('counterpart', e.target.value)}
-                readOnly={form.type === 'receber' && !!form.obraId}
-                className={form.type === 'receber' && form.obraId ? 'bg-muted/50' : ''}
+                readOnly={isObraReceber}
+                className={isObraReceber ? 'bg-muted/50' : ''}
+                placeholder={form.type === 'receber' && !form.obraId ? 'Ex: Banco, Investidor, Empresa...' : ''}
               />
             </div>
 
