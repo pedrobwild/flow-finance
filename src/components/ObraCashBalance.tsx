@@ -76,6 +76,18 @@ export default function ObraCashBalance() {
         .filter(t => t.type === 'pagar' && t.status !== 'confirmado')
         .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
 
+      const balance = totalReceived - totalPaid;
+      const hasOverdue = overdueReceivable > 0;
+      const hasUpcomingIncome = nextEntry && daysBetween(today, nextEntry.dueDate) <= 15;
+      const deepNegative = balance < 0 && Math.abs(balance) > obra.contractValue * 0.2;
+
+      let semaphore: Semaphore = 'pode-seguir';
+      if (deepNegative || (balance < 0 && !hasUpcomingIncome)) {
+        semaphore = 'replanejar';
+      } else if (balance < 0 || hasOverdue) {
+        semaphore = 'atencao';
+      }
+
       result.push({
         id: obra.id,
         code: obra.code,
@@ -84,7 +96,7 @@ export default function ObraCashBalance() {
         contractValue: obra.contractValue,
         totalReceived,
         totalPaid,
-        balance: totalReceived - totalPaid,
+        balance,
         receivedPct,
         pendingPct,
         overduePct,
@@ -92,6 +104,7 @@ export default function ObraCashBalance() {
         nextEntry,
         nextExit,
         obra,
+        semaphore,
       });
     }
 
