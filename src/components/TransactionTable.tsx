@@ -265,15 +265,6 @@ export default function TransactionTable({ type }: Props) {
               </SelectContent>
             </Select>
           )}
-          {!isPagar && uniqueCounterparts.length > 0 && (
-            <Select value={counterpartFilter} onValueChange={setCounterpartFilter}>
-              <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Obra / Cliente</SelectItem>
-                {uniqueCounterparts.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
           <Select value={periodFilter} onValueChange={setPeriodFilter}>
             <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
