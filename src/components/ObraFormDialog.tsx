@@ -105,20 +105,9 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
               <Label className="text-xs">Endereço</Label>
               <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Rua, número, bairro..." />
             </div>
-            <div>
+            <div className="col-span-2">
               <Label className="text-xs">Valor do Contrato (R$) *</Label>
               <Input type="number" step="0.01" value={form.contractValue} onChange={e => set('contractValue', e.target.value)} required />
-            </div>
-            <div>
-              <Label className="text-xs">Status</Label>
-              <Select value={form.status} onValueChange={v => set('status', v)}>
-                <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {OBRA_STATUS_OPTIONS.map(s => (
-                    <SelectItem key={s} value={s}>{OBRA_STATUS_LABELS[s]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="col-span-2">
               <Label className="text-xs">Condições de Pagamento</Label>
