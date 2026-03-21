@@ -88,9 +88,17 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
           init.counterpart = `${obra.clientName}${obra.condominium ? ` — ${obra.condominium}` : ''}${obra.unitNumber ? ` un. ${obra.unitNumber}` : ''}`;
         }
       }
+      // Apply prefill data from AI suggestions
+      if (prefill) {
+        if (prefill.description) init.description = prefill.description;
+        if (prefill.counterpart) init.counterpart = prefill.counterpart;
+        if (prefill.amount) init.amount = prefill.amount.toString();
+        if (prefill.category) init.category = prefill.category;
+        if (prefill.notes) init.notes = prefill.notes;
+      }
       setForm(init);
     }
-  }, [transaction, open, defaultType, defaultObraId, obras]);
+  }, [transaction, open, defaultType, defaultObraId, obras, prefill]);
 
   const set = (key: string, value: string) => {
     setForm(f => ({ ...f, [key]: value }));
