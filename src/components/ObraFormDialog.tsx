@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useObras } from '@/lib/obras-context';
-import { Obra, OBRA_STATUS_OPTIONS, OBRA_STATUS_LABELS, ObraStatus } from '@/lib/types';
+import { Obra, ObraStatus } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
