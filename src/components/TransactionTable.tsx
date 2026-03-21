@@ -325,6 +325,25 @@ export default function TransactionTable({ type }: Props) {
             </Button>
           )}
           <div className="flex-1" />
+          <ExportDropdown
+            onCSV={() => {
+              const rows = transactionsToExportRows(filtered, type);
+              exportToCSV(rows, `${isPagar ? 'contas-pagar' : 'contas-receber'}`);
+            }}
+            onExcel={() => {
+              const rows = transactionsToExportRows(filtered, type);
+              exportToExcel(rows, `${isPagar ? 'contas-pagar' : 'contas-receber'}`);
+            }}
+            onPDF={() => {
+              const rows = transactionsToExportRows(filtered, type);
+              const headers = Object.keys(rows[0] || {});
+              exportToPDF(
+                isPagar ? 'Contas a Pagar' : 'Contas a Receber',
+                headers,
+                rows.map(r => headers.map(h => String(r[h] ?? '')))
+              );
+            }}
+          />
           <AuditLogDrawer />
           <CustomCategoriesManager />
           <Button
