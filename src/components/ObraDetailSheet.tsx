@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
-import { Obra, OBRA_STATUS_LABELS, OBRA_STATUS_COLORS, STATUS_LABELS, ObraFinancials, Transaction } from '@/lib/types';
+import { useObraStages } from '@/hooks/use-obra-stages';
+import { Obra, OBRA_STATUS_LABELS, OBRA_STATUS_COLORS, STATUS_LABELS, ObraFinancials, Transaction, ObraStage, STAGE_STATUS_LABELS, STAGE_STATUS_COLORS } from '@/lib/types';
 import { formatCurrency, formatDateFull, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
   DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, Plus,
-  Check, Pencil, Trash2, AlertTriangle,
+  Check, Pencil, Trash2, AlertTriangle, Layers, GripVertical,
 } from 'lucide-react';
 import TransactionFormDialog from './TransactionFormDialog';
+import StageFormDialog from './StageFormDialog';
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
+  CartesianGrid, Tooltip as RechartsTooltip, ReferenceLine,
+} from 'recharts';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip as RechartsTooltip, ReferenceLine,
