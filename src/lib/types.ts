@@ -31,7 +31,7 @@ export interface CashBalance {
 }
 
 export const COST_CENTERS: CostCenter[] = [
-  'Operação', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
+  'OPEX', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
 ];
 
 export const STATUS_OPTIONS: TransactionStatus[] = ['previsto', 'pendente', 'confirmado', 'atrasado'];
