@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
+import { todayISO, addDays } from '@/lib/helpers';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import TodayTomorrowActions from '@/components/TodayTomorrowActions';
 import DashboardKPIs from '@/components/DashboardKPIs';
-import CashFlowHeroChart from '@/components/CashFlowHeroChart';
+import MorningBriefing from '@/components/MorningBriefing';
+import WeeklyCashProjection from '@/components/WeeklyCashProjection';
+import ObraCashBalance from '@/components/ObraCashBalance';
+import CashPressureConflicts from '@/components/CashPressureConflicts';
+import DecisionAlerts from '@/components/DecisionAlerts';
 import { motion } from 'framer-motion';
 
 const section = (delay: number) => ({
@@ -13,9 +17,6 @@ const section = (delay: number) => ({
 });
 
 export default function Dashboard() {
-  const today = new Date();
-  const greeting = today.getHours() < 12 ? 'Bom dia' : today.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
-
   const [period, setPeriod] = useState<PeriodRange>({
     from: todayISO(),
     to: addDays(todayISO(), 30),
@@ -24,30 +25,40 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <motion.div {...section(0)} className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-1">
-            {today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
-          <h1 className="text-2xl font-bold leading-tight">{greeting} 👋</h1>
+      {/* === BRIEFING EXECUTIVO DA MANHÃ === */}
+      <motion.div {...section(0)}>
+        <div className="flex justify-end mb-2">
+          <DashboardPeriodFilter value={period} onChange={setPeriod} />
         </div>
-        <DashboardPeriodFilter value={period} onChange={setPeriod} />
+        <MorningBriefing />
       </motion.div>
 
-      {/* Urgent: Today & Tomorrow */}
+      {/* === AÇÕES IMEDIATAS === */}
       <motion.div {...section(0.06)}>
         <TodayTomorrowActions />
       </motion.div>
 
-      {/* KPIs */}
-      <motion.div {...section(0.12)}>
+      {/* === KPIs === */}
+      <motion.div {...section(0.10)}>
         <DashboardKPIs period={period} />
       </motion.div>
 
-      {/* Hero Chart */}
-      <motion.div {...section(0.18)}>
-        <CashFlowHeroChart period={period} />
+      {/* === PROJEÇÃO SEMANAL COM ZONAS DE SEGURANÇA === */}
+      <motion.div {...section(0.14)}>
+        <WeeklyCashProjection />
+      </motion.div>
+
+      {/* === SALDO DE CAIXA POR OBRA + SEMÁFORO === */}
+      <ObraCashBalance />
+
+      {/* === CONFLITOS + PRESSÃO DE CAIXA === */}
+      <motion.div {...section(0.22)}>
+        <CashPressureConflicts />
+      </motion.div>
+
+      {/* === ALERTAS DE DECISÃO === */}
+      <motion.div {...section(0.26)}>
+        <DecisionAlerts />
       </motion.div>
     </div>
   );
