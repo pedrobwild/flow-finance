@@ -81,17 +81,18 @@ export default function FluxoCaixa() {
 
   const days: DayRow[] = useMemo(() => {
     const result: DayRow[] = [];
-    let accumulated = effectiveInitialBalance - overduePayablesTotal;
 
     for (let i = 0; i < period; i++) {
       const date = addDays(today, i);
       const dayTxs = transactions.filter(t =>
         t.status !== 'confirmado' && t.dueDate === date
       );
-      const entradas = dayTxs.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
+      // Entradas: exclude atrasado receivables (prudent - they may not come)
+      const entradas = dayTxs.filter(t => t.type === 'receber' && t.status !== 'atrasado').reduce((s, t) => s + t.amount, 0);
       const saidas = dayTxs.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
       const saldoDia = entradas - saidas;
-      accumulated += saldoDia;
+      // Use filteredProjectedBalance for consistency with all other charts
+      const accumulated = filteredProjectedBalance(date);
 
       const dayDate = new Date(date + 'T12:00:00');
       const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
@@ -104,7 +105,7 @@ export default function FluxoCaixa() {
       });
     }
     return result;
-  }, [transactions, effectiveInitialBalance, overduePayablesTotal, period, today]);
+  }, [transactions, filteredProjectedBalance, period, today]);
 
   const finalBalance = days.length > 0 ? days[days.length - 1].accumulated : effectiveInitialBalance;
   const minDay = days.length > 0 ? days.reduce((min, d) => d.accumulated < min.accumulated ? d : min, days[0]) : null;
