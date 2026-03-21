@@ -27,8 +27,8 @@ interface DataPoint {
 }
 
 export default function WeeklyCashProjection() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
-  const { filteredTransactions } = useObraFilter();
+  const { currentBalance } = useFinance();
+  const { filteredTransactions, filteredProjectedBalance, filteredBalance } = useObraFilter();
   const today = todayISO();
   const [granularity, setGranularity] = useState<Granularity>('dia');
   const [days, setDays] = useState<DayCount>(30);
