@@ -70,6 +70,7 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
       address: form.address,
       status: form.status,
       contractValue: parseFloat(form.contractValue) || 0,
+      budgetTarget: parseFloat(form.budgetTarget) || 0,
       paymentTerms: form.paymentTerms,
       expectedStartDate: form.expectedStartDate || null,
       expectedEndDate: form.expectedEndDate || null,
