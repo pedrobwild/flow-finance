@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils';
 import { PieChart as PieIcon } from 'lucide-react';
 
 export default function CostCenterBreakdown() {
-  const { transactions } = useFinance();
+  const { } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
   const in30 = addDays(today, 30);
 

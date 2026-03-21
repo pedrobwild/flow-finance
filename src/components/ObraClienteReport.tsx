@@ -21,7 +21,7 @@ interface ObraSummary {
 }
 
 export default function ObraClienteReport() {
-  const { transactions } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const { obras } = useObras();
 
   const report = useMemo(() => {

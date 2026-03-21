@@ -6,7 +6,8 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, R
 import { Input } from '@/components/ui/input';
 
 export default function CashFlowMiniChart() {
-  const { transactions, projectedBalance } = useFinance();
+  const { projectedBalance } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const [threshold, setThreshold] = useState(20000);
   const today = todayISO();
 

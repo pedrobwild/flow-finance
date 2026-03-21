@@ -14,7 +14,8 @@ interface ConcentrationRisk {
 }
 
 export default function ForecastInsights() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
+  const { currentBalance, projectedBalance } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
 
   const insights = useMemo(() => {

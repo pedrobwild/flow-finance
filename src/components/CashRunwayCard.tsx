@@ -20,7 +20,8 @@ interface RunwayAnalysis {
 }
 
 export default function CashRunwayCard() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
+  const { currentBalance, projectedBalance } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
 
   const analysis: RunwayAnalysis = useMemo(() => {
