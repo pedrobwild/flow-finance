@@ -273,7 +273,16 @@ export default function TransactionTable({ type }: Props) {
                 {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
-          )}
+           )}
+          {isPagar && (
+            <Select value={costTypeFilter} onValueChange={setCostTypeFilter}>
+              <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Tipo Custo</SelectItem>
+                <SelectItem value="fixo">Fixo (recorrente)</SelectItem>
+                <SelectItem value="variavel">Variável (único)</SelectItem>
+              </SelectContent>
+            </Select>
           {!isPagar && (
             <Select value={billingFilter} onValueChange={setBillingFilter}>
               <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
