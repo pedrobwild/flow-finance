@@ -97,7 +97,7 @@ EXEMPLOS DE INSIGHTS AVANÇADOS:
                       properties: {
                         severity: { type: "string", enum: ["critical", "warning", "info"] },
                         text: { type: "string", description: "1-2 sentence insight in Portuguese with specific names, values, dates" },
-                        category: { type: "string", enum: ["cobranca", "desconto", "fornecedor", "cronograma", "caixa", "margem"], description: "Category of the insight for icon rendering" },
+                        category: { type: "string", enum: ["cobranca", "desconto", "fornecedor", "cronograma", "caixa", "margem", "mercado"], description: "Category of the insight for icon rendering" },
                       },
                       required: ["severity", "text", "category"],
                       additionalProperties: false,
