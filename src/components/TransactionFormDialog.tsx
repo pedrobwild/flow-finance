@@ -52,7 +52,7 @@ const empty = (type: TransactionType, obraId?: string) => ({
   billingSentAt: '',
 });
 
-export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId }: Props) {
+export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId, prefill }: Props) {
   const { addTransaction, updateTransaction } = useFinance();
   const { obras } = useObras();
   const isEdit = !!transaction;
