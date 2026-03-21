@@ -28,7 +28,8 @@ function ChartWrapper({ height, children }: { height: number; children: (width: 
   );
 }
 
-  export default function RealVsProjected() {
+export default function RealVsProjected() {
+  const { transactions, currentBalance } = useFinance();
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
 
