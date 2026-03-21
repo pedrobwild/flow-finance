@@ -68,6 +68,7 @@ export default function TransactionTable({ type }: Props) {
       .filter(t => statusFilter === 'todos' || t.status === statusFilter)
       .filter(t => priorityFilter === 'todas' || t.priority === priorityFilter)
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
+      .filter(t => counterpartFilter === 'todos' || t.counterpart === counterpartFilter)
       .filter(t => {
         if (periodFilter === 'todos') return true;
         if (periodFilter === 'semana') return t.dueDate <= eow;
