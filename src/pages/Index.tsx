@@ -11,6 +11,7 @@ import CashRunwayChart from '@/components/CashRunwayChart';
 import HealthScore from '@/components/HealthScore';
 import MacroIndicators from '@/components/MacroIndicators';
 import RealVsProjected from '@/components/RealVsProjected';
+import ObraRanking from '@/components/ObraRanking';
 import { motion } from 'framer-motion';
 
 const section = (delay: number) => ({
@@ -45,8 +46,9 @@ export default function Dashboard() {
         <motion.div {...section(0.04)} className="lg:col-span-2">
           <MorningBriefing />
         </motion.div>
-        <motion.div {...section(0.08)}>
+        <motion.div {...section(0.08)} className="space-y-6">
           <HealthScore />
+          <ObraRanking />
         </motion.div>
       </div>
 

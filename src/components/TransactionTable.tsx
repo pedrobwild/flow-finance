@@ -19,8 +19,10 @@ import {
 } from '@/components/ui/dialog';
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
-  Clock, AlertTriangle, CalendarDays, X, CalendarIcon, Send, FileText, CreditCard, Paperclip,
+  Clock, AlertTriangle, CalendarDays, X, CalendarIcon, Send, FileText, CreditCard, Paperclip, Download,
 } from 'lucide-react';
+import ExportDropdown from './ExportDropdown';
+import { exportToCSV, exportToExcel, exportToPDF, transactionsToExportRows } from '@/lib/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -322,6 +324,25 @@ export default function TransactionTable({ type }: Props) {
             </Button>
           )}
           <div className="flex-1" />
+          <ExportDropdown
+            onCSV={() => {
+              const rows = transactionsToExportRows(filtered, type);
+              exportToCSV(rows, `${isPagar ? 'contas-pagar' : 'contas-receber'}`);
+            }}
+            onExcel={() => {
+              const rows = transactionsToExportRows(filtered, type);
+              exportToExcel(rows, `${isPagar ? 'contas-pagar' : 'contas-receber'}`);
+            }}
+            onPDF={() => {
+              const rows = transactionsToExportRows(filtered, type);
+              const headers = Object.keys(rows[0] || {});
+              exportToPDF(
+                isPagar ? 'Contas a Pagar' : 'Contas a Receber',
+                headers,
+                rows.map(r => headers.map(h => String(r[h] ?? '')))
+              );
+            }}
+          />
           <AuditLogDrawer />
           <CustomCategoriesManager />
           <Button
