@@ -16,7 +16,19 @@ interface ObrasContextType {
   getActiveObrasWithFinancials: () => (Obra & ObraFinancials)[];
 }
 
-const ObrasContext = createContext<ObrasContextType | null>(null);
+const obrasContextRegistry = globalThis as typeof globalThis & {
+  __BWILD_OBRAS_CONTEXT__?: React.Context<ObrasContextType | null>;
+};
+
+const ObrasContext =
+  obrasContextRegistry.__BWILD_OBRAS_CONTEXT__ ??
+  createContext<ObrasContextType | null>(null);
+
+if (!obrasContextRegistry.__BWILD_OBRAS_CONTEXT__) {
+  obrasContextRegistry.__BWILD_OBRAS_CONTEXT__ = ObrasContext;
+}
+
+ObrasContext.displayName = 'ObrasContext';
 
 function generateCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
