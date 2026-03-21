@@ -159,6 +159,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
         address: data.address,
         status: data.status,
         contract_value: data.contractValue,
+        budget_target: data.budgetTarget || 0,
         payment_terms: data.paymentTerms,
         expected_start_date: data.expectedStartDate || null,
         expected_end_date: data.expectedEndDate || null,
