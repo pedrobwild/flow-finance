@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObras } from '@/lib/obras-context';
 import {
   Transaction, TransactionType, STATUS_OPTIONS, PRIORITY_OPTIONS, COST_CENTERS,
   STATUS_LABELS, PRIORITY_LABELS, PRIORITY_CLASSES,
@@ -7,6 +8,7 @@ import {
 import { formatCurrency, formatDateFull, todayISO, addDays } from '@/lib/helpers';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -25,11 +27,13 @@ const STATUS_ORDER: Record<string, number> = { atrasado: 0, pendente: 1, previst
 
 export default function TransactionTable({ type }: Props) {
   const { transactions, confirmTransaction, deleteTransaction } = useFinance();
+  const { obras } = useObras();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [priorityFilter, setPriorityFilter] = useState('todas');
   const [costCenterFilter, setCostCenterFilter] = useState('todos');
   const [counterpartFilter, setCounterpartFilter] = useState('todos');
+  const [obraFilter, setObraFilter] = useState('todos');
   const [periodFilter, setPeriodFilter] = useState('todos');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -37,7 +41,7 @@ export default function TransactionTable({ type }: Props) {
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [actualAmount, setActualAmount] = useState('');
 
-  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || (type === 'pagar' && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || periodFilter !== 'todos' || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'todos' || priorityFilter !== 'todas' || (type === 'pagar' && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || obraFilter !== 'todos' || periodFilter !== 'todos' || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
@@ -45,13 +49,24 @@ export default function TransactionTable({ type }: Props) {
     setPriorityFilter('todas');
     setCostCenterFilter('todos');
     setCounterpartFilter('todos');
+    setObraFilter('todos');
     setPeriodFilter('todos');
   };
+
+  const obrasWithTx = useMemo(() => {
+    const obraIds = new Set(transactions.filter(t => t.type === type && t.obraId).map(t => t.obraId!));
+    return obras.filter(o => obraIds.has(o.id));
+  }, [transactions, obras, type]);
 
   const uniqueCounterparts = useMemo(() => {
     const set = new Set(transactions.filter(t => t.type === 'receber').map(t => t.counterpart).filter(Boolean));
     return Array.from(set).sort();
   }, [transactions]);
+
+  const getObraCode = (obraId: string | null) => {
+    if (!obraId) return null;
+    return obras.find(o => o.id === obraId)?.code || null;
+  };
 
   const filtered = useMemo(() => {
     const today = todayISO();
@@ -70,6 +85,11 @@ export default function TransactionTable({ type }: Props) {
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
       .filter(t => counterpartFilter === 'todos' || t.counterpart === counterpartFilter)
       .filter(t => {
+        if (obraFilter === 'todos') return true;
+        if (obraFilter === '_sem_obra') return !t.obraId;
+        return t.obraId === obraFilter;
+      })
+      .filter(t => {
         if (periodFilter === 'todos') return true;
         if (periodFilter === 'semana') return t.dueDate <= eow;
         if (periodFilter === 'mes') return t.dueDate <= eomStr;
@@ -87,7 +107,7 @@ export default function TransactionTable({ type }: Props) {
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, periodFilter]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, periodFilter]);
 
   const totals = useMemo(() => {
     const today = todayISO();
@@ -210,6 +230,17 @@ export default function TransactionTable({ type }: Props) {
               {PRIORITY_OPTIONS.map(p => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
             </SelectContent>
           </Select>
+          {/* Obra filter */}
+          <Select value={obraFilter} onValueChange={setObraFilter}>
+            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todas obras</SelectItem>
+              <SelectItem value="_sem_obra">{isPagar ? 'Corporativo' : 'Sem obra'}</SelectItem>
+              {obrasWithTx.map(o => (
+                <SelectItem key={o.id} value={o.id}>{o.code} · {o.clientName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {isPagar && (
             <Select value={costCenterFilter} onValueChange={setCostCenterFilter}>
               <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -279,9 +310,7 @@ export default function TransactionTable({ type }: Props) {
                 <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
                   {type === 'receber' ? 'Parcela' : 'Categoria'}
                 </th>
-                {isPagar && (
-                  <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Obra</th>
-                )}
+                <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Obra</th>
                 <th className="text-right px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Valor</th>
                 <th className="text-right pr-5 pl-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider w-28">Ações</th>
               </tr>
@@ -293,6 +322,7 @@ export default function TransactionTable({ type }: Props) {
                   const isOverdue = tx.status === 'atrasado';
                   const isDueToday = tx.dueDate === today && !isOverdue && tx.status !== 'confirmado';
                   const isConfirmed = tx.status === 'confirmado';
+                  const obraCode = getObraCode(tx.obraId);
 
                   return (
                     <motion.tr
@@ -335,16 +365,15 @@ export default function TransactionTable({ type }: Props) {
                           <p className="text-[10px] text-muted-foreground truncate mt-0.5">{tx.notes}</p>
                         )}
                       </td>
-                      <td className={cn("px-3 py-3 max-w-[140px] truncate text-xs", isPagar ? "text-muted-foreground" : "font-medium text-foreground")}>{tx.counterpart}</td>
+                      <td className={cn("px-3 py-3 max-w-[140px] truncate text-xs", isPagar ? "text-muted-foreground" : "font-medium text-foreground")}>{tx.counterpart || '—'}</td>
                       <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell">{tx.category}</td>
-                      {isPagar && (
-                        <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell">
-                          {['Materiais de Obra', 'Mão de Obra Terceirizada'].includes(tx.category)
-                            ? <span className="font-medium text-foreground">{tx.costCenter}</span>
-                            : <span className="text-muted-foreground/40">—</span>
-                          }
-                        </td>
-                      )}
+                      <td className="px-3 py-3 text-xs hidden lg:table-cell">
+                        {obraCode ? (
+                          <Badge variant="outline" className="text-[10px] font-mono">{obraCode}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground/40">{isPagar ? 'Corp.' : '—'}</span>
+                        )}
+                      </td>
                       <td className="px-3 py-3 text-right">
                         <span className={cn(
                           'font-mono font-bold whitespace-nowrap text-xs',
