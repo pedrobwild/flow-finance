@@ -65,6 +65,46 @@ export const OBRA_STATUS_COLORS: Record<ObraStatus, { bg: string; text: string; 
   finalizada: { bg: 'bg-muted', text: 'text-muted-foreground', variant: 'secondary' },
 };
 
+export type StageStatus = 'planejada' | 'em_execucao' | 'concluida' | 'adiada';
+
+export interface ObraStage {
+  id: string;
+  obraId: string;
+  name: string;
+  supplier: string;
+  estimatedValue: number;
+  estimatedStartDate: string | null;
+  estimatedEndDate: string | null;
+  actualStartDate: string | null;
+  actualEndDate: string | null;
+  status: StageStatus;
+  notes: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export const STAGE_NAMES = [
+  'Demolição', 'Civil', 'Hidráulica', 'Elétrica', 'Gesso',
+  'Marcenaria', 'Marmoraria', 'Serralheria', 'Pintura',
+  'Iluminação', 'Decoração', 'Montagem Final', 'Outro',
+];
+
+export const STAGE_STATUS_OPTIONS: StageStatus[] = ['planejada', 'em_execucao', 'concluida', 'adiada'];
+
+export const STAGE_STATUS_LABELS: Record<StageStatus, string> = {
+  planejada: 'Planejada',
+  em_execucao: 'Em execução',
+  concluida: 'Concluída',
+  adiada: 'Adiada',
+};
+
+export const STAGE_STATUS_COLORS: Record<StageStatus, { bg: string; text: string }> = {
+  planejada: { bg: 'bg-muted', text: 'text-muted-foreground' },
+  em_execucao: { bg: 'bg-accent/10', text: 'text-accent' },
+  concluida: { bg: 'bg-success/10', text: 'text-success' },
+  adiada: { bg: 'bg-warning/10', text: 'text-warning' },
+};
+
 export interface ObraFinancials {
   totalContractValue: number;
   totalReceivable: number;
