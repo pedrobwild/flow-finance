@@ -109,11 +109,10 @@ export default function TransactionTable({ type }: Props) {
         return t.obraId === obraFilter;
       })
       .filter(t => {
-        if (periodFilter === 'todos') return true;
-        if (periodFilter === 'semana') return t.dueDate <= eow;
-        if (periodFilter === 'mes') return t.dueDate <= eomStr;
-        if (periodFilter === 'proximo') return t.dueDate > eomStr && t.dueDate <= nmStr;
-        return true;
+        if (!dateRange?.from) return true;
+        const from = dateRange.from.toISOString().split('T')[0];
+        const to = dateRange.to ? dateRange.to.toISOString().split('T')[0] : from;
+        return t.dueDate >= from && t.dueDate <= to;
       })
       .filter(t => {
         if (!search) return true;
