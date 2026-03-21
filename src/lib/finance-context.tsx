@@ -47,6 +47,7 @@ interface FinanceContextType {
   currentBalance: CashBalance | null;
   isLoading: boolean;
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
+  addTransactions: (txs: Omit<Transaction, 'id'>[]) => Promise<void>;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   confirmTransaction: (id: string, actualAmount?: number, txType?: string) => void;
