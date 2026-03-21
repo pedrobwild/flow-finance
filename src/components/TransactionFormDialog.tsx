@@ -145,7 +145,8 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
     });
   };
 
-  const categories = form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES;
+  const customCatsForType = customCategories.filter(c => c.type === form.type).map(c => c.name);
+  const categories = [...(form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES), ...customCatsForType];
   const cLabel = form.type === 'pagar' ? 'Fornecedor' : (form.obraId ? 'Obra / Cliente' : 'Origem / Pagador');
   const isObraReceber = form.type === 'receber' && !!form.obraId;
 
