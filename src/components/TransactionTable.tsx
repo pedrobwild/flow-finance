@@ -83,13 +83,6 @@ export default function TransactionTable({ type }: Props) {
 
   const filtered = useMemo(() => {
     const today = todayISO();
-    const eow = addDays(today, 7);
-    const eom = new Date();
-    eom.setMonth(eom.getMonth() + 1, 0);
-    const eomStr = eom.toISOString().split('T')[0];
-    const nm = new Date();
-    nm.setMonth(nm.getMonth() + 2, 0);
-    const nmStr = nm.toISOString().split('T')[0];
 
     return transactions
       .filter(t => t.type === type)
