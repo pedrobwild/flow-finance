@@ -155,6 +155,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
       const { data: rows, error } = await supabase.from('obras').insert({
         code: generateCode(),
         client_name: data.clientName,
+        client_email: data.clientEmail || '',
         condominium: data.condominium,
         unit_number: data.unitNumber,
         address: data.address,
