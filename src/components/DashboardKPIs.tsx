@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
-import { formatCurrency, todayISO, daysBetween } from '@/lib/helpers';
+import { formatCurrency, todayISO, daysBetween, addDays, getDayMonth } from '@/lib/helpers';
 import { motion } from 'framer-motion';
 import {
   ArrowDownCircle, ArrowUpCircle, TrendingUp, Wallet,
@@ -10,10 +10,37 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import type { PeriodRange } from './DashboardPeriodFilter';
 
 interface Props {
   period: PeriodRange;
+}
+
+function MiniSparkline({ data, color }: { data: { value: number }[]; color: string }) {
+  if (data.length < 2) return null;
+  return (
+    <div className="h-6 w-full mt-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={1.5}
+            fill={`url(#spark-${color})`}
+            dot={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
 export default function DashboardKPIs({ period }: Props) {
@@ -57,6 +84,37 @@ export default function DashboardKPIs({ period }: Props) {
     };
   }, [transactions, currentBalance, projectedBalance, period, today]);
 
+  // Sparkline data: projected balance over next 30 days
+  const sparklines = useMemo(() => {
+    const POINTS = 15;
+    const days = 30;
+
+    const balanceData: { value: number }[] = [];
+    const pagarData: { value: number }[] = [];
+    const receberData: { value: number }[] = [];
+    const liquidoData: { value: number }[] = [];
+
+    for (let i = 0; i <= POINTS; i++) {
+      const date = addDays(today, Math.round((i / POINTS) * days));
+      const proj = projectedBalance(date);
+      balanceData.push({ value: proj });
+
+      // Cumulative pagar/receber up to this date
+      const cumPagar = transactions
+        .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= date)
+        .reduce((s, t) => s + t.amount, 0);
+      const cumReceber = transactions
+        .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= date)
+        .reduce((s, t) => s + t.amount, 0);
+
+      pagarData.push({ value: cumPagar });
+      receberData.push({ value: cumReceber });
+      liquidoData.push({ value: proj });
+    }
+
+    return { balanceData, pagarData, receberData, liquidoData };
+  }, [transactions, projectedBalance, today]);
+
   const handleSaveBalance = () => {
     const val = parseFloat(balanceInput.replace(/[^\d.,-]/g, '').replace(',', '.'));
     if (!isNaN(val)) {
@@ -79,6 +137,8 @@ export default function DashboardKPIs({ period }: Props) {
       accentLine: 'bg-accent',
       ringColor: '',
       isBalance: true,
+      sparkData: sparklines.balanceData,
+      sparkColor: 'hsl(var(--accent))',
     },
     {
       label: 'Total a Pagar',
@@ -90,6 +150,8 @@ export default function DashboardKPIs({ period }: Props) {
       ringColor: stats.overduePayable > 0 ? 'ring-1 ring-destructive/20' : '',
       subtitle: `${stats.countPagar} transações`,
       overdue: stats.overduePayable > 0 ? `+${formatCurrency(stats.overduePayableTotal)} atrasado` : undefined,
+      sparkData: sparklines.pagarData,
+      sparkColor: 'hsl(var(--destructive))',
     },
     {
       label: 'Total a Receber',
@@ -101,6 +163,8 @@ export default function DashboardKPIs({ period }: Props) {
       ringColor: stats.overdueReceivable > 0 ? 'ring-1 ring-warning/20' : '',
       subtitle: `${stats.countReceber} transações`,
       overdue: stats.overdueReceivable > 0 ? `${formatCurrency(stats.overdueReceivableTotal)} em atraso` : undefined,
+      sparkData: sparklines.receberData,
+      sparkColor: 'hsl(var(--success))',
     },
     {
       label: 'Saldo Líquido',
@@ -111,6 +175,8 @@ export default function DashboardKPIs({ period }: Props) {
       accentLine: stats.saldoLiquido >= 0 ? 'bg-success' : 'bg-destructive',
       ringColor: '',
       subtitle: `Projeção final: ${formatCurrency(stats.projectedEnd)}`,
+      sparkData: sparklines.liquidoData,
+      sparkColor: stats.saldoLiquido >= 0 ? 'hsl(var(--success))' : 'hsl(var(--destructive))',
     },
   ];
 
@@ -163,8 +229,12 @@ export default function DashboardKPIs({ period }: Props) {
               <p className={cn('stat-value', card.color)}>
                 {card.isBalance && !currentBalance ? '—' : formatCurrency(card.value)}
               </p>
+
+              {/* Sparkline */}
+              <MiniSparkline data={card.sparkData} color={card.sparkColor} />
+
               {card.isBalance ? (
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-1">
                   <p className={cn('text-[10px]', stats.balAge !== null && stats.balAge > 3 ? 'text-warning' : 'text-muted-foreground')}>
                     {stats.balAge !== null && stats.balAge > 3 && <Clock className="w-3 h-3 inline mr-0.5 -mt-0.5" />}
                     {balanceDateLabel || 'Informar saldo'}
@@ -178,7 +248,7 @@ export default function DashboardKPIs({ period }: Props) {
                   </Button>
                 </div>
               ) : (
-                <div className="mt-2 space-y-0.5">
+                <div className="mt-1 space-y-0.5">
                   {card.subtitle && <p className="text-[10px] text-muted-foreground">{card.subtitle}</p>}
                   {card.overdue && (
                     <p className="text-[10px] text-destructive font-semibold flex items-center gap-0.5">
