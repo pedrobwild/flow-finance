@@ -121,7 +121,7 @@ export default function TransactionTable({ type }: Props) {
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, periodFilter]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, periodFilter, isFiltered]);
 
   const totals = useMemo(() => {
     const today = todayISO();
