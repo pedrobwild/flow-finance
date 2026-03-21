@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
-import { Link } from 'react-router-dom';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import TodayTomorrowActions from '@/components/TodayTomorrowActions';
 import DashboardKPIs from '@/components/DashboardKPIs';
 import CashFlowHeroChart from '@/components/CashFlowHeroChart';
-import CashRunwayCard from '@/components/CashRunwayCard';
-import ForecastInsights from '@/components/ForecastInsights';
-import ActionList from '@/components/ActionList';
-import CostCenterBreakdown from '@/components/CostCenterBreakdown';
-import { Beaker, ChevronRight } from 'lucide-react';
+import ObrasTimeline from '@/components/ObrasTimeline';
+import ObrasHealthCards from '@/components/ObrasHealthCards';
+import DecisionAlerts from '@/components/DecisionAlerts';
 import { motion } from 'framer-motion';
 
 const section = (delay: number) => ({
@@ -56,44 +53,18 @@ export default function Dashboard() {
         <CashFlowHeroChart period={period} />
       </motion.div>
 
-      {/* Runway + Actions side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <motion.div {...section(0.24)} className="lg:col-span-5">
-          <CashRunwayCard />
-        </motion.div>
-        <motion.div {...section(0.30)} className="lg:col-span-7">
-          <ActionList />
-        </motion.div>
-      </div>
+      {/* === METADE INFERIOR — OBRAS-CENTRIC === */}
 
-      {/* Simulator CTA */}
-      <motion.div {...section(0.36)}>
-        <Link
-          to="/simulador"
-          className="card-elevated p-4 flex items-center justify-between group block hover:shadow-md active:scale-[0.985] transition-all duration-200"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-              <Beaker className="w-[18px] h-[18px] text-accent" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-sm group-hover:text-accent transition-colors">Simulador de Cenários</h2>
-              <p className="text-[11px] text-muted-foreground mt-0.5">E se eu adiar ou excluir pagamentos? Simule decisões e veja o impacto.</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
-        </Link>
+      {/* Mapa de pressão de caixa por obra */}
+      <ObrasTimeline />
+
+      {/* Saúde financeira por obra */}
+      <motion.div {...section(0.30)}>
+        <ObrasHealthCards />
       </motion.div>
 
-      {/* Forecast + Cost Center */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <motion.div {...section(0.42)} className="lg:col-span-6">
-          <ForecastInsights />
-        </motion.div>
-        <motion.div {...section(0.48)} className="lg:col-span-6">
-          <CostCenterBreakdown />
-        </motion.div>
-      </div>
+      {/* Alertas de decisão */}
+      <DecisionAlerts />
     </div>
   );
 }
