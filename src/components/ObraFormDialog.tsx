@@ -19,7 +19,7 @@ const emptyForm = {
   condominium: '',
   unitNumber: '',
   address: '',
-  status: 'contratada' as ObraStatus,
+  status: 'ativa' as ObraStatus,
   contractValue: '',
   paymentTerms: '',
   expectedStartDate: '',
