@@ -186,6 +186,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
       if (data.address !== undefined) update.address = data.address;
       if (data.status !== undefined) update.status = data.status;
       if (data.contractValue !== undefined) update.contract_value = data.contractValue;
+      if (data.budgetTarget !== undefined) update.budget_target = data.budgetTarget;
       if (data.paymentTerms !== undefined) update.payment_terms = data.paymentTerms;
       if (data.expectedStartDate !== undefined) update.expected_start_date = data.expectedStartDate || null;
       if (data.expectedEndDate !== undefined) update.expected_end_date = data.expectedEndDate || null;
