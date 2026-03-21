@@ -101,9 +101,13 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // For receber, auto-generate description from parcela info
+    const description = form.type === 'receber'
+      ? form.category || form.description || 'Parcela'
+      : form.description;
     const data: any = {
       type: form.type as TransactionType,
-      description: form.description,
+      description,
       counterpart: form.counterpart,
       amount: parseFloat(form.amount) || 0,
       dueDate: form.dueDate,
@@ -114,7 +118,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       recurrence: form.recurrence,
       paymentMethod: form.paymentMethod === '_none' ? '' : form.paymentMethod,
       notes: form.notes,
-      priority: form.priority,
+      priority: form.type === 'receber' ? 'normal' : form.priority,
       obraId: form.obraId || null,
     };
     if (isEdit && transaction) {
