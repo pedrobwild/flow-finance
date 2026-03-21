@@ -60,7 +60,7 @@ export default function FluxoCaixa() {
   // When switching to por_obra, auto-select first active obra
   useEffect(() => {
     if (viewMode === 'por_obra' && !selectedObraId) {
-      const active = obras.filter(o => o.status === 'em_execucao' || o.status === 'contratada');
+      const active = obras.filter(o => o.status === 'ativa');
       if (active.length > 0) setSelectedObraId(active[0].id);
     }
   }, [viewMode, obras, selectedObraId]);
