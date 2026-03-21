@@ -163,8 +163,13 @@ export default function ContasReceber() {
         </motion.div>
       )}
 
-      {/* Table */}
+      {/* Report by Obra/Cliente */}
       <motion.div {...sect(0.14)}>
+        <ObraClienteReport />
+      </motion.div>
+
+      {/* Table */}
+      <motion.div {...sect(0.18)}>
         <TransactionTable type="receber" />
       </motion.div>
     </div>
