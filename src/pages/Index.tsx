@@ -9,6 +9,8 @@ import ObraCashBalance from '@/components/ObraCashBalance';
 import DecisionAlerts from '@/components/DecisionAlerts';
 import CashRunwayChart from '@/components/CashRunwayChart';
 import HealthScore from '@/components/HealthScore';
+import MacroIndicators from '@/components/MacroIndicators';
+import RealVsProjected from '@/components/RealVsProjected';
 import { motion } from 'framer-motion';
 
 const section = (delay: number) => ({
@@ -26,7 +28,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 pb-8">
-      {/* === HEADER === */}
+      {/* === HEADER + MACRO === */}
       <motion.div {...section(0)}>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -35,6 +37,7 @@ export default function Dashboard() {
           </div>
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
         </div>
+        <MacroIndicators />
       </motion.div>
 
       {/* === ROW 1: BRIEFING + HEALTH SCORE === */}
@@ -62,13 +65,18 @@ export default function Dashboard() {
         <DashboardKPIs period={period} />
       </motion.div>
 
-      {/* === RUNWAY DE CAIXA === */}
-      <motion.div {...section(0.22)}>
-        <CashRunwayChart />
-      </motion.div>
+      {/* === RUNWAY + REAL VS PROJETADO === */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div {...section(0.22)}>
+          <CashRunwayChart />
+        </motion.div>
+        <motion.div {...section(0.24)}>
+          <RealVsProjected />
+        </motion.div>
+      </div>
 
       {/* === PROJEÇÃO SEMANAL === */}
-      <motion.div {...section(0.26)}>
+      <motion.div {...section(0.28)}>
         <WeeklyCashProjection />
       </motion.div>
 
