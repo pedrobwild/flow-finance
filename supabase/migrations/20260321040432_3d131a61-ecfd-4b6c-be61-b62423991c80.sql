@@ -1,0 +1,1 @@
+ALTER TABLE public.transactions ADD COLUMN billing_count integer NOT NULL DEFAULT 0;

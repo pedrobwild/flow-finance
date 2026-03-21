@@ -34,7 +34,7 @@ interface Props { type: TransactionType; }
 const STATUS_ORDER: Record<string, number> = { atrasado: 0, pendente: 1, previsto: 2, confirmado: 3 };
 
 export default function TransactionTable({ type }: Props) {
-  const { confirmTransaction, deleteTransaction } = useFinance();
+  const { confirmTransaction, deleteTransaction, updateTransaction } = useFinance();
   const { filteredTransactions: transactions, isFiltered } = useObraFilter();
   const { obras } = useObras();
   const [search, setSearch] = useState('');
@@ -430,13 +430,14 @@ export default function TransactionTable({ type }: Props) {
                             ) : '—'}
                           </td>
                           <td className="px-3 py-3 text-xs hidden lg:table-cell whitespace-nowrap">
-                            {tx.billingSentAt ? (
+                            {tx.billingCount > 0 && tx.billingSentAt ? (
                               <span className="flex items-center gap-1 text-success">
                                 <Send className="w-3 h-3" />
-                                {formatDateFull(tx.billingSentAt)}
+                                <span className="font-medium">Cobrança {tx.billingCount}</span>
+                                <span className="text-muted-foreground">· {formatDateFull(tx.billingSentAt)}</span>
                               </span>
                             ) : (
-                              <span className="text-muted-foreground/50">Não enviada</span>
+                              <span className="text-muted-foreground/50">Não cobrada</span>
                             )}
                           </td>
                           <td className="px-3 py-3 max-w-[140px] text-xs text-muted-foreground hidden xl:table-cell">
@@ -461,6 +462,23 @@ export default function TransactionTable({ type }: Props) {
                       </td>
                       <td className="pr-5 pl-3 py-3">
                         <div className="flex items-center justify-end gap-0.5">
+                          {!isPagar && !isConfirmed && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity hover:bg-primary/10 active:scale-90"
+                              title={tx.billingCount > 0 ? `Reenviar cobrança (atual: ${tx.billingCount})` : 'Marcar cobrança enviada'}
+                              onClick={() => {
+                                const newCount = (tx.billingCount || 0) + 1;
+                                updateTransaction(tx.id, {
+                                  billingSentAt: todayISO(),
+                                  billingCount: newCount,
+                                });
+                              }}
+                            >
+                              <Send className="w-3.5 h-3.5 text-primary" />
+                            </Button>
+                          )}
                           {!isConfirmed && (
                             <Button
                               size="icon"

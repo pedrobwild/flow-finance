@@ -26,6 +26,7 @@ function rowToTransaction(row: any): Transaction {
     priority: row.priority as Priority,
     obraId: row.obra_id || null,
     billingSentAt: row.billing_sent_at || null,
+    billingCount: Number(row.billing_count) || 0,
   };
   tx.status = computeStatus(tx);
   return tx;
@@ -129,6 +130,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         priority: tx.priority,
         obra_id: (tx as any).obraId || null,
         billing_sent_at: tx.billingSentAt || null,
+        billing_count: tx.billingCount || 0,
       });
       if (error) throw error;
     },
@@ -157,6 +159,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         priority: tx.priority,
         obra_id: (tx as any).obraId || null,
         billing_sent_at: tx.billingSentAt || null,
+        billing_count: tx.billingCount || 0,
       }));
       const { error } = await supabase.from('transactions').insert(rows);
       if (error) throw error;
@@ -185,6 +188,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (updates.priority !== undefined) db.priority = updates.priority;
       if ((updates as any).obraId !== undefined) db.obra_id = (updates as any).obraId;
       if (updates.billingSentAt !== undefined) db.billing_sent_at = updates.billingSentAt;
+      if (updates.billingCount !== undefined) db.billing_count = updates.billingCount;
       const { error } = await supabase.from('transactions').update(db).eq('id', id);
       if (error) throw error;
     },
