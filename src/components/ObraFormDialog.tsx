@@ -114,6 +114,10 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
                 <Label className="text-xs">Nome do Cliente *</Label>
                 <Input value={form.clientName} onChange={e => set('clientName', e.target.value)} required autoFocus />
               </div>
+              <div className="col-span-2">
+                <Label className="text-xs">Email do Cliente</Label>
+                <Input type="email" value={form.clientEmail} onChange={e => set('clientEmail', e.target.value)} placeholder="cliente@email.com" />
+              </div>
               <div>
                 <Label className="text-xs">Condomínio</Label>
                 <Input value={form.condominium} onChange={e => set('condominium', e.target.value)} placeholder="Ex: Ed. Solar" />
