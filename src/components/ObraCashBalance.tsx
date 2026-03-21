@@ -12,6 +12,8 @@ import { AlertTriangle } from 'lucide-react';
 import ObraDetailSheet from '@/components/ObraDetailSheet';
 import type { Obra, Transaction } from '@/lib/types';
 
+type Semaphore = 'pode-seguir' | 'atencao' | 'replanejar';
+
 interface ObraRow {
   id: string | null;
   code: string;
@@ -28,6 +30,7 @@ interface ObraRow {
   nextEntry: Transaction | null;
   nextExit: Transaction | null;
   obra: Obra | null;
+  semaphore: Semaphore;
 }
 
 const section = (delay: number) => ({
@@ -73,6 +76,18 @@ export default function ObraCashBalance() {
         .filter(t => t.type === 'pagar' && t.status !== 'confirmado')
         .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
 
+      const balance = totalReceived - totalPaid;
+      const hasOverdue = overdueReceivable > 0;
+      const hasUpcomingIncome = nextEntry && daysBetween(today, nextEntry.dueDate) <= 15;
+      const deepNegative = balance < 0 && Math.abs(balance) > obra.contractValue * 0.2;
+
+      let semaphore: Semaphore = 'pode-seguir';
+      if (deepNegative || (balance < 0 && !hasUpcomingIncome)) {
+        semaphore = 'replanejar';
+      } else if (balance < 0 || hasOverdue) {
+        semaphore = 'atencao';
+      }
+
       result.push({
         id: obra.id,
         code: obra.code,
@@ -81,7 +96,7 @@ export default function ObraCashBalance() {
         contractValue: obra.contractValue,
         totalReceived,
         totalPaid,
-        balance: totalReceived - totalPaid,
+        balance,
         receivedPct,
         pendingPct,
         overduePct,
@@ -89,6 +104,7 @@ export default function ObraCashBalance() {
         nextEntry,
         nextExit,
         obra,
+        semaphore,
       });
     }
 
@@ -123,6 +139,7 @@ export default function ObraCashBalance() {
       nextEntry: corpNextEntry,
       nextExit: corpNextExit,
       obra: null,
+      semaphore: (corpReceived - corpPaid) < 0 ? 'atencao' : 'pode-seguir',
     });
 
     // Sort: negative balance first, then ascending
@@ -223,6 +240,15 @@ export default function ObraCashBalance() {
                       >
                         <TableCell className="py-2.5">
                           <div className="flex items-center gap-2">
+                            <span className={cn(
+                              'w-2 h-2 rounded-full shrink-0',
+                              row.semaphore === 'pode-seguir' && 'bg-success',
+                              row.semaphore === 'atencao' && 'bg-warning',
+                              row.semaphore === 'replanejar' && 'bg-destructive pulse-alert',
+                            )} title={
+                              row.semaphore === 'pode-seguir' ? 'Pode seguir' :
+                              row.semaphore === 'atencao' ? 'Atenção' : 'Replanejar'
+                            } />
                             <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0 shrink-0">
                               {row.code}
                             </Badge>
@@ -295,6 +321,12 @@ export default function ObraCashBalance() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2 min-w-0">
+                        <span className={cn(
+                          'w-2.5 h-2.5 rounded-full shrink-0',
+                          row.semaphore === 'pode-seguir' && 'bg-success',
+                          row.semaphore === 'atencao' && 'bg-warning',
+                          row.semaphore === 'replanejar' && 'bg-destructive pulse-alert',
+                        )} />
                         <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0 shrink-0">
                           {row.code}
                         </Badge>
