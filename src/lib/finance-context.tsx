@@ -24,6 +24,7 @@ function rowToTransaction(row: any): Transaction {
     paymentMethod: (row.payment_method || '') as PaymentMethod,
     notes: row.notes || '',
     priority: row.priority as Priority,
+    obraId: row.obra_id || null,
   };
   tx.status = computeStatus(tx);
   return tx;
