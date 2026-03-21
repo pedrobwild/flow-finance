@@ -240,6 +240,15 @@ export default function ObraCashBalance() {
                       >
                         <TableCell className="py-2.5">
                           <div className="flex items-center gap-2">
+                            <span className={cn(
+                              'w-2 h-2 rounded-full shrink-0',
+                              row.semaphore === 'pode-seguir' && 'bg-success',
+                              row.semaphore === 'atencao' && 'bg-warning',
+                              row.semaphore === 'replanejar' && 'bg-destructive pulse-alert',
+                            )} title={
+                              row.semaphore === 'pode-seguir' ? 'Pode seguir' :
+                              row.semaphore === 'atencao' ? 'Atenção' : 'Replanejar'
+                            } />
                             <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0 shrink-0">
                               {row.code}
                             </Badge>
