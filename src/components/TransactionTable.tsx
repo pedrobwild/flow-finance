@@ -399,7 +399,16 @@ export default function TransactionTable({ type }: Props) {
                         <>
                           <td className="px-3 py-3 text-xs">
                             {obraCode ? (
-                              <Badge variant="outline" className="text-[10px] font-mono">{obraCode}</Badge>
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] font-mono cursor-pointer hover:bg-primary/10 transition-colors"
+                                onClick={() => {
+                                  const obra = obras.find(o => o.id === tx.obraId);
+                                  if (obra) setDetailObra(obra);
+                                }}
+                              >
+                                {obraCode}
+                              </Badge>
                             ) : (
                               <span className="text-muted-foreground/40">—</span>
                             )}
