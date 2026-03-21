@@ -103,7 +103,8 @@ export const PAGAR_CATEGORIES = [
 
 export const RECEBER_CATEGORIES = [
   'Contrato de Reforma (Medição)', 'Sinal de Contrato', 'Parcela de Contrato',
-  'Projeto Arquitetônico', 'Consultoria', 'Reembolso', 'Outros'
+  'Projeto Arquitetônico', 'Consultoria', 'Reembolso',
+  'Investimento', 'Estorno', 'Rendimento', 'Empréstimo', 'Outros'
 ];
 
 export const STATUS_LABELS: Record<TransactionStatus, string> = {

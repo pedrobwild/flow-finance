@@ -99,14 +99,15 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
   };
 
   const categories = form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES;
-  const cLabel = form.type === 'pagar' ? 'Fornecedor' : 'Obra / Cliente';
+  const cLabel = form.type === 'pagar' ? 'Fornecedor' : (form.obraId ? 'Obra / Cliente' : 'Origem / Pagador');
+  const isObraReceber = form.type === 'receber' && !!form.obraId;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For receber, auto-generate description from parcela info
-    const description = form.type === 'receber'
+    // For receber with obra, use parcela (category) as description; without obra, use description field
+    const description = form.type === 'receber' && form.obraId
       ? form.category || form.description || 'Parcela'
-      : form.description;
+      : form.description || form.category;
     const data: any = {
       type: form.type as TransactionType,
       description,
@@ -153,7 +154,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
             {/* Obra selector */}
             <div className="col-span-2">
               <Label className="text-xs flex items-center gap-1">
-                <Building2 className="h-3 w-3" /> Obra {form.type === 'receber' && '*'}
+                <Building2 className="h-3 w-3" /> Obra
               </Label>
               <Select value={form.obraId || '_none'} onValueChange={v => handleObraSelect(v === '_none' ? '' : v)}>
                 <SelectTrigger className="text-sm">
@@ -179,13 +180,14 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
               <Input
                 value={form.counterpart}
                 onChange={e => set('counterpart', e.target.value)}
-                readOnly={form.type === 'receber' && !!form.obraId}
-                className={form.type === 'receber' && form.obraId ? 'bg-muted/50' : ''}
+                readOnly={isObraReceber}
+                className={isObraReceber ? 'bg-muted/50' : ''}
+                placeholder={form.type === 'receber' && !form.obraId ? 'Ex: Banco, Investidor, Empresa...' : ''}
               />
             </div>
 
             {/* For receber: Parcela field prominently */}
-            {form.type === 'receber' && (
+            {form.type === 'receber' && form.obraId && (
               <div className="col-span-2">
                 <Label className="text-xs">Parcela *</Label>
                 <Input
@@ -195,6 +197,28 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                   required
                 />
               </div>
+            )}
+            {form.type === 'receber' && !form.obraId && (
+              <>
+                <div className="col-span-2">
+                  <Label className="text-xs">Descrição *</Label>
+                  <Input
+                    value={form.description}
+                    onChange={e => set('description', e.target.value)}
+                    placeholder="Ex: Rendimento aplicação, Estorno cartão..."
+                    required
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs">Categoria</Label>
+                  <Select value={form.category} onValueChange={v => set('category', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             <div>
