@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import ExportDropdown from './ExportDropdown';
 import { exportToCSV, exportToExcel, exportToPDF, transactionsToExportRows } from '@/lib/export-utils';
-} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
