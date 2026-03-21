@@ -55,7 +55,7 @@ export default function TransactionTable({ type }: Props) {
 
   const isPagar = type === 'pagar';
 
-  const hasActiveFilters = statusFilter !== 'todos' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || obraFilter !== 'todos' || !!dateRange?.from || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'todos' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || obraFilter !== 'todos' || !!dateRange?.from || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
