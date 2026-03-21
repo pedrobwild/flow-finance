@@ -1,7 +1,7 @@
 export type TransactionType = 'pagar' | 'receber';
 export type TransactionStatus = 'previsto' | 'pendente' | 'confirmado' | 'atrasado';
 export type Priority = 'crítica' | 'alta' | 'normal' | 'baixa';
-export type CostCenter = 'Operação' | 'Marketing' | 'Vendas' | 'Produto' | 'RH' | 'Jurídico' | 'Administrativo' | 'Diretoria';
+export type CostCenter = 'OPEX' | 'Marketing' | 'Vendas' | 'Produto' | 'RH' | 'Jurídico' | 'Administrativo' | 'Diretoria';
 export type Recurrence = 'única' | 'mensal' | 'semanal' | 'trimestral' | 'anual';
 export type PaymentMethod = 'PIX' | 'Boleto' | 'Cartão de Crédito' | 'TED' | 'Débito Automático' | 'Dinheiro' | '';
 
