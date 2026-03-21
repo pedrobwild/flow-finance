@@ -28,10 +28,8 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
   const [txFormOpen, setTxFormOpen] = useState(false);
   const [txFormType, setTxFormType] = useState<'pagar' | 'receber'>('receber');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [stageFormOpen, setStageFormOpen] = useState(false);
-  const [editingStage, setEditingStage] = useState<ObraStage | null>(null);
 
-  const { stages, addStage, updateStage, deleteStage } = useObraStages(obra?.id ?? null);
+
 
   const fin = obra ? getObraFinancials(obra.id) : null;
   const obraTxs = obra ? transactions.filter(t => t.obraId === obra.id) : [];
