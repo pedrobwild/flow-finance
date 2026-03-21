@@ -38,7 +38,7 @@ export default function TransactionTable({ type }: Props) {
   const { filteredTransactions: transactions, isFiltered } = useObraFilter();
   const { obras } = useObras();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('todos');
+  const [statusFilter, setStatusFilter] = useState('pendentes');
   const [priorityFilter, setPriorityFilter] = useState('todas');
   const [costCenterFilter, setCostCenterFilter] = useState('todos');
   const [counterpartFilter, setCounterpartFilter] = useState('todos');
