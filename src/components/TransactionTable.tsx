@@ -318,7 +318,7 @@ export default function TransactionTable({ type }: Props) {
                           <p className="text-[10px] text-muted-foreground truncate mt-0.5">{tx.notes}</p>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-muted-foreground max-w-[140px] truncate text-xs">{tx.counterpart}</td>
+                      <td className={cn("px-3 py-3 max-w-[140px] truncate text-xs", isPagar ? "text-muted-foreground" : "font-medium text-foreground")}>{tx.counterpart}</td>
                       <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell">{tx.category}</td>
                       {isPagar && (
                         <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell">
