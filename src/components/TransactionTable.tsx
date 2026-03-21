@@ -44,6 +44,7 @@ export default function TransactionTable({ type }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [actualAmount, setActualAmount] = useState('');
+  const [detailObra, setDetailObra] = useState<Obra | null>(null);
 
   const isPagar = type === 'pagar';
 
