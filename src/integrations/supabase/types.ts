@@ -125,6 +125,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          billing_sent_at: string | null
           category: string
           cost_center: string
           counterpart: string
@@ -144,6 +145,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          billing_sent_at?: string | null
           category?: string
           cost_center?: string
           counterpart?: string
@@ -163,6 +165,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          billing_sent_at?: string | null
           category?: string
           cost_center?: string
           counterpart?: string

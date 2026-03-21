@@ -1,0 +1,1 @@
+ALTER TABLE public.transactions ADD COLUMN billing_sent_at date DEFAULT NULL;
