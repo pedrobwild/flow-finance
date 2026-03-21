@@ -70,6 +70,7 @@ export default function TransactionTable({ type }: Props) {
     setCounterpartFilter('todos');
     setObraFilter('todos');
     setBillingFilter('todos');
+    setCostTypeFilter('todos');
     setDateRange(undefined);
   };
 
