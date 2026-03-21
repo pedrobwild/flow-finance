@@ -100,6 +100,12 @@ export default function TransactionTable({ type }: Props) {
       })
       .filter(t => priorityFilter === 'todas' || t.priority === priorityFilter)
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
+      .filter(t => {
+        if (costTypeFilter === 'todos') return true;
+        if (costTypeFilter === 'fixo') return t.recurrence !== 'única';
+        if (costTypeFilter === 'variavel') return t.recurrence === 'única';
+        return true;
+      })
       .filter(t => counterpartFilter === 'todos' || t.counterpart === counterpartFilter)
       .filter(t => {
         if (billingFilter === 'todos') return true;
