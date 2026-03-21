@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      obras: {
+        Row: {
+          client_name: string
+          code: string
+          condominium: string
+          created_at: string
+          id: string
+          status: string
+          unit_number: string
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          code: string
+          condominium?: string
+          created_at?: string
+          id?: string
+          status?: string
+          unit_number?: string
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          code?: string
+          condominium?: string
+          created_at?: string
+          id?: string
+          status?: string
+          unit_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -52,6 +85,7 @@ export type Database = {
           due_date: string
           id: string
           notes: string | null
+          obra_id: string | null
           paid_at: string | null
           payment_method: string | null
           priority: string
@@ -70,6 +104,7 @@ export type Database = {
           due_date: string
           id?: string
           notes?: string | null
+          obra_id?: string | null
           paid_at?: string | null
           payment_method?: string | null
           priority?: string
@@ -88,6 +123,7 @@ export type Database = {
           due_date?: string
           id?: string
           notes?: string | null
+          obra_id?: string | null
           paid_at?: string | null
           payment_method?: string | null
           priority?: string
@@ -96,7 +132,15 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
