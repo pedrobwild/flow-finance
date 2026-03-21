@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface Insight {
   severity: 'critical' | 'warning' | 'info';
   text: string;
-  category?: 'cobranca' | 'desconto' | 'fornecedor' | 'cronograma' | 'caixa' | 'margem';
+  category?: 'cobranca' | 'desconto' | 'fornecedor' | 'cronograma' | 'caixa' | 'margem' | 'mercado';
 }
 
 interface Suggestion {
