@@ -1,7 +1,7 @@
 export type TransactionType = 'pagar' | 'receber';
 export type TransactionStatus = 'previsto' | 'pendente' | 'confirmado' | 'atrasado';
 export type Priority = 'crítica' | 'alta' | 'normal' | 'baixa';
-export type CostCenter = 'Operação' | 'Marketing' | 'Vendas' | 'Produto' | 'RH' | 'Jurídico' | 'Administrativo' | 'Diretoria';
+export type CostCenter = 'OPEX' | 'Marketing' | 'Vendas' | 'Produto' | 'RH' | 'Jurídico' | 'Administrativo' | 'Diretoria';
 export type Recurrence = 'única' | 'mensal' | 'semanal' | 'trimestral' | 'anual';
 export type PaymentMethod = 'PIX' | 'Boleto' | 'Cartão de Crédito' | 'TED' | 'Débito Automático' | 'Dinheiro' | '';
 
@@ -31,7 +31,7 @@ export interface CashBalance {
 }
 
 export const COST_CENTERS: CostCenter[] = [
-  'Operação', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
+  'OPEX', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
 ];
 
 export const STATUS_OPTIONS: TransactionStatus[] = ['previsto', 'pendente', 'confirmado', 'atrasado'];
@@ -75,7 +75,7 @@ export const PRIORITY_CLASSES: Record<Priority, string> = {
 };
 
 export const COST_CENTER_COLORS: Record<CostCenter, string> = {
-  'Operação': '#0C3547',
+  'OPEX': '#0C3547',
   'Marketing': '#7c3aed',
   'Vendas': '#059669',
   'Produto': '#d97706',

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import {
   Transaction, TransactionType, STATUS_OPTIONS, PRIORITY_OPTIONS, COST_CENTERS,
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Building2 } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -28,7 +29,8 @@ const empty = (type: TransactionType) => ({
   dueDate: todayISO(),
   paidAt: '',
   status: 'pendente' as const,
-  costCenter: 'Operação' as const,
+  costCenter: 'OPEX' as const,
+  obra: '',
   category: 'Outros',
   recurrence: 'única' as const,
   paymentMethod: '_none',
@@ -37,12 +39,27 @@ const empty = (type: TransactionType) => ({
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType }: Props) {
-  const { addTransaction, updateTransaction } = useFinance();
+  const { addTransaction, updateTransaction, transactions } = useFinance();
   const isEdit = !!transaction;
   const [form, setForm] = useState(empty(defaultType));
+  const [obraModalOpen, setObraModalOpen] = useState(false);
+
+  const existingObras = useMemo(() => {
+    const obrasSet = new Set(
+      transactions
+        .filter(t => t.type === 'pagar' && t.costCenter === 'OPEX' && t.notes)
+        .map(t => {
+          const match = t.notes.match(/\[Obra: (.+?)\]/);
+          return match ? match[1] : null;
+        })
+        .filter(Boolean) as string[]
+    );
+    return Array.from(obrasSet).sort();
+  }, [transactions]);
 
   useEffect(() => {
     if (transaction) {
+      const obraMatch = transaction.notes.match(/\[Obra: (.+?)\]/);
       setForm({
         type: transaction.type,
         description: transaction.description,
@@ -52,10 +69,11 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         paidAt: transaction.paidAt || '',
         status: transaction.status as any,
         costCenter: transaction.costCenter as any,
+        obra: obraMatch ? obraMatch[1] : '',
         category: transaction.category,
         recurrence: transaction.recurrence as any,
         paymentMethod: transaction.paymentMethod || '_none',
-        notes: transaction.notes,
+        notes: transaction.notes.replace(/\s*\[Obra: .+?\]/, ''),
         priority: transaction.priority as any,
       });
     } else {
@@ -63,12 +81,20 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
     }
   }, [transaction, open, defaultType]);
 
-  const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
+  const set = (key: string, value: string) => {
+    setForm(f => ({ ...f, [key]: value }));
+    if (key === 'costCenter' && value === 'OPEX') {
+      setObraModalOpen(true);
+    }
+  };
   const categories = form.type === 'pagar' ? PAGAR_CATEGORIES : RECEBER_CATEGORIES;
   const cLabel = form.type === 'pagar' ? 'Fornecedor' : 'Obra / Cliente';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const notesWithObra = form.costCenter === 'OPEX' && form.obra
+      ? `${form.notes}${form.notes ? ' ' : ''}[Obra: ${form.obra}]`
+      : form.notes;
     const data = {
       type: form.type as TransactionType,
       description: form.description,
@@ -81,7 +107,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       category: form.category,
       recurrence: form.recurrence as any,
       paymentMethod: (form.paymentMethod === '_none' ? '' : form.paymentMethod) as any,
-      notes: form.notes,
+      notes: notesWithObra,
       priority: form.priority as any,
     };
     if (isEdit && transaction) {
@@ -93,6 +119,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -138,21 +165,22 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
             </div>
             {form.type === 'pagar' && (
               <div>
-                {['Materiais de Obra', 'Mão de Obra Terceirizada'].includes(form.category) ? (
-                  <>
-                    <Label className="text-xs">Obra</Label>
-                    <Input value={form.costCenter} onChange={e => set('costCenter', e.target.value)} placeholder="Ex: Reforma Apt 302 — Vila Madalena" />
-                  </>
-                ) : (
-                  <>
-                    <Label className="text-xs">Centro de Custo</Label>
-                    <Select value={form.costCenter} onValueChange={v => set('costCenter', v)}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </>
+                <Label className="text-xs">Centro de Custo</Label>
+                <Select value={form.costCenter} onValueChange={v => set('costCenter', v)}>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {COST_CENTERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {form.costCenter === 'OPEX' && form.obra && (
+                  <button
+                    type="button"
+                    onClick={() => setObraModalOpen(true)}
+                    className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <Building2 className="h-3 w-3" />
+                    Obra: {form.obra}
+                  </button>
                 )}
               </div>
             )}
@@ -209,5 +237,58 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Modal de seleção de Obra para OPEX */}
+    <Dialog open={obraModalOpen} onOpenChange={setObraModalOpen}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            Selecionar Obra
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Obra destino da despesa</Label>
+            <Input
+              value={form.obra}
+              onChange={e => setForm(f => ({ ...f, obra: e.target.value }))}
+              placeholder="Ex: Reforma Apt 302 — Vila Madalena"
+              autoFocus
+            />
+          </div>
+          {existingObras.length > 0 && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Obras anteriores</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {existingObras.map(obra => (
+                  <button
+                    key={obra}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, obra }))}
+                    className={`text-xs px-2 py-1 rounded-md border transition-colors ${
+                      form.obra === obra
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                    }`}
+                  >
+                    {obra}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => { setForm(f => ({ ...f, obra: '' })); setObraModalOpen(false); }}>
+              Pular
+            </Button>
+            <Button type="button" size="sm" onClick={() => setObraModalOpen(false)} disabled={!form.obra}>
+              Confirmar
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
