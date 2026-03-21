@@ -123,6 +123,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         payment_method: tx.paymentMethod,
         notes: tx.notes,
         priority: tx.priority,
+        obra_id: (tx as any).obraId || null,
       });
       if (error) throw error;
     },
