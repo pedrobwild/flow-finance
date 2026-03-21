@@ -68,6 +68,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         paymentMethod: transaction.paymentMethod || '_none',
         notes: transaction.notes,
         priority: transaction.priority as any,
+        billingSentAt: transaction.billingSentAt || '',
       });
     } else {
       const init = empty(defaultType, defaultObraId);
