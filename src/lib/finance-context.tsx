@@ -137,6 +137,33 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     onError: () => toast.error('Erro ao criar transação'),
   });
 
+  const addBulkMutation = useMutation({
+    mutationFn: async (txs: Omit<Transaction, 'id'>[]) => {
+      const rows = txs.map(tx => ({
+        type: tx.type,
+        description: tx.description,
+        counterpart: tx.counterpart,
+        amount: tx.amount,
+        due_date: tx.dueDate,
+        paid_at: tx.paidAt,
+        status: tx.status,
+        cost_center: tx.costCenter,
+        category: tx.category,
+        recurrence: tx.recurrence,
+        payment_method: tx.paymentMethod,
+        notes: tx.notes,
+        priority: tx.priority,
+        obra_id: (tx as any).obraId || null,
+      }));
+      const { error } = await supabase.from('transactions').insert(rows);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateTx();
+    },
+    onError: () => toast.error('Erro ao criar transações'),
+  });
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Transaction> }) => {
       const db: any = {};
