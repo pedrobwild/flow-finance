@@ -373,10 +373,10 @@ export default function MorningBriefing() {
                   <div className="space-y-1">
                     {data.suggestions.map((sug, i) => {
                       const urg = sug.urgency ? urgencyLabel[sug.urgency] : null;
+                      const hasPrefill = !!sug.prefill;
                       return (
-                        <Link
+                        <div
                           key={i}
-                          to={sug.link}
                           className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-all group border border-transparent hover:border-border"
                         >
                           <div className="w-1 h-8 rounded-full bg-accent/30 group-hover:bg-accent transition-colors" />
@@ -391,8 +391,26 @@ export default function MorningBriefing() {
                             </div>
                             <p className="text-[11px] text-muted-foreground line-clamp-2">{sug.detail}</p>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                        </Link>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {hasPrefill && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2.5 text-[10px] font-semibold gap-1 border-accent/30 text-accent hover:bg-accent hover:text-accent-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSuggestionAction(sug);
+                                }}
+                              >
+                                <Plus className="w-3 h-3" />
+                                Criar
+                              </Button>
+                            )}
+                            <Link to={sug.link}>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground hover:text-accent transition-all flex-shrink-0" />
+                            </Link>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -402,6 +420,20 @@ export default function MorningBriefing() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Transaction form pre-filled from AI suggestions */}
+      {txFormDefaults && (
+        <TransactionFormDialog
+          open={txFormOpen}
+          onClose={() => {
+            setTxFormOpen(false);
+            setTxFormDefaults(null);
+          }}
+          transaction={null}
+          defaultType={txFormDefaults.type}
+          defaultObraId={txFormDefaults.obraId}
+        />
+      )}
     </div>
   );
 }
