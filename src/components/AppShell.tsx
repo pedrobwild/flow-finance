@@ -87,6 +87,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               </div>
               <DropdownMenuSeparator />
+              {isAdmin && (
+                <DropdownMenuItem onClick={() => navigate('/obras')} className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Área do Admin
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={signOut} className="gap-2 text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4" />
                 Sair
