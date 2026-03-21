@@ -139,6 +139,7 @@ export default function ObraCashBalance() {
       nextEntry: corpNextEntry,
       nextExit: corpNextExit,
       obra: null,
+      semaphore: (corpReceived - corpPaid) < 0 ? 'atencao' : 'pode-seguir',
     });
 
     // Sort: negative balance first, then ascending
