@@ -50,7 +50,7 @@ interface FinanceContextType {
   addTransactions: (txs: Omit<Transaction, 'id'>[]) => Promise<void>;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
-  confirmTransaction: (id: string, actualAmount?: number, txType?: string) => void;
+  confirmTransaction: (id: string, actualAmount?: number, txType?: string, paidAt?: string) => void;
   updateCashBalance: (amount: number, date?: string) => void;
   projectedBalance: (date: string) => number;
   getTransactionsByObra: (obraId: string | null) => Transaction[];
