@@ -305,8 +305,7 @@ export default function MorningBriefing() {
 
       {/* Collapsible Content */}
       {expanded && (
-      <div className="px-4 pb-4 border-t">
-      <div className="pt-4">
+      <div className="px-4 pb-4 pt-4 border-t">
         <AnimatePresence mode="wait">
           {loading && (
             <motion.div
