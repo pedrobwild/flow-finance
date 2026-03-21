@@ -33,7 +33,7 @@ const empty = (type: TransactionType, obraId?: string) => ({
   dueDate: todayISO(),
   paidAt: '',
   status: 'pendente' as const,
-  costCenter: 'OPEX' as const,
+  costCenter: 'Operação' as const,
   obraId: obraId || '',
   category: 'Outros',
   recurrence: 'única' as const,
