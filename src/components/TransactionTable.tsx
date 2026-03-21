@@ -29,6 +29,7 @@ export default function TransactionTable({ type }: Props) {
   const [statusFilter, setStatusFilter] = useState('todos');
   const [priorityFilter, setPriorityFilter] = useState('todas');
   const [costCenterFilter, setCostCenterFilter] = useState('todos');
+  const [counterpartFilter, setCounterpartFilter] = useState('todos');
   const [periodFilter, setPeriodFilter] = useState('todos');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
