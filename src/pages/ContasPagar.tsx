@@ -4,7 +4,7 @@ import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
-import { ArrowDownRight, Building2, Clock, AlertTriangle, TrendingDown, Layers, Wallet } from 'lucide-react';
+import { ArrowDownRight, Building2, Clock, AlertTriangle, TrendingDown, Layers, Wallet, Repeat, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TransactionTable from '@/components/TransactionTable';
 
