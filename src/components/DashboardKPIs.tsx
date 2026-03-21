@@ -17,8 +17,8 @@ interface Props {
 }
 
 export default function DashboardKPIs({ period }: Props) {
-  const { currentBalance, projectedBalance, updateCashBalance } = useFinance();
-  const { filteredTransactions: transactions } = useObraFilter();
+  const { updateCashBalance } = useFinance();
+  const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance, isFiltered } = useObraFilter();
   const [editingBalance, setEditingBalance] = useState(false);
   const [balanceInput, setBalanceInput] = useState('');
   const today = todayISO();

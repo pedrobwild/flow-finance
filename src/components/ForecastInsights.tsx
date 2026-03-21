@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { motion } from 'framer-motion';
@@ -14,8 +13,7 @@ interface ConcentrationRisk {
 }
 
 export default function ForecastInsights() {
-  const { currentBalance, projectedBalance } = useFinance();
-  const { filteredTransactions: transactions } = useObraFilter();
+  const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const today = todayISO();
 
   const insights = useMemo(() => {

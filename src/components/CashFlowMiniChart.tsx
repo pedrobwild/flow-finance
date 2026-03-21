@@ -1,13 +1,11 @@
 import { useMemo, useState } from 'react';
-import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Input } from '@/components/ui/input';
 
 export default function CashFlowMiniChart() {
-  const { projectedBalance } = useFinance();
-  const { filteredTransactions: transactions } = useObraFilter();
+  const { filteredTransactions: transactions, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const [threshold, setThreshold] = useState(20000);
   const today = todayISO();
 

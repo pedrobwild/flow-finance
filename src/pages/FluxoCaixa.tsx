@@ -38,8 +38,8 @@ const sect = (delay: number) => ({
 });
 
 export default function FluxoCaixa() {
-  const { currentBalance, confirmTransaction } = useFinance();
-  const { filteredTransactions: transactions, isFiltered, selectedObraId } = useObraFilter();
+  const { confirmTransaction } = useFinance();
+  const { filteredTransactions: transactions, isFiltered, selectedObraId, filteredBalance } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const [period, setPeriod] = useState(30);
   const [initialBalance, setInitialBalance] = useState(0);
@@ -49,8 +49,8 @@ export default function FluxoCaixa() {
   const today = todayISO();
 
   useEffect(() => {
-    if (currentBalance) setInitialBalance(currentBalance.amount);
-  }, [currentBalance]);
+    if (filteredBalance) setInitialBalance(filteredBalance.amount);
+  }, [filteredBalance]);
 
   const toggleDay = (date: string) => {
     setExpandedDays(prev => {

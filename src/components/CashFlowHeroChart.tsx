@@ -31,8 +31,8 @@ interface DayPoint {
 }
 
 export default function CashFlowHeroChart({ period }: Props) {
-  const { projectedBalance, confirmTransaction } = useFinance();
-  const { filteredTransactions: transactions } = useObraFilter();
+  const { confirmTransaction } = useFinance();
+  const { filteredTransactions: transactions, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const today = todayISO();
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
 
