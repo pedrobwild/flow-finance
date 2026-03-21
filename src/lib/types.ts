@@ -45,6 +45,7 @@ export interface Obra {
   address: string;
   status: ObraStatus;
   contractValue: number;
+  budgetTarget: number;
   paymentTerms: string;
   expectedStartDate: string | null;
   expectedEndDate: string | null;
