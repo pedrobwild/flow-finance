@@ -52,6 +52,8 @@ interface FinanceContextType {
   confirmTransaction: (id: string, actualAmount?: number, txType?: string) => void;
   updateCashBalance: (amount: number, date?: string) => void;
   projectedBalance: (date: string) => number;
+  getTransactionsByObra: (obraId: string | null) => Transaction[];
+  projectedBalanceForObra: (obraId: string, date: string) => number;
 }
 
 const financeContextRegistry = globalThis as typeof globalThis & {
@@ -185,7 +187,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.from('transactions').update(updateData).eq('id', id);
       if (error) throw error;
 
-      // Update cash balance when actual amount is provided
       if (actualAmount !== undefined && txType) {
         const currentAmt = currentBalance?.amount ?? 0;
         const newBalance = txType === 'receber'
@@ -233,14 +234,38 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (tx.dueDate > targetDate) continue;
 
       if (tx.type === 'receber') {
-        if (tx.status === 'atrasado') continue; // uncertain
+        if (tx.status === 'atrasado') continue;
         projected += tx.amount;
       } else {
-        projected -= tx.amount; // include overdue payables
+        projected -= tx.amount;
       }
     }
     return projected;
   }, [transactions, currentBalance]);
+
+  const getTransactionsByObra = useCallback((obraId: string | null): Transaction[] => {
+    if (obraId === null) {
+      return transactions.filter(t => !t.obraId);
+    }
+    return transactions.filter(t => t.obraId === obraId);
+  }, [transactions]);
+
+  const projectedBalanceForObra = useCallback((obraId: string, targetDate: string): number => {
+    const obraTxs = transactions.filter(t => t.obraId === obraId);
+    let balance = 0;
+
+    for (const tx of obraTxs) {
+      if (tx.dueDate > targetDate) continue;
+      if (tx.type === 'receber') {
+        if (tx.status === 'confirmado' || tx.status !== 'atrasado') {
+          balance += tx.amount;
+        }
+      } else {
+        balance -= tx.amount;
+      }
+    }
+    return balance;
+  }, [transactions]);
 
   return (
     <FinanceContext.Provider value={{
@@ -255,6 +280,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       confirmTransaction: (id, actualAmount, txType) => confirmMutation.mutate({ id, actualAmount, txType }),
       updateCashBalance: (amount, date) => balanceMutation.mutate({ amount, date: date || todayISO() }),
       projectedBalance,
+      getTransactionsByObra,
+      projectedBalanceForObra,
     }}>
       {children}
     </FinanceContext.Provider>
