@@ -12,15 +12,20 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
-  Clock, AlertTriangle, CalendarDays, X,
+  Clock, AlertTriangle, CalendarDays, X, CalendarIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { DateRange } from 'react-day-picker';
 import TransactionFormDialog from './TransactionFormDialog';
 import ObraDetailSheet from './ObraDetailSheet';
 
@@ -38,7 +43,7 @@ export default function TransactionTable({ type }: Props) {
   const [costCenterFilter, setCostCenterFilter] = useState('todos');
   const [counterpartFilter, setCounterpartFilter] = useState('todos');
   const [obraFilter, setObraFilter] = useState('todos');
-  const [periodFilter, setPeriodFilter] = useState('todos');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
@@ -49,7 +54,7 @@ export default function TransactionTable({ type }: Props) {
 
   const isPagar = type === 'pagar';
 
-  const hasActiveFilters = statusFilter !== 'todos' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || obraFilter !== 'todos' || periodFilter !== 'todos' || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'todos' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || obraFilter !== 'todos' || !!dateRange?.from || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
@@ -58,7 +63,7 @@ export default function TransactionTable({ type }: Props) {
     setCostCenterFilter('todos');
     setCounterpartFilter('todos');
     setObraFilter('todos');
-    setPeriodFilter('todos');
+    setDateRange(undefined);
   };
 
   const obrasWithTx = useMemo(() => {
@@ -78,19 +83,12 @@ export default function TransactionTable({ type }: Props) {
 
   const filtered = useMemo(() => {
     const today = todayISO();
-    const eow = addDays(today, 7);
-    const eom = new Date();
-    eom.setMonth(eom.getMonth() + 1, 0);
-    const eomStr = eom.toISOString().split('T')[0];
-    const nm = new Date();
-    nm.setMonth(nm.getMonth() + 2, 0);
-    const nmStr = nm.toISOString().split('T')[0];
 
     return transactions
       .filter(t => t.type === type)
       // Company view: hide confirmed past transactions (only future matters)
       .filter(t => {
-        if (isFiltered) return true; // Obra view: show everything
+        if (isFiltered) return true;
         if (t.status === 'confirmado' && t.dueDate < today) return false;
         return true;
       })
@@ -104,11 +102,10 @@ export default function TransactionTable({ type }: Props) {
         return t.obraId === obraFilter;
       })
       .filter(t => {
-        if (periodFilter === 'todos') return true;
-        if (periodFilter === 'semana') return t.dueDate <= eow;
-        if (periodFilter === 'mes') return t.dueDate <= eomStr;
-        if (periodFilter === 'proximo') return t.dueDate > eomStr && t.dueDate <= nmStr;
-        return true;
+        if (!dateRange?.from) return true;
+        const from = dateRange.from.toISOString().split('T')[0];
+        const to = dateRange.to ? dateRange.to.toISOString().split('T')[0] : from;
+        return t.dueDate >= from && t.dueDate <= to;
       })
       .filter(t => {
         if (!search) return true;
@@ -121,7 +118,7 @@ export default function TransactionTable({ type }: Props) {
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, periodFilter, isFiltered]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, dateRange, isFiltered]);
 
   const totals = useMemo(() => {
     const today = todayISO();
@@ -254,15 +251,32 @@ export default function TransactionTable({ type }: Props) {
               </SelectContent>
             </Select>
           )}
-          <Select value={periodFilter} onValueChange={setPeriodFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Período</SelectItem>
-              <SelectItem value="semana">Esta semana</SelectItem>
-              <SelectItem value="mes">Este mês</SelectItem>
-              <SelectItem value="proximo">Mês que vem</SelectItem>
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("h-8 text-xs gap-1.5 font-normal", !dateRange?.from && "text-muted-foreground")}>
+                <CalendarIcon className="w-3.5 h-3.5" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>{format(dateRange.from, "dd/MM", { locale: ptBR })} – {format(dateRange.to, "dd/MM", { locale: ptBR })}</>
+                  ) : (
+                    format(dateRange.from, "dd/MM/yy", { locale: ptBR })
+                  )
+                ) : (
+                  "Período"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
           {hasActiveFilters && (
             <Button
               size="sm"
