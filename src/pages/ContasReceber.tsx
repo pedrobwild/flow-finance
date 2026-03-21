@@ -15,7 +15,8 @@ const sect = (delay: number) => ({
 });
 
 export default function ContasReceber() {
-  const { transactions } = useFinance();
+  const { } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
 
   const insights = useMemo(() => {
