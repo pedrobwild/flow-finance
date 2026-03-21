@@ -172,6 +172,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       priority: form.type === 'receber' ? 'normal' : form.priority,
       obraId: form.obraId || null,
       billingSentAt: form.billingSentAt || null,
+      attachmentUrl: attachmentUrl || null,
     };
     if (isEdit && transaction) {
       updateTransaction(transaction.id, data);
