@@ -27,6 +27,7 @@ const adminNavItems = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
   const { user, isAdmin, profile, signOut } = useAuth();
 
   const navItems = isAdmin ? [...baseNavItems, ...adminNavItems] : baseNavItems;
