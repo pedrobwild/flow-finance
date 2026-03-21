@@ -519,6 +519,13 @@ export default function TransactionTable({ type }: Props) {
                       </td>
                       <td className="pr-5 pl-3 py-3">
                         <div className="flex items-center justify-end gap-0.5">
+                          {tx.attachmentUrl && (
+                            <a href={tx.attachmentUrl} target="_blank" rel="noopener noreferrer" title="Ver comprovante">
+                              <Button size="icon" variant="ghost" className="h-7 w-7 hover:bg-primary/10" type="button">
+                                <Paperclip className="w-3.5 h-3.5 text-primary" />
+                              </Button>
+                            </a>
+                          )}
                           {!isPagar && !isConfirmed && (
                             <Button
                               size="icon"
