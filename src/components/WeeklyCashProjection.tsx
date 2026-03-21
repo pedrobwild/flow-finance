@@ -27,17 +27,18 @@ interface DataPoint {
 }
 
 export default function WeeklyCashProjection() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
-  const { filteredTransactions } = useObraFilter();
+  const { currentBalance } = useFinance();
+  const { filteredTransactions, filteredProjectedBalance, filteredBalance } = useObraFilter();
   const today = todayISO();
   const [granularity, setGranularity] = useState<Granularity>('dia');
   const [days, setDays] = useState<DayCount>(30);
   const [weeks, setWeeks] = useState<WeekCount>(6);
 
+  const baseBalance = filteredBalance?.amount ?? currentBalance?.amount ?? 0;
+
   const safetyMargin = useMemo(() => {
-    const bal = currentBalance?.amount ?? 0;
-    return Math.max(bal * 0.1, 5000);
-  }, [currentBalance]);
+    return Math.max(baseBalance * 0.1, 5000);
+  }, [baseBalance]);
 
   const data = useMemo((): DataPoint[] => {
     const result: DataPoint[] = [];
@@ -45,14 +46,14 @@ export default function WeeklyCashProjection() {
     if (granularity === 'dia') {
       for (let d = 0; d < days; d++) {
         const date = addDays(today, d);
-        const saldoInicial = d === 0 ? (currentBalance?.amount ?? 0) : projectedBalance(addDays(today, d - 1));
+        const saldoInicial = d === 0 ? (baseBalance ?? 0) : filteredProjectedBalance(addDays(today, d - 1));
         const dayEntradas = filteredTransactions
-          .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate === date)
+          .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.status !== 'atrasado' && t.dueDate === date)
           .reduce((s, t) => s + t.amount, 0);
         const daySaidas = filteredTransactions
           .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate === date)
           .reduce((s, t) => s + t.amount, 0);
-        const saldoFinal = projectedBalance(date);
+        const saldoFinal = filteredProjectedBalance(date);
 
         let zone: 'safe' | 'attention' | 'danger' = 'safe';
         if (saldoFinal < 0) zone = 'danger';
@@ -76,14 +77,14 @@ export default function WeeklyCashProjection() {
       for (let w = 0; w < weeks; w++) {
         const ws = addDays(today, w * 7);
         const we = addDays(today, w * 7 + 6);
-        const saldoInicial = projectedBalance(ws);
+        const saldoInicial = filteredProjectedBalance(ws);
         const weekEntradas = filteredTransactions
-          .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
+          .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.status !== 'atrasado' && t.dueDate >= ws && t.dueDate <= we)
           .reduce((s, t) => s + t.amount, 0);
         const weekSaidas = filteredTransactions
           .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
           .reduce((s, t) => s + t.amount, 0);
-        const saldoFinal = projectedBalance(we);
+        const saldoFinal = filteredProjectedBalance(we);
 
         let zone: 'safe' | 'attention' | 'danger' = 'safe';
         if (saldoFinal < 0) zone = 'danger';
@@ -103,7 +104,7 @@ export default function WeeklyCashProjection() {
       }
     }
     return result;
-  }, [filteredTransactions, projectedBalance, currentBalance, today, granularity, days, weeks, safetyMargin]);
+  }, [filteredTransactions, filteredProjectedBalance, baseBalance, today, granularity, days, weeks, safetyMargin]);
 
   const dangerCount = data.filter(d => d.zone === 'danger').length;
   const attentionCount = data.filter(d => d.zone === 'attention').length;
