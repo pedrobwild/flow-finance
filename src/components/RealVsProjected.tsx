@@ -115,7 +115,7 @@ export default function RealVsProjected() {
         )}
       </div>
 
-      <div className="h-52">
+      <div style={{ width: '100%', height: 208 }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <defs>
