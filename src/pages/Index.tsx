@@ -4,9 +4,6 @@ import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardP
 import TodayTomorrowActions from '@/components/TodayTomorrowActions';
 import DashboardKPIs from '@/components/DashboardKPIs';
 import CashFlowHeroChart from '@/components/CashFlowHeroChart';
-import MorningBriefing from '@/components/MorningBriefing';
-import ObraCashBalance from '@/components/ObraCashBalance';
-import DecisionSuggestions from '@/components/DecisionSuggestions';
 import { motion } from 'framer-motion';
 
 const section = (delay: number) => ({
@@ -27,8 +24,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* === METADE SUPERIOR (INALTERADA) === */}
-
       {/* Header */}
       <motion.div {...section(0)} className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
@@ -40,7 +35,7 @@ export default function Dashboard() {
         <DashboardPeriodFilter value={period} onChange={setPeriod} />
       </motion.div>
 
-      {/* Ações imediatas */}
+      {/* Urgent: Today & Tomorrow */}
       <motion.div {...section(0.06)}>
         <TodayTomorrowActions />
       </motion.div>
@@ -50,21 +45,10 @@ export default function Dashboard() {
         <DashboardKPIs period={period} />
       </motion.div>
 
-      {/* Gráfico de projeção */}
+      {/* Hero Chart */}
       <motion.div {...section(0.18)}>
         <CashFlowHeroChart period={period} />
       </motion.div>
-
-      {/* === METADE INFERIOR (NOVA) === */}
-
-      {/* Briefing executivo */}
-      <MorningBriefing />
-
-      {/* Saldo de caixa por obra */}
-      <ObraCashBalance />
-
-      {/* Decisões sugeridas */}
-      <DecisionSuggestions />
     </div>
   );
 }
