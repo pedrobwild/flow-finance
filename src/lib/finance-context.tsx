@@ -303,6 +303,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       currentBalance,
       isLoading,
       addTransaction: (tx) => addMutation.mutate(tx),
+      addTransactions: (txs) => addBulkMutation.mutateAsync(txs),
       updateTransaction: (id, updates) => updateMutation.mutate({ id, updates }),
       deleteTransaction: (id) => deleteMutation.mutate(id),
       confirmTransaction: (id, actualAmount, txType) => confirmMutation.mutate({ id, actualAmount, txType }),
