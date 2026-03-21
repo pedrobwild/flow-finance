@@ -272,6 +272,12 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
               <Label className="text-xs">{form.type === 'pagar' ? 'Pago em' : 'Recebido em'}</Label>
               <Input type="date" value={form.paidAt} onChange={e => set('paidAt', e.target.value)} />
             </div>
+            {form.type === 'receber' && (
+              <div>
+                <Label className="text-xs">Cobrança enviada em</Label>
+                <Input type="date" value={form.billingSentAt} onChange={e => set('billingSentAt', e.target.value)} />
+              </div>
+            )}
             <div className="col-span-2">
               <Label className="text-xs">Observações</Label>
               <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} />
