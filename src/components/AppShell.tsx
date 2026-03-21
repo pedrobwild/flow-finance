@@ -12,16 +12,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const baseNavItems = [
+const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { label: 'Obras', icon: Building2, path: '/obras' },
   { label: 'A Pagar', icon: ArrowDownCircle, path: '/pagar' },
   { label: 'A Receber', icon: ArrowUpCircle, path: '/receber' },
-  { label: 'Fluxo de Caixa', icon: TrendingUp, path: '/fluxo' },
+  { label: 'Fluxo', icon: TrendingUp, path: '/fluxo' },
   { label: 'Simulador', icon: Beaker, path: '/simulador' },
-];
-
-const adminNavItems = [
-  { label: 'Obras', icon: Building2, path: '/obras' },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -30,7 +27,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { user, isAdmin, profile, signOut } = useAuth();
 
-  const navItems = isAdmin ? [...baseNavItems, ...adminNavItems] : baseNavItems;
   const initials = profile?.fullName
     ? profile.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() || '??';
@@ -87,12 +83,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               </div>
               <DropdownMenuSeparator />
-              {isAdmin && (
-                <DropdownMenuItem onClick={() => navigate('/obras')} className="gap-2">
-                  <Settings className="h-4 w-4" />
-                  Área do Admin
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem onClick={signOut} className="gap-2 text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4" />
                 Sair
