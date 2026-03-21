@@ -51,10 +51,6 @@ export default function Dashboard() {
       {/* === SALDO DE CAIXA POR OBRA + SEMÁFORO === */}
       <ObraCashBalance />
 
-      {/* === CONFLITOS + PRESSÃO DE CAIXA === */}
-      <motion.div {...section(0.22)}>
-        <CashPressureConflicts />
-      </motion.div>
 
       {/* === ALERTAS DE DECISÃO === */}
       <motion.div {...section(0.26)}>
