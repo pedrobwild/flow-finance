@@ -26,6 +26,7 @@ function rowToTransaction(row: any): Transaction {
     priority: row.priority as Priority,
     obraId: row.obra_id || null,
     billingSentAt: row.billing_sent_at || null,
+    billingCount: Number(row.billing_count) || 0,
   };
   tx.status = computeStatus(tx);
   return tx;
