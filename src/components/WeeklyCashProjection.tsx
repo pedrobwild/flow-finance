@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
-import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
+import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName } from '@/lib/helpers';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, ReferenceLine, Cell,
@@ -10,13 +10,17 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { TrendingDown, TrendingUp, ShieldAlert } from 'lucide-react';
 
-interface WeekData {
+type Granularity = 'dia' | 'semana';
+type DayCount = 15 | 30 | 45;
+type WeekCount = 6 | 8 | 12;
+
+interface DataPoint {
   label: string;
-  weekStart: string;
-  weekEnd: string;
+  periodStart: string;
+  periodEnd: string;
   saldoInicial: number;
   entradas: number;
-  saidas: number;
+  saidas: number; // negative for chart
   saldoFinal: number;
   netFlow: number;
   zone: 'safe' | 'attention' | 'danger';
@@ -26,55 +30,86 @@ export default function WeeklyCashProjection() {
   const { transactions, currentBalance, projectedBalance } = useFinance();
   const { filteredTransactions } = useObraFilter();
   const today = todayISO();
-  const [weeks, setWeeks] = useState<6 | 8 | 12>(6);
+  const [granularity, setGranularity] = useState<Granularity>('dia');
+  const [days, setDays] = useState<DayCount>(30);
+  const [weeks, setWeeks] = useState<WeekCount>(6);
 
   const safetyMargin = useMemo(() => {
     const bal = currentBalance?.amount ?? 0;
     return Math.max(bal * 0.1, 5000);
   }, [currentBalance]);
 
-  const data = useMemo((): WeekData[] => {
-    const result: WeekData[] = [];
+  const data = useMemo((): DataPoint[] => {
+    const result: DataPoint[] = [];
 
-    for (let w = 0; w < weeks; w++) {
-      const ws = addDays(today, w * 7);
-      const we = addDays(today, w * 7 + 6);
+    if (granularity === 'dia') {
+      for (let d = 0; d < days; d++) {
+        const date = addDays(today, d);
+        const saldoInicial = d === 0 ? (currentBalance?.amount ?? 0) : projectedBalance(addDays(today, d - 1));
+        const dayEntradas = filteredTransactions
+          .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate === date)
+          .reduce((s, t) => s + t.amount, 0);
+        const daySaidas = filteredTransactions
+          .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate === date)
+          .reduce((s, t) => s + t.amount, 0);
+        const saldoFinal = projectedBalance(date);
 
-      const saldoInicial = projectedBalance(ws);
+        let zone: 'safe' | 'attention' | 'danger' = 'safe';
+        if (saldoFinal < 0) zone = 'danger';
+        else if (saldoFinal < safetyMargin) zone = 'attention';
 
-      const weekEntradas = filteredTransactions
-        .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
-        .reduce((s, t) => s + t.amount, 0);
-      const weekSaidas = filteredTransactions
-        .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
-        .reduce((s, t) => s + t.amount, 0);
+        const label = d === 0 ? 'Hoje' : d === 1 ? 'Amanhã' : getDayMonth(date);
 
-      const saldoFinal = projectedBalance(we);
-      const netFlow = weekEntradas - weekSaidas;
+        result.push({
+          label,
+          periodStart: date,
+          periodEnd: date,
+          saldoInicial,
+          entradas: dayEntradas,
+          saidas: -daySaidas,
+          saldoFinal,
+          netFlow: dayEntradas - daySaidas,
+          zone,
+        });
+      }
+    } else {
+      for (let w = 0; w < weeks; w++) {
+        const ws = addDays(today, w * 7);
+        const we = addDays(today, w * 7 + 6);
+        const saldoInicial = projectedBalance(ws);
+        const weekEntradas = filteredTransactions
+          .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
+          .reduce((s, t) => s + t.amount, 0);
+        const weekSaidas = filteredTransactions
+          .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
+          .reduce((s, t) => s + t.amount, 0);
+        const saldoFinal = projectedBalance(we);
 
-      let zone: 'safe' | 'attention' | 'danger' = 'safe';
-      if (saldoFinal < 0) zone = 'danger';
-      else if (saldoFinal < safetyMargin) zone = 'attention';
+        let zone: 'safe' | 'attention' | 'danger' = 'safe';
+        if (saldoFinal < 0) zone = 'danger';
+        else if (saldoFinal < safetyMargin) zone = 'attention';
 
-      result.push({
-        label: w === 0 ? 'Esta semana' : `${getDayMonth(ws)}`,
-        weekStart: ws,
-        weekEnd: we,
-        saldoInicial,
-        entradas: weekEntradas,
-        saidas: -weekSaidas, // negative for chart
-        saldoFinal,
-        netFlow,
-        zone,
-      });
+        result.push({
+          label: w === 0 ? 'Esta semana' : getDayMonth(ws),
+          periodStart: ws,
+          periodEnd: we,
+          saldoInicial,
+          entradas: weekEntradas,
+          saidas: -weekSaidas,
+          saldoFinal,
+          netFlow: weekEntradas - weekSaidas,
+          zone,
+        });
+      }
     }
     return result;
-  }, [filteredTransactions, projectedBalance, today, weeks, safetyMargin]);
+  }, [filteredTransactions, projectedBalance, currentBalance, today, granularity, days, weeks, safetyMargin]);
 
-  const minSaldo = Math.min(...data.map(d => Math.min(d.saldoFinal, d.saidas)));
-  const dangerWeeks = data.filter(d => d.zone === 'danger').length;
-  const attentionWeeks = data.filter(d => d.zone === 'attention').length;
-  const worstWeek = data.reduce((worst, d) => d.saldoFinal < worst.saldoFinal ? d : worst, data[0]);
+  const dangerCount = data.filter(d => d.zone === 'danger').length;
+  const attentionCount = data.filter(d => d.zone === 'attention').length;
+  const worstPoint = data.length > 0 ? data.reduce((w, d) => d.saldoFinal < w.saldoFinal ? d : w, data[0]) : null;
+  const periodLabel = granularity === 'dia' ? 'dia' : 'semana';
+  const periodLabelPlural = granularity === 'dia' ? 'dias' : 'semanas';
 
   const zoneColors = {
     safe: 'hsl(var(--success))',
@@ -84,8 +119,8 @@ export default function WeeklyCashProjection() {
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
-    const week = payload[0]?.payload as WeekData;
-    if (!week) return null;
+    const point = payload[0]?.payload as DataPoint;
+    if (!point) return null;
 
     return (
       <div className="bg-card border rounded-lg p-3 shadow-xl text-xs space-y-2 min-w-[200px]">
@@ -93,30 +128,30 @@ export default function WeeklyCashProjection() {
           <p className="font-semibold">{label}</p>
           <span className={cn(
             'text-[10px] font-medium px-1.5 py-0.5 rounded',
-            week.zone === 'safe' && 'bg-success/10 text-success',
-            week.zone === 'attention' && 'bg-warning/10 text-warning',
-            week.zone === 'danger' && 'bg-destructive/10 text-destructive',
+            point.zone === 'safe' && 'bg-success/10 text-success',
+            point.zone === 'attention' && 'bg-warning/10 text-warning',
+            point.zone === 'danger' && 'bg-destructive/10 text-destructive',
           )}>
-            {week.zone === 'safe' ? 'Seguro' : week.zone === 'attention' ? 'Atenção' : 'Risco'}
+            {point.zone === 'safe' ? 'Seguro' : point.zone === 'attention' ? 'Atenção' : 'Risco'}
           </span>
         </div>
         <div className="space-y-1 pt-1 border-t">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Saldo inicial</span>
-            <span className="font-mono">{formatCurrency(week.saldoInicial)}</span>
+            <span className="font-mono">{formatCurrency(point.saldoInicial)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Entradas</span>
-            <span className="font-mono text-success">+{formatCurrency(week.entradas)}</span>
+            <span className="font-mono text-success">+{formatCurrency(point.entradas)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Saídas</span>
-            <span className="font-mono text-destructive">−{formatCurrency(Math.abs(week.saidas))}</span>
+            <span className="font-mono text-destructive">−{formatCurrency(Math.abs(point.saidas))}</span>
           </div>
           <div className="flex justify-between pt-1 border-t font-semibold">
             <span>Saldo final</span>
-            <span className={cn('font-mono', week.saldoFinal >= 0 ? 'text-success' : 'text-destructive')}>
-              {formatCurrency(week.saldoFinal)}
+            <span className={cn('font-mono', point.saldoFinal >= 0 ? 'text-success' : 'text-destructive')}>
+              {formatCurrency(point.saldoFinal)}
             </span>
           </div>
         </div>
@@ -131,51 +166,74 @@ export default function WeeklyCashProjection() {
           <div>
             <h2 className="text-sm font-semibold">Margem de Segurança do Caixa</h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Projeção semanal — o caixa suporta o cronograma?
+              Projeção {granularity === 'dia' ? 'diária' : 'semanal'} — o caixa suporta o cronograma?
             </p>
           </div>
-          <div className="flex items-center gap-1">
-            {([6, 8, 12] as const).map(w => (
+          <div className="flex items-center gap-2">
+            {/* Granularity toggle */}
+            <div className="flex items-center bg-muted rounded-md p-0.5">
               <Button
-                key={w}
                 size="sm"
-                variant={weeks === w ? 'default' : 'ghost'}
-                className="h-7 px-2.5 text-xs"
-                onClick={() => setWeeks(w)}
+                variant={granularity === 'dia' ? 'default' : 'ghost'}
+                className="h-6 px-2 text-[10px]"
+                onClick={() => setGranularity('dia')}
               >
-                {w}s
+                Dia
               </Button>
-            ))}
+              <Button
+                size="sm"
+                variant={granularity === 'semana' ? 'default' : 'ghost'}
+                className="h-6 px-2 text-[10px]"
+                onClick={() => setGranularity('semana')}
+              >
+                Semana
+              </Button>
+            </div>
+            {/* Period selector */}
+            <div className="flex items-center gap-1">
+              {granularity === 'dia'
+                ? ([15, 30, 45] as const).map(d => (
+                    <Button key={d} size="sm" variant={days === d ? 'default' : 'ghost'} className="h-7 px-2.5 text-xs" onClick={() => setDays(d)}>
+                      {d}d
+                    </Button>
+                  ))
+                : ([6, 8, 12] as const).map(w => (
+                    <Button key={w} size="sm" variant={weeks === w ? 'default' : 'ghost'} className="h-7 px-2.5 text-xs" onClick={() => setWeeks(w)}>
+                      {w}s
+                    </Button>
+                  ))
+              }
+            </div>
           </div>
         </div>
 
         {/* Status strip */}
         <div className="flex flex-wrap gap-3 mt-2">
-          {dangerWeeks > 0 && (
+          {dangerCount > 0 && (
             <div className="flex items-center gap-1.5 text-destructive">
               <ShieldAlert className="w-3.5 h-3.5" />
               <span className="text-[11px] font-medium">
-                {dangerWeeks} semana{dangerWeeks > 1 ? 's' : ''} em risco
+                {dangerCount} {dangerCount > 1 ? periodLabelPlural : periodLabel} em risco
               </span>
             </div>
           )}
-          {attentionWeeks > 0 && (
+          {attentionCount > 0 && (
             <div className="flex items-center gap-1.5 text-warning">
               <TrendingDown className="w-3.5 h-3.5" />
               <span className="text-[11px] font-medium">
-                {attentionWeeks} semana{attentionWeeks > 1 ? 's' : ''} em atenção
+                {attentionCount} {attentionCount > 1 ? periodLabelPlural : periodLabel} em atenção
               </span>
             </div>
           )}
-          {dangerWeeks === 0 && attentionWeeks === 0 && (
+          {dangerCount === 0 && attentionCount === 0 && (
             <div className="flex items-center gap-1.5 text-success">
               <TrendingUp className="w-3.5 h-3.5" />
               <span className="text-[11px] font-medium">Caixa saudável no período</span>
             </div>
           )}
-          {worstWeek && (
+          {worstPoint && (
             <span className="text-[11px] text-muted-foreground">
-              Pior semana: <span className="font-medium text-foreground">{worstWeek.label}</span> ({formatCurrency(worstWeek.saldoFinal)})
+              Pior ponto: <span className="font-medium text-foreground">{worstPoint.label}</span> ({formatCurrency(worstPoint.saldoFinal)})
             </span>
           )}
         </div>
@@ -187,9 +245,10 @@ export default function WeeklyCashProjection() {
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: granularity === 'dia' ? 8 : 10, fill: 'hsl(var(--muted-foreground))' }}
               axisLine={{ stroke: 'hsl(var(--border))' }}
               tickLine={false}
+              interval={granularity === 'dia' ? (days > 30 ? 3 : 2) : 0}
             />
             <YAxis
               tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
@@ -199,7 +258,6 @@ export default function WeeklyCashProjection() {
             />
             <Tooltip content={<CustomTooltip />} />
 
-            {/* Safety margin line */}
             <ReferenceLine
               y={safetyMargin}
               stroke="hsl(var(--warning))"
@@ -209,40 +267,38 @@ export default function WeeklyCashProjection() {
             />
             <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeWidth={1.5} strokeOpacity={0.4} />
 
-            {/* Bars */}
-            <Bar dataKey="entradas" stackId="flow" radius={[2, 2, 0, 0]} maxBarSize={32}>
+            <Bar dataKey="entradas" stackId="flow" radius={[2, 2, 0, 0]} maxBarSize={granularity === 'dia' ? 16 : 32}>
               {data.map((_, i) => (
                 <Cell key={i} fill="hsl(var(--success))" fillOpacity={0.7} />
               ))}
             </Bar>
-            <Bar dataKey="saidas" stackId="flow" radius={[0, 0, 2, 2]} maxBarSize={32}>
+            <Bar dataKey="saidas" stackId="flow" radius={[0, 0, 2, 2]} maxBarSize={granularity === 'dia' ? 16 : 32}>
               {data.map((_, i) => (
                 <Cell key={i} fill="hsl(var(--destructive))" fillOpacity={0.5} />
               ))}
             </Bar>
 
-            {/* Saldo line */}
             <Line
               type="monotone"
               dataKey="saldoFinal"
               stroke="hsl(var(--accent))"
               strokeWidth={2.5}
-              dot={(props: any) => {
-                const week = data[props.index];
-                if (!week) return <circle key={props.index} />;
+              dot={granularity === 'semana' ? ((props: any) => {
+                const point = data[props.index];
+                if (!point) return <circle key={props.index} />;
                 return (
                   <circle
                     key={props.index}
                     cx={props.cx}
                     cy={props.cy}
                     r={5}
-                    fill={zoneColors[week.zone]}
+                    fill={zoneColors[point.zone]}
                     stroke="hsl(var(--card))"
                     strokeWidth={2}
                   />
                 );
-              }}
-              activeDot={{ r: 6, stroke: 'hsl(var(--accent))', strokeWidth: 2, fill: 'hsl(var(--card))' }}
+              }) : false}
+              activeDot={{ r: 5, stroke: 'hsl(var(--accent))', strokeWidth: 2, fill: 'hsl(var(--card))' }}
             />
           </ComposedChart>
         </ResponsiveContainer>
