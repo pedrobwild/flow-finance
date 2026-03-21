@@ -39,6 +39,9 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      {/* === WAR ROOM (when negative cash projected) === */}
+      <WarRoomPanel />
+
       {/* === ROW 1: KPIs + HEALTH (números primeiro) === */}
       <motion.div {...section(0.04)}>
         <div className="flex flex-col lg:flex-row gap-4">
