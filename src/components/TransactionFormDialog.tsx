@@ -15,12 +15,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Building2 } from 'lucide-react';
 
+interface PrefillData {
+  description?: string;
+  counterpart?: string;
+  amount?: number;
+  category?: string;
+  notes?: string;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
   transaction: Transaction | null;
   defaultType: TransactionType;
   defaultObraId?: string;
+  prefill?: PrefillData;
 }
 
 const ACTIVE_OBRA_STATUSES: ObraStatus[] = ['ativa'];
@@ -43,7 +52,7 @@ const empty = (type: TransactionType, obraId?: string) => ({
   billingSentAt: '',
 });
 
-export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId }: Props) {
+export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId, prefill }: Props) {
   const { addTransaction, updateTransaction } = useFinance();
   const { obras } = useObras();
   const isEdit = !!transaction;
@@ -79,9 +88,17 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
           init.counterpart = `${obra.clientName}${obra.condominium ? ` — ${obra.condominium}` : ''}${obra.unitNumber ? ` un. ${obra.unitNumber}` : ''}`;
         }
       }
+      // Apply prefill data from AI suggestions
+      if (prefill) {
+        if (prefill.description) init.description = prefill.description;
+        if (prefill.counterpart) init.counterpart = prefill.counterpart;
+        if (prefill.amount) init.amount = prefill.amount.toString();
+        if (prefill.category) init.category = prefill.category;
+        if (prefill.notes) init.notes = prefill.notes;
+      }
       setForm(init);
     }
-  }, [transaction, open, defaultType, defaultObraId, obras]);
+  }, [transaction, open, defaultType, defaultObraId, obras, prefill]);
 
   const set = (key: string, value: string) => {
     setForm(f => ({ ...f, [key]: value }));

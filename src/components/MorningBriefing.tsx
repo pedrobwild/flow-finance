@@ -3,11 +3,13 @@ import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, daysBetween } from '@/lib/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock, Globe } from 'lucide-react';
+import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock, Globe, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import TransactionFormDialog from '@/components/TransactionFormDialog';
+import type { TransactionType } from '@/lib/types';
 
 interface Insight {
   severity: 'critical' | 'warning' | 'info';
@@ -15,11 +17,22 @@ interface Insight {
   category?: 'cobranca' | 'desconto' | 'fornecedor' | 'cronograma' | 'caixa' | 'margem' | 'mercado';
 }
 
+interface SuggestionPrefill {
+  type?: TransactionType;
+  description?: string;
+  counterpart?: string;
+  amount?: number;
+  category?: string;
+  notes?: string;
+  obraCode?: string;
+}
+
 interface Suggestion {
   action: string;
   detail: string;
   urgency?: 'hoje' | 'esta_semana' | 'proximo';
   link: string;
+  prefill?: SuggestionPrefill;
 }
 
 interface BriefingData {
@@ -35,6 +48,33 @@ export default function MorningBriefing() {
   const [data, setData] = useState<BriefingData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [txFormOpen, setTxFormOpen] = useState(false);
+  const [txFormDefaults, setTxFormDefaults] = useState<{
+    type: TransactionType;
+    description?: string;
+    counterpart?: string;
+    amount?: number;
+    category?: string;
+    notes?: string;
+    obraId?: string;
+  } | null>(null);
+
+  const handleSuggestionAction = (sug: Suggestion) => {
+    if (!sug.prefill) return;
+    const p = sug.prefill;
+    // Resolve obraCode to obraId
+    const obraId = p.obraCode ? obras.find(o => o.code === p.obraCode)?.id : undefined;
+    setTxFormDefaults({
+      type: p.type || 'pagar',
+      description: p.description,
+      counterpart: p.counterpart,
+      amount: p.amount,
+      category: p.category,
+      notes: p.notes,
+      obraId,
+    });
+    setTxFormOpen(true);
+  };
 
   const financialSummary = useMemo(() => {
     const bal = currentBalance?.amount ?? 0;
@@ -333,10 +373,10 @@ export default function MorningBriefing() {
                   <div className="space-y-1">
                     {data.suggestions.map((sug, i) => {
                       const urg = sug.urgency ? urgencyLabel[sug.urgency] : null;
+                      const hasPrefill = !!sug.prefill;
                       return (
-                        <Link
+                        <div
                           key={i}
-                          to={sug.link}
                           className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-all group border border-transparent hover:border-border"
                         >
                           <div className="w-1 h-8 rounded-full bg-accent/30 group-hover:bg-accent transition-colors" />
@@ -351,8 +391,26 @@ export default function MorningBriefing() {
                             </div>
                             <p className="text-[11px] text-muted-foreground line-clamp-2">{sug.detail}</p>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                        </Link>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {hasPrefill && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2.5 text-[10px] font-semibold gap-1 border-accent/30 text-accent hover:bg-accent hover:text-accent-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSuggestionAction(sug);
+                                }}
+                              >
+                                <Plus className="w-3 h-3" />
+                                Criar
+                              </Button>
+                            )}
+                            <Link to={sug.link}>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground hover:text-accent transition-all flex-shrink-0" />
+                            </Link>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -362,6 +420,27 @@ export default function MorningBriefing() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Transaction form pre-filled from AI suggestions */}
+      {txFormDefaults && (
+        <TransactionFormDialog
+          open={txFormOpen}
+          onClose={() => {
+            setTxFormOpen(false);
+            setTxFormDefaults(null);
+          }}
+          transaction={null}
+          defaultType={txFormDefaults.type}
+          defaultObraId={txFormDefaults.obraId}
+          prefill={{
+            description: txFormDefaults.description,
+            counterpart: txFormDefaults.counterpart,
+            amount: txFormDefaults.amount,
+            category: txFormDefaults.category,
+            notes: txFormDefaults.notes,
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -67,7 +67,18 @@ EXEMPLOS DE INSIGHTS AVANÇADOS:
 - "A parcela de R$ 45k da obra [código] vence em 20 dias — oferecer 2% de desconto para antecipação (economia de R$ 900 para o cliente) geraria caixa suficiente para não atrasar o [fornecedor]"
 - "Com INCC acumulando X% nos últimos 12 meses, os custos de materiais da obra [código] podem ultrapassar o previsto — considere renegociar o contrato ou antecipar compras de acabamento"
 - "Com Selic a X%, manter R$ Yk parado em conta rende R$ Zk/mês — vale antecipar o pagamento ao fornecedor [nome] com desconto de W% ao invés de esperar o vencimento"
-- "As obras [A] e [B] têm pico de saída na mesma semana — adie a compra de acabamento da [B] em 1 semana para diluir a pressão"`;
+- "As obras [A] e [B] têm pico de saída na mesma semana — adie a compra de acabamento da [B] em 1 semana para diluir a pressão"
+
+REGRAS DE PREFILL (campo "prefill" nas sugestões):
+- SEMPRE inclua o campo "prefill" quando a sugestão envolve criar uma transação específica (pagamento, recebimento, cobrança)
+- O prefill deve conter dados concretos: tipo (pagar/receber), valor, descrição, contraparte (cliente/fornecedor)
+- Se a sugestão é sobre uma obra específica, inclua o obraCode
+- O campo "notes" deve explicar o contexto da recomendação
+- Exemplos de quando incluir prefill:
+  * "Registrar antecipação de R$ 45k" → prefill: { type: "receber", amount: 45000, counterpart: "Cliente X", description: "Antecipação com desconto", obraCode: "OB-001" }
+  * "Antecipar pagamento ao fornecedor" → prefill: { type: "pagar", amount: 12000, counterpart: "Fornecedor Y", description: "Pagamento antecipado", category: "Materiais" }
+  * "Negociar desconto" → prefill: { type: "receber", amount: 43650, counterpart: "Cliente Z", notes: "Desconto de 3% sobre R$45k para antecipação" }`;
+
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -112,6 +123,20 @@ EXEMPLOS DE INSIGHTS AVANÇADOS:
                         detail: { type: "string", description: "1-2 sentences explaining why, how, and the expected impact with real numbers" },
                         urgency: { type: "string", enum: ["hoje", "esta_semana", "proximo"], description: "When this action should be taken" },
                         link: { type: "string", enum: ["/obras", "/pagar", "/receber", "/simulador", "/fluxo"] },
+                        prefill: {
+                          type: "object",
+                          description: "Optional pre-fill data for a transaction form. Include when the suggestion involves creating/editing a specific transaction.",
+                          properties: {
+                            type: { type: "string", enum: ["pagar", "receber"], description: "Transaction type" },
+                            description: { type: "string", description: "Transaction description" },
+                            counterpart: { type: "string", description: "Client or supplier name" },
+                            amount: { type: "number", description: "Suggested amount in BRL" },
+                            category: { type: "string", description: "Category like Materiais, Mão de Obra, etc." },
+                            notes: { type: "string", description: "Context note explaining why this transaction is suggested" },
+                            obraCode: { type: "string", description: "Obra code if related to a specific project" },
+                          },
+                          additionalProperties: false,
+                        },
                       },
                       required: ["action", "detail", "urgency", "link"],
                       additionalProperties: false,
