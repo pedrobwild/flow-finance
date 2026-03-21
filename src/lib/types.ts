@@ -21,6 +21,7 @@ export interface Transaction {
   notes: string;
   priority: Priority;
   obraId: string | null;
+  billingSentAt: string | null;
 }
 
 export interface CashBalance {

@@ -25,6 +25,7 @@ function rowToTransaction(row: any): Transaction {
     notes: row.notes || '',
     priority: row.priority as Priority,
     obraId: row.obra_id || null,
+    billingSentAt: row.billing_sent_at || null,
   };
   tx.status = computeStatus(tx);
   return tx;
