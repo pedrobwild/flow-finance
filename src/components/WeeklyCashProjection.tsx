@@ -48,7 +48,7 @@ export default function WeeklyCashProjection() {
         const date = addDays(today, d);
         const saldoInicial = d === 0 ? (baseBalance ?? 0) : filteredProjectedBalance(addDays(today, d - 1));
         const dayEntradas = filteredTransactions
-          .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate === date)
+          .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.status !== 'atrasado' && t.dueDate === date)
           .reduce((s, t) => s + t.amount, 0);
         const daySaidas = filteredTransactions
           .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate === date)
