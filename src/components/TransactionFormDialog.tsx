@@ -154,7 +154,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
             {/* Obra selector */}
             <div className="col-span-2">
               <Label className="text-xs flex items-center gap-1">
-                <Building2 className="h-3 w-3" /> Obra {form.type === 'receber' && '*'}
+                <Building2 className="h-3 w-3" /> Obra
               </Label>
               <Select value={form.obraId || '_none'} onValueChange={v => handleObraSelect(v === '_none' ? '' : v)}>
                 <SelectTrigger className="text-sm">
