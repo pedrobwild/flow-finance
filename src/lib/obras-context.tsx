@@ -44,6 +44,7 @@ function rowToObra(row: any): Obra {
     id: row.id,
     code: row.code,
     clientName: row.client_name,
+    clientEmail: row.client_email || '',
     condominium: row.condominium || '',
     unitNumber: row.unit_number || '',
     address: row.address || '',
