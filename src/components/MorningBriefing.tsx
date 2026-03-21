@@ -3,7 +3,7 @@ import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, daysBetween } from '@/lib/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap } from 'lucide-react';
+import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -12,11 +12,13 @@ import { supabase } from '@/integrations/supabase/client';
 interface Insight {
   severity: 'critical' | 'warning' | 'info';
   text: string;
+  category?: 'cobranca' | 'desconto' | 'fornecedor' | 'cronograma' | 'caixa' | 'margem';
 }
 
 interface Suggestion {
   action: string;
   detail: string;
+  urgency?: 'hoje' | 'esta_semana' | 'proximo';
   link: string;
 }
 
@@ -62,6 +64,31 @@ export default function MorningBriefing() {
       if (fin.totalOverdueReceivable > 0) {
         lines.push(`  ⚠ Recebíveis atrasados: ${formatCurrency(fin.totalOverdueReceivable)}`);
       }
+
+      // Billing/collection history per obra
+      const obraReceivables = transactions.filter(t => t.obraId === obra.id && t.type === 'receber');
+      const withBilling = obraReceivables.filter(t => t.billingCount > 0);
+      if (withBilling.length > 0) {
+        lines.push(`  📧 Histórico de cobranças:`);
+        withBilling.forEach(t => {
+          const daysUntil = daysBetween(today, t.dueDate);
+          const daysLabel = daysUntil > 0 ? `vence em ${daysUntil}d` : daysUntil === 0 ? 'vence hoje' : `${Math.abs(daysUntil)}d atrasado`;
+          lines.push(`    - ${formatCurrency(t.amount)} (${t.status}, ${daysLabel}): ${t.billingCount} cobrança(s) enviada(s)${t.billingSentAt ? `, última em ${getDayMonth(t.billingSentAt)}` : ''}`);
+          if (t.notes) lines.push(`      Obs: ${t.notes}`);
+        });
+      }
+
+      // Upcoming receivables for discount analysis
+      const upcomingReceivables = obraReceivables
+        .filter(t => t.status !== 'confirmado' && t.dueDate > today)
+        .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      if (upcomingReceivables.length > 0) {
+        lines.push(`  📅 Parcelas futuras (${upcomingReceivables.length}):`);
+        upcomingReceivables.slice(0, 5).forEach(t => {
+          const daysUntil = daysBetween(today, t.dueDate);
+          lines.push(`    - ${formatCurrency(t.amount)} em ${getDayMonth(t.dueDate)} (${daysUntil}d) — ${t.status}${t.paymentMethod ? `, via ${t.paymentMethod}` : ''}`);
+        });
+      }
     });
 
     const corpPending = transactions.filter(t => !t.obraId && t.type === 'pagar' && t.status !== 'confirmado');
@@ -102,8 +129,22 @@ export default function MorningBriefing() {
       lines.push(`=== ATRASADOS: ${overdue.length} itens, total ${formatCurrency(overdue.reduce((s, t) => s + t.amount, 0))} ===`);
       overdue.slice(0, 5).forEach(t => {
         const daysLate = daysBetween(t.dueDate, today);
-        lines.push(`  ${t.type === 'receber' ? '📥' : '📤'} ${formatCurrency(t.amount)} — ${t.description} (${daysLate}d atraso)`);
+        const obraRef = t.obraId ? obras.find(o => o.id === t.obraId) : null;
+        lines.push(`  ${t.type === 'receber' ? '📥' : '📤'} ${formatCurrency(t.amount)} — ${t.description} (${daysLate}d atraso)${t.billingCount > 0 ? ` [${t.billingCount} cobrança(s)]` : ''}${obraRef ? ` [${obraRef.code}]` : ''}`);
+        if (t.notes) lines.push(`    Obs: ${t.notes}`);
       });
+    }
+
+    // Cash pressure analysis
+    const totalPendingOut = transactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate <= addDays(today, 14)).reduce((s, t) => s + t.amount, 0);
+    const totalPendingIn = transactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate <= addDays(today, 14)).reduce((s, t) => s + t.amount, 0);
+    lines.push('');
+    lines.push(`=== PRESSÃO DE CAIXA 14 DIAS ===`);
+    lines.push(`Saídas previstas: ${formatCurrency(totalPendingOut)}`);
+    lines.push(`Entradas previstas: ${formatCurrency(totalPendingIn)}`);
+    lines.push(`Gap: ${formatCurrency(totalPendingIn - totalPendingOut)}`);
+    if (bal + totalPendingIn - totalPendingOut < 0) {
+      lines.push(`⚠ CAIXA FICARÁ NEGATIVO em até 14 dias sem ação`);
     }
 
     return lines.join('\n');
@@ -149,6 +190,28 @@ export default function MorningBriefing() {
     critical: 'bg-destructive/5 border-destructive/15',
     warning: 'bg-warning/5 border-warning/15',
     info: 'bg-accent/5 border-accent/15',
+  };
+
+  const categoryIcon: Record<string, React.ReactNode> = {
+    cobranca: <Phone className="w-4 h-4 text-warning flex-shrink-0" />,
+    desconto: <Percent className="w-4 h-4 text-accent flex-shrink-0" />,
+    fornecedor: <Truck className="w-4 h-4 text-muted-foreground flex-shrink-0" />,
+    cronograma: <Calendar className="w-4 h-4 text-primary flex-shrink-0" />,
+    caixa: <PiggyBank className="w-4 h-4 text-destructive flex-shrink-0" />,
+    margem: <TrendingDown className="w-4 h-4 text-warning flex-shrink-0" />,
+  };
+
+  const urgencyLabel: Record<string, { text: string; className: string }> = {
+    hoje: { text: 'Hoje', className: 'bg-destructive/10 text-destructive' },
+    esta_semana: { text: 'Esta semana', className: 'bg-warning/10 text-warning' },
+    proximo: { text: 'Em breve', className: 'bg-muted text-muted-foreground' },
+  };
+
+  const getInsightIcon = (insight: Insight) => {
+    if (insight.category && categoryIcon[insight.category]) {
+      return categoryIcon[insight.category];
+    }
+    return severityIcon[insight.severity];
   };
 
   return (
@@ -240,7 +303,7 @@ export default function MorningBriefing() {
                       severityBg[insight.severity]
                     )}
                   >
-                    {severityIcon[insight.severity]}
+                    {getInsightIcon(insight)}
                     <p className="text-xs leading-relaxed text-foreground">{insight.text}</p>
                   </motion.div>
                 ))}
@@ -256,20 +319,30 @@ export default function MorningBriefing() {
                     </h3>
                   </div>
                   <div className="space-y-1">
-                    {data.suggestions.map((sug, i) => (
-                      <Link
-                        key={i}
-                        to={sug.link}
-                        className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-all group border border-transparent hover:border-border"
-                      >
-                        <div className="w-1 h-8 rounded-full bg-accent/30 group-hover:bg-accent transition-colors" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-foreground">{sug.action}</p>
-                          <p className="text-[11px] text-muted-foreground truncate">{sug.detail}</p>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                      </Link>
-                    ))}
+                    {data.suggestions.map((sug, i) => {
+                      const urg = sug.urgency ? urgencyLabel[sug.urgency] : null;
+                      return (
+                        <Link
+                          key={i}
+                          to={sug.link}
+                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-all group border border-transparent hover:border-border"
+                        >
+                          <div className="w-1 h-8 rounded-full bg-accent/30 group-hover:bg-accent transition-colors" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-semibold text-foreground">{sug.action}</p>
+                              {urg && (
+                                <span className={cn('text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full', urg.className)}>
+                                  {urg.text}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground line-clamp-2">{sug.detail}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               )}
