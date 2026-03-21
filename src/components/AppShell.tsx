@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield } from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -27,6 +27,7 @@ const adminNavItems = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
   const { user, isAdmin, profile, signOut } = useAuth();
 
   const navItems = isAdmin ? [...baseNavItems, ...adminNavItems] : baseNavItems;
@@ -86,6 +87,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               </div>
               <DropdownMenuSeparator />
+              {isAdmin && (
+                <DropdownMenuItem onClick={() => navigate('/obras')} className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Área do Admin
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={signOut} className="gap-2 text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4" />
                 Sair
