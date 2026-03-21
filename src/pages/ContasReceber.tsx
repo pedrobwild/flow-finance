@@ -3,10 +3,8 @@ import { motion } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
-import { ArrowUpRight, Users, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ArrowUpRight, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
-import ObraClienteReport from '@/components/ObraClienteReport';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 16, filter: 'blur(4px)' } as const,
@@ -38,14 +36,6 @@ export default function ContasReceber() {
       ? Math.round(overdue.reduce((s, t) => s + daysBetween(t.dueDate, today), 0) / overdue.length)
       : 0;
 
-    // Top 3 clients by pending amount
-    const clientMap = new Map<string, number>();
-    pending.forEach(t => clientMap.set(t.counterpart, (clientMap.get(t.counterpart) || 0) + t.amount));
-    const topClients = [...clientMap.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([name, amount]) => ({ name, amount, pct: totalPending > 0 ? Math.round(amount / totalPending * 100) : 0 }));
-
     // Next 7d incoming
     const in7d = addDays(today, 7);
     const next7 = pending.filter(t => t.dueDate >= today && t.dueDate <= in7d);
@@ -57,7 +47,7 @@ export default function ContasReceber() {
     return {
       totalPending, totalOverdue, totalConfirmed,
       pendingCount: pending.length, overdueCount: overdue.length, confirmedCount: confirmed.length,
-      avgDaysOverdue, topClients, totalNext7, next7Count: next7.length,
+      avgDaysOverdue, totalNext7, next7Count: next7.length,
       conversionRate,
     };
   }, [transactions, today, isFiltered]);
@@ -85,72 +75,35 @@ export default function ContasReceber() {
         </div>
       </motion.div>
 
-      {/* Insights strip */}
-      {(insights.overdueCount > 0 || insights.topClients.length > 0) && (
-        <motion.div {...sect(0.06)} className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* Overdue aging */}
-          {insights.overdueCount > 0 && (
-            <div className="card-elevated p-4 ring-1 ring-destructive/15">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center">
-                  <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-destructive">Recebíveis Atrasados</p>
-                  <p className="text-[10px] text-muted-foreground">{insights.overdueCount} pendência(s) · média de {insights.avgDaysOverdue} dias</p>
-                </div>
+      {/* Overdue warning */}
+      {insights.overdueCount > 0 && (
+        <motion.div {...sect(0.06)}>
+          <div className="card-elevated p-4 ring-1 ring-destructive/15">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-bold font-mono text-destructive">{formatCurrency(insights.totalOverdue)}</span>
-                <span className="text-[10px] text-muted-foreground">fora da projeção</span>
-              </div>
-              <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-destructive/60 transition-all duration-700"
-                  style={{ width: `${Math.min(100, insights.totalPending > 0 ? (insights.totalOverdue / (insights.totalPending + insights.totalOverdue)) * 100 : 0)}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {insights.totalPending > 0
-                  ? `${Math.round(insights.totalOverdue / (insights.totalPending + insights.totalOverdue) * 100)}% do total pendente está atrasado`
-                  : 'Todos os valores estão atrasados'}
-              </p>
-            </div>
-          )}
-
-          {/* Client concentration */}
-          {insights.topClients.length > 0 && (
-            <div className="card-elevated p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <Users className="w-3.5 h-3.5 text-accent" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold">Concentração por Obra / Cliente</p>
-                  <p className="text-[10px] text-muted-foreground">Top obras com valores pendentes</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {insights.topClients.map((c, i) => (
-                  <div key={c.name} className="group/client">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-medium truncate flex-1 mr-2">{c.name || 'Sem nome'}</span>
-                      <span className="text-xs font-mono font-semibold text-success shrink-0">{formatCurrency(c.amount)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-success/50 transition-all duration-500"
-                          style={{ width: `${c.pct}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{c.pct}%</span>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <p className="text-xs font-semibold text-destructive">Recebíveis Atrasados</p>
+                <p className="text-[10px] text-muted-foreground">{insights.overdueCount} pendência(s) · média de {insights.avgDaysOverdue} dias</p>
               </div>
             </div>
-          )}
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl font-bold font-mono text-destructive">{formatCurrency(insights.totalOverdue)}</span>
+              <span className="text-[10px] text-muted-foreground">fora da projeção</span>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-destructive/60 transition-all duration-700"
+                style={{ width: `${Math.min(100, insights.totalPending > 0 ? (insights.totalOverdue / (insights.totalPending + insights.totalOverdue)) * 100 : 0)}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {insights.totalPending > 0
+                ? `${Math.round(insights.totalOverdue / (insights.totalPending + insights.totalOverdue) * 100)}% do total pendente está atrasado`
+                : 'Todos os valores estão atrasados'}
+            </p>
+          </div>
         </motion.div>
       )}
 
@@ -169,10 +122,6 @@ export default function ContasReceber() {
         </motion.div>
       )}
 
-      {/* Report by Obra/Cliente */}
-      <motion.div {...sect(0.14)}>
-        <ObraClienteReport />
-      </motion.div>
 
       {/* Table */}
       <motion.div {...sect(0.18)}>
