@@ -56,7 +56,7 @@ const empty = (type: TransactionType, obraId?: string) => ({
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId, prefill }: Props) {
-  const { addTransaction, updateTransaction } = useFinance();
+  const { addTransaction, updateTransaction, addTransactions } = useFinance();
   const { obras } = useObras();
   const { data: customCategories = [] } = useCustomCategories();
   const isEdit = !!transaction;
