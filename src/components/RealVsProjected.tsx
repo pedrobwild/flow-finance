@@ -112,7 +112,8 @@ export default function RealVsProjected() {
 
   return (
     <div
-      className="card-elevated p-5"
+      className="card-elevated p-5 border-4 border-red-500"
+      style={{ minHeight: 300 }}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
