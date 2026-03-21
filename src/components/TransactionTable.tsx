@@ -350,11 +350,13 @@ export default function TransactionTable({ type }: Props) {
                           {STATUS_LABELS[tx.status]}
                         </span>
                       </td>
-                      <td className="px-3 py-3">
-                        <span className={cn('status-badge text-[10px]', PRIORITY_CLASSES[tx.priority])}>
-                          {PRIORITY_LABELS[tx.priority]}
-                        </span>
-                      </td>
+                      {isPagar && (
+                        <td className="px-3 py-3">
+                          <span className={cn('status-badge text-[10px]', PRIORITY_CLASSES[tx.priority])}>
+                            {PRIORITY_LABELS[tx.priority]}
+                          </span>
+                        </td>
+                      )}
                       <td className="px-3 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           {isDueToday && <Clock className="w-3 h-3 text-warning" />}
