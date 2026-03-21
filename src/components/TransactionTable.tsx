@@ -322,6 +322,8 @@ export default function TransactionTable({ type }: Props) {
             </Button>
           )}
           <div className="flex-1" />
+          <AuditLogDrawer />
+          <CustomCategoriesManager />
           <Button
             size="sm"
             onClick={() => { setEditingTx(null); setShowForm(true); }}
