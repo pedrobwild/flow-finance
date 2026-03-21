@@ -3,7 +3,7 @@ import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, daysBetween } from '@/lib/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock } from 'lucide-react';
+import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface Insight {
   severity: 'critical' | 'warning' | 'info';
   text: string;
-  category?: 'cobranca' | 'desconto' | 'fornecedor' | 'cronograma' | 'caixa' | 'margem';
+  category?: 'cobranca' | 'desconto' | 'fornecedor' | 'cronograma' | 'caixa' | 'margem' | 'mercado';
 }
 
 interface Suggestion {
@@ -154,8 +154,19 @@ export default function MorningBriefing() {
     setLoading(true);
     setError(null);
     try {
+      // Fetch market data in parallel (non-blocking — briefing works without it)
+      let marketContext: string | null = null;
+      try {
+        const { data: marketData } = await supabase.functions.invoke('market-data');
+        if (marketData?.marketContext) {
+          marketContext = marketData.marketContext;
+        }
+      } catch (e) {
+        console.warn('Market data unavailable:', e);
+      }
+
       const { data: fnData, error: fnError } = await supabase.functions.invoke('morning-briefing', {
-        body: { financialSummary },
+        body: { financialSummary, marketContext },
       });
 
       if (fnError) throw new Error(fnError.message);
@@ -199,6 +210,7 @@ export default function MorningBriefing() {
     cronograma: <Calendar className="w-4 h-4 text-primary flex-shrink-0" />,
     caixa: <PiggyBank className="w-4 h-4 text-destructive flex-shrink-0" />,
     margem: <TrendingDown className="w-4 h-4 text-warning flex-shrink-0" />,
+    mercado: <Globe className="w-4 h-4 text-primary flex-shrink-0" />,
   };
 
   const urgencyLabel: Record<string, { text: string; className: string }> = {

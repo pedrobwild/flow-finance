@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { financialSummary } = await req.json();
+    const { financialSummary, marketContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -46,6 +46,13 @@ Você deve cruzar múltiplas dimensões dos dados para gerar recomendações int
 - Há sazonalidade nos pagamentos?
 - A margem da obra está se deteriorando (custos subindo vs. previsto)?
 
+6. CONTEXTO MACROECONÔMICO (quando disponível):
+- Use os dados de mercado em tempo real (Selic, INCC, tendências de materiais) para contextualizar recomendações
+- Se o INCC está subindo, alerte sobre impacto nos custos futuros das obras e sugira antecipar compras de materiais
+- Se a Selic está alta, avalie o custo de oportunidade de manter dinheiro parado vs. antecipar pagamentos
+- Cruze notícias do setor com a situação financeira: "Com a alta de X% nos materiais de acabamento, considere renegociar contratos de fornecimento"
+- Use indicadores para justificar descontos: "Com Selic a X%, oferecer 2% de desconto para antecipação de 30 dias é vantajoso — equivale a rendimento de Y% ao mês"
+
 REGRAS DE FORMATO:
 - Gere 3-5 insights, cada um com 1-2 frases curtas e DIRETAS
 - Cada insight deve ter uma ação concreta e específica (nomes, valores, datas reais)
@@ -53,11 +60,13 @@ REGRAS DE FORMATO:
 - Gere 2-4 sugestões de decisão práticas e IMEDIATAMENTE acionáveis
 - NÃO repita números que o CEO já vê nos KPIs
 - Priorize insights que CRUZAM informações (ex: "a pressão de caixa da semana X pode ser resolvida antecipando a parcela Y do cliente Z")
+- Quando houver dados de mercado, pelo menos 1 insight deve conectar macro com micro (indicador econômico + decisão operacional)
 
 EXEMPLOS DE INSIGHTS AVANÇADOS:
 - "Após 3 cobranças sem resposta do cliente [nome], considere ligar diretamente — ofereça 3% de desconto se pagar em 48h, isso libera R$ Xk para cobrir o fornecedor [nome] que vence dia [data]"
 - "A parcela de R$ 45k da obra [código] vence em 20 dias — oferecer 2% de desconto para antecipação (economia de R$ 900 para o cliente) geraria caixa suficiente para não atrasar o [fornecedor]"
-- "O cliente [nome] tem padrão de pagar 5-7 dias após cobrança — envie a cobrança da parcela de [data] AGORA para garantir que o pagamento chegue antes do vencimento do [fornecedor] em [data]"
+- "Com INCC acumulando X% nos últimos 12 meses, os custos de materiais da obra [código] podem ultrapassar o previsto — considere renegociar o contrato ou antecipar compras de acabamento"
+- "Com Selic a X%, manter R$ Yk parado em conta rende R$ Zk/mês — vale antecipar o pagamento ao fornecedor [nome] com desconto de W% ao invés de esperar o vencimento"
 - "As obras [A] e [B] têm pico de saída na mesma semana — adie a compra de acabamento da [B] em 1 semana para diluir a pressão"`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -70,7 +79,7 @@ EXEMPLOS DE INSIGHTS AVANÇADOS:
         model: "openai/gpt-5",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Dados financeiros de hoje:\n\n${financialSummary}` },
+          { role: "user", content: `Dados financeiros de hoje:\n\n${financialSummary}${marketContext ? `\n\n=== DADOS DE MERCADO EM TEMPO REAL (Perplexity) ===\n${marketContext}` : '\n\n(Dados de mercado indisponíveis hoje)'}` },
         ],
         tools: [
           {
@@ -88,7 +97,7 @@ EXEMPLOS DE INSIGHTS AVANÇADOS:
                       properties: {
                         severity: { type: "string", enum: ["critical", "warning", "info"] },
                         text: { type: "string", description: "1-2 sentence insight in Portuguese with specific names, values, dates" },
-                        category: { type: "string", enum: ["cobranca", "desconto", "fornecedor", "cronograma", "caixa", "margem"], description: "Category of the insight for icon rendering" },
+                        category: { type: "string", enum: ["cobranca", "desconto", "fornecedor", "cronograma", "caixa", "margem", "mercado"], description: "Category of the insight for icon rendering" },
                       },
                       required: ["severity", "text", "category"],
                       additionalProperties: false,
