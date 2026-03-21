@@ -432,6 +432,13 @@ export default function MorningBriefing() {
           transaction={null}
           defaultType={txFormDefaults.type}
           defaultObraId={txFormDefaults.obraId}
+          prefill={{
+            description: txFormDefaults.description,
+            counterpart: txFormDefaults.counterpart,
+            amount: txFormDefaults.amount,
+            category: txFormDefaults.category,
+            notes: txFormDefaults.notes,
+          }}
         />
       )}
     </div>
