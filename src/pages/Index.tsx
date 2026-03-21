@@ -6,7 +6,6 @@ import DashboardKPIs from '@/components/DashboardKPIs';
 import MorningBriefing from '@/components/MorningBriefing';
 import WeeklyCashProjection from '@/components/WeeklyCashProjection';
 import ObraCashBalance from '@/components/ObraCashBalance';
-import CashRunwayCard from '@/components/CashRunwayCard';
 import DecisionAlerts from '@/components/DecisionAlerts';
 import { motion } from 'framer-motion';
 
