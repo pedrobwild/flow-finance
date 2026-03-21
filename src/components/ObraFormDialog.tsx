@@ -123,9 +123,13 @@ export default function ObraFormDialog({ open, onClose, obra }: Props) {
                 <Label className="text-xs">Endereço</Label>
                 <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Rua, número, bairro..." />
               </div>
-              <div className="col-span-2">
+              <div>
                 <Label className="text-xs">Valor do Contrato (R$) *</Label>
                 <Input type="number" step="0.01" value={form.contractValue} onChange={e => set('contractValue', e.target.value)} required />
+              </div>
+              <div>
+                <Label className="text-xs">Meta de Orçamento (R$)</Label>
+                <Input type="number" step="0.01" value={form.budgetTarget} onChange={e => set('budgetTarget', e.target.value)} placeholder="Custo máximo esperado" />
               </div>
               <div className="col-span-2">
                 <Label className="text-xs">Condições de Pagamento</Label>
