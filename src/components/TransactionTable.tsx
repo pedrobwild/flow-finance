@@ -441,6 +441,7 @@ export default function TransactionTable({ type }: Props) {
                               onClick={() => {
                                 setConfirmTx(tx);
                                 setActualAmount(tx.amount.toString());
+                                setConfirmPaidAt(todayISO());
                               }}
                               title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}
                             >
