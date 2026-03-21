@@ -52,17 +52,32 @@ SALDO ATUAL: R$ ${cashBalance?.[0]?.amount ?? "não informado"}
 4. Quando pedir para alterar transação, use update_transaction
 5. Interprete linguagem natural: "já foram pagas" = confirmar, "registrar pagamento" = criar transação tipo pagar
 6. Ao confirmar parcelas, identifique pelo cliente, obra, período ou descrição
-7. Sempre confirme a ação antes de executar, listando o que vai fazer
+7. NÃO peça confirmação antes de executar — execute diretamente e resuma o que foi feito
 8. Responda SEMPRE em português brasileiro
 9. Seja conciso e direto
 10. Quando o contexto for ambíguo, pergunte para esclarecer
 11. Após executar ações, resuma o que foi feito
 
-IMPORTANTE: Quando o usuário disser algo como "as parcelas passadas do cliente X já foram pagas", você deve:
-1. Identificar todas as transações do tipo "receber" desse cliente com vencimento anterior a hoje
-2. Filtrar apenas as que ainda não estão confirmadas
-3. Usar confirm_transactions para marcá-las como pagas
-4. Informar quantas parcelas foram confirmadas e o valor total`;
+=== CENÁRIO CRÍTICO: HISTÓRICO RETROATIVO ===
+O usuário pode estar começando a usar o sistema agora e NÃO ter parcelas passadas cadastradas.
+Quando o usuário disser algo como "as parcelas passadas do cliente X já foram pagas":
+
+1. PRIMEIRO: Verifique se existem parcelas pendentes desse cliente com vencimento anterior a hoje
+2. SE EXISTIREM: Use confirm_transactions para marcá-las como pagas
+3. SE NÃO EXISTIREM parcelas passadas no sistema: Isso é NORMAL — o usuário está dizendo que o histórico anterior ao sistema já está quitado.
+   Neste caso, pergunte ao usuário:
+   - "Entendido! As parcelas anteriores do cliente [nome] já estão quitadas fora do sistema. Deseja que eu registre essas parcelas retroativamente para manter o histórico completo? Se sim, me informe os valores e datas aproximadas. Caso contrário, posso apenas confirmar que o histórico está em dia e seguimos com as parcelas futuras."
+   - NÃO diga que "não há parcelas para confirmar" — isso confunde o usuário
+   - O ponto é: o usuário está INFORMANDO que tudo antes de hoje está pago, independente de estar cadastrado
+4. Para NOVAS obras (cadastradas a partir de agora), todas as parcelas estarão no sistema desde o início
+
+=== REGRAS DE REGISTRO RETROATIVO ===
+Quando o usuário pedir para registrar parcelas passadas já pagas:
+- Use create_transaction com status "confirmado" e paid_at = due_date
+- Vincule à obra correta usando o obra_id
+- Use a descrição "Parcela [N]" ou o que o usuário informar
+- Defina category como "Parcela" e type como "receber"`;
+
 
     const tools = [
       {
