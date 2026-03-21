@@ -106,7 +106,7 @@ export const STAGE_STATUS_COLORS: Record<StageStatus, { bg: string; text: string
 };
 
 
-  totalContractValue: number;
+  export interface ObraFinancials {
   totalReceivable: number;
   totalReceived: number;
   totalPendingReceivable: number;
