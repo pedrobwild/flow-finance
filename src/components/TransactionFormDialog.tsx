@@ -92,6 +92,9 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const notesWithObra = form.costCenter === 'OPEX' && form.obra
+      ? `${form.notes}${form.notes ? ' ' : ''}[Obra: ${form.obra}]`
+      : form.notes;
     const data = {
       type: form.type as TransactionType,
       description: form.description,
@@ -104,7 +107,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       category: form.category,
       recurrence: form.recurrence as any,
       paymentMethod: (form.paymentMethod === '_none' ? '' : form.paymentMethod) as any,
-      notes: form.notes,
+      notes: notesWithObra,
       priority: form.priority as any,
     };
     if (isEdit && transaction) {
