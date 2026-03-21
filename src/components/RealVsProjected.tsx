@@ -4,7 +4,30 @@ import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { GitCompareArrows } from 'lucide-react';
 
-export default function RealVsProjected() {
+/** Measures parent width with ResizeObserver, avoiding ResponsiveContainer issues */
+function ChartWrapper({ height, children }: { height: number; children: (width: number) => React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width;
+      if (w > 0) setWidth(w);
+    });
+    ro.observe(ref.current);
+    // Initial measure
+    setWidth(ref.current.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} style={{ width: '100%', height, minHeight: height }}>
+      {width > 0 ? children(width) : null}
+    </div>
+  );
+}
+
   const { transactions, currentBalance } = useFinance();
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
