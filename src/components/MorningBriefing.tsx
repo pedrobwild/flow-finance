@@ -48,6 +48,33 @@ export default function MorningBriefing() {
   const [data, setData] = useState<BriefingData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [txFormOpen, setTxFormOpen] = useState(false);
+  const [txFormDefaults, setTxFormDefaults] = useState<{
+    type: TransactionType;
+    description?: string;
+    counterpart?: string;
+    amount?: number;
+    category?: string;
+    notes?: string;
+    obraId?: string;
+  } | null>(null);
+
+  const handleSuggestionAction = (sug: Suggestion) => {
+    if (!sug.prefill) return;
+    const p = sug.prefill;
+    // Resolve obraCode to obraId
+    const obraId = p.obraCode ? obras.find(o => o.code === p.obraCode)?.id : undefined;
+    setTxFormDefaults({
+      type: p.type || 'pagar',
+      description: p.description,
+      counterpart: p.counterpart,
+      amount: p.amount,
+      category: p.category,
+      notes: p.notes,
+      obraId,
+    });
+    setTxFormOpen(true);
+  };
 
   const financialSummary = useMemo(() => {
     const bal = currentBalance?.amount ?? 0;
