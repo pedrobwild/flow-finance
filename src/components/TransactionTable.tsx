@@ -38,7 +38,7 @@ export default function TransactionTable({ type }: Props) {
   const { filteredTransactions: transactions, isFiltered } = useObraFilter();
   const { obras } = useObras();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('todos');
+  const [statusFilter, setStatusFilter] = useState('pendentes');
   const [priorityFilter, setPriorityFilter] = useState('todas');
   const [costCenterFilter, setCostCenterFilter] = useState('todos');
   const [counterpartFilter, setCounterpartFilter] = useState('todos');
@@ -55,11 +55,11 @@ export default function TransactionTable({ type }: Props) {
 
   const isPagar = type === 'pagar';
 
-  const hasActiveFilters = statusFilter !== 'todos' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || obraFilter !== 'todos' || !!dateRange?.from || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || obraFilter !== 'todos' || !!dateRange?.from || search.length > 0;
 
   const clearFilters = () => {
     setSearch('');
-    setStatusFilter('todos');
+    setStatusFilter('pendentes');
     setPriorityFilter('todas');
     setCostCenterFilter('todos');
     setCounterpartFilter('todos');
@@ -84,17 +84,14 @@ export default function TransactionTable({ type }: Props) {
   };
 
   const filtered = useMemo(() => {
-    const today = todayISO();
-
     return transactions
       .filter(t => t.type === type)
-      // Company view: hide confirmed past transactions (only future matters)
+      // Default "pendentes" filter: hide paid/confirmed items
       .filter(t => {
-        if (isFiltered) return true;
-        if (t.status === 'confirmado' && t.dueDate < today) return false;
-        return true;
+        if (statusFilter === 'pendentes') return t.status !== 'confirmado';
+        if (statusFilter === 'todos') return true;
+        return t.status === statusFilter;
       })
-      .filter(t => statusFilter === 'todos' || t.status === statusFilter)
       .filter(t => priorityFilter === 'todas' || t.priority === priorityFilter)
       .filter(t => costCenterFilter === 'todos' || t.costCenter === costCenterFilter)
       .filter(t => counterpartFilter === 'todos' || t.counterpart === counterpartFilter)
@@ -127,7 +124,7 @@ export default function TransactionTable({ type }: Props) {
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, dateRange, isFiltered]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, counterpartFilter, obraFilter, dateRange]);
 
   const totals = useMemo(() => {
     const today = todayISO();
@@ -236,10 +233,15 @@ export default function TransactionTable({ type }: Props) {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos status</SelectItem>
-              {STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
+              <SelectItem value="pendentes">Pendentes</SelectItem>
+              <SelectItem value="todos">Todos</SelectItem>
+              {STATUS_OPTIONS.map(s => (
+                <SelectItem key={s} value={s}>
+                  {isPagar && s === 'confirmado' ? 'Pago' : STATUS_LABELS[s]}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {isPagar && (
@@ -390,10 +392,18 @@ export default function TransactionTable({ type }: Props) {
                       )}
                     >
                       <td className="pl-5 pr-3 py-3">
-                        <span className={cn('status-badge text-[10px]', `status-${tx.status}`)}>
+                        <span className={cn(
+                          'status-badge text-[10px]',
+                          `status-${tx.status}`,
+                          isConfirmed && isPagar && 'bg-success/10 text-success border-success/20'
+                        )}>
                           {isOverdue && <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse mr-1" />}
-                          {STATUS_LABELS[tx.status]}
+                          {isConfirmed && isPagar && <Check className="w-3 h-3 mr-1" />}
+                          {isConfirmed && isPagar ? 'Pago' : STATUS_LABELS[tx.status]}
                         </span>
+                        {isConfirmed && tx.paidAt && (
+                          <p className="text-[10px] text-muted-foreground mt-0.5 pl-0.5">{formatDateFull(tx.paidAt)}</p>
+                        )}
                       </td>
                       {isPagar && (
                         <td className="px-3 py-3">
