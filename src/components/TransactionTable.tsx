@@ -270,6 +270,16 @@ export default function TransactionTable({ type }: Props) {
               </SelectContent>
             </Select>
           )}
+          {!isPagar && (
+            <Select value={obraFilter} onValueChange={setObraFilter}>
+              <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Tipo</SelectItem>
+                <SelectItem value="_com_obra">De obra</SelectItem>
+                <SelectItem value="_sem_obra">Avulsa</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className={cn("h-8 text-xs gap-1.5 font-normal", !dateRange?.from && "text-muted-foreground")}>
