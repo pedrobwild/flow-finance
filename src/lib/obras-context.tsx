@@ -9,7 +9,7 @@ import { todayISO } from './helpers';
 interface ObrasContextType {
   obras: Obra[];
   isLoading: boolean;
-  addObra: (data: Omit<Obra, 'id' | 'code' | 'createdAt'>) => void;
+  addObra: (data: Omit<Obra, 'id' | 'code' | 'createdAt'>) => Promise<Obra | null>;
   updateObra: (id: string, data: Partial<Omit<Obra, 'id' | 'code' | 'createdAt'>>) => void;
   deleteObra: (id: string) => void;
   getObraFinancials: (obraId: string) => ObraFinancials;
