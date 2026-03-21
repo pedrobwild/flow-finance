@@ -7,6 +7,8 @@ import MorningBriefing from '@/components/MorningBriefing';
 import WeeklyCashProjection from '@/components/WeeklyCashProjection';
 import ObraCashBalance from '@/components/ObraCashBalance';
 import DecisionAlerts from '@/components/DecisionAlerts';
+import CashRunwayChart from '@/components/CashRunwayChart';
+import HealthScore from '@/components/HealthScore';
 import { motion } from 'framer-motion';
 
 const section = (delay: number) => ({
@@ -24,7 +26,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 pb-8">
-      {/* === ROW 1: BRIEFING === */}
+      {/* === HEADER === */}
       <motion.div {...section(0)}>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -33,26 +35,40 @@ export default function Dashboard() {
           </div>
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
         </div>
-        <MorningBriefing />
       </motion.div>
 
-      {/* === ALERTAS DE DECISÃO (prominent, early) === */}
-      <motion.div {...section(0.06)}>
+      {/* === ROW 1: BRIEFING + HEALTH SCORE === */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div {...section(0.04)} className="lg:col-span-2">
+          <MorningBriefing />
+        </motion.div>
+        <motion.div {...section(0.08)}>
+          <HealthScore />
+        </motion.div>
+      </div>
+
+      {/* === ALERTAS DE DECISÃO === */}
+      <motion.div {...section(0.10)}>
         <DecisionAlerts />
       </motion.div>
 
       {/* === AÇÕES IMEDIATAS === */}
-      <motion.div {...section(0.10)}>
+      <motion.div {...section(0.14)}>
         <TodayTomorrowActions />
       </motion.div>
 
-      {/* === KPIs === */}
-      <motion.div {...section(0.14)}>
+      {/* === KPIs COM SPARKLINES === */}
+      <motion.div {...section(0.18)}>
         <DashboardKPIs period={period} />
       </motion.div>
 
+      {/* === RUNWAY DE CAIXA === */}
+      <motion.div {...section(0.22)}>
+        <CashRunwayChart />
+      </motion.div>
+
       {/* === PROJEÇÃO SEMANAL === */}
-      <motion.div {...section(0.18)}>
+      <motion.div {...section(0.26)}>
         <WeeklyCashProjection />
       </motion.div>
 
