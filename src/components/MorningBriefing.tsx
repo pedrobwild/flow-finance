@@ -12,11 +12,13 @@ import { supabase } from '@/integrations/supabase/client';
 interface Insight {
   severity: 'critical' | 'warning' | 'info';
   text: string;
+  category?: 'cobranca' | 'desconto' | 'fornecedor' | 'cronograma' | 'caixa' | 'margem';
 }
 
 interface Suggestion {
   action: string;
   detail: string;
+  urgency?: 'hoje' | 'esta_semana' | 'proximo';
   link: string;
 }
 
