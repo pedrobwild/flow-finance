@@ -67,9 +67,17 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
     setTxFormOpen(true);
   };
 
+  if (!obra || !fin || !statusColor) {
+    return (
+      <Sheet open={false} onOpenChange={() => {}}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl" />
+      </Sheet>
+    );
+  }
+
   return (
     <>
-      <Sheet open={!!obra} onOpenChange={v => !v && onClose()}>
+      <Sheet open={true} onOpenChange={v => !v && onClose()}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto p-0">
           <SheetHeader className="p-6 pb-4 border-b sticky top-0 bg-background z-10">
             <div className="flex items-center justify-between">
