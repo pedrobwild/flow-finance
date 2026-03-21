@@ -60,7 +60,7 @@ export default function ContasReceber() {
       avgDaysOverdue, topClients, totalNext7, next7Count: next7.length,
       conversionRate,
     };
-  }, [transactions, today]);
+  }, [transactions, today, isFiltered]);
 
   return (
     <div className="space-y-6">
