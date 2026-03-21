@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings } from 'lucide-react';
+import ChatCommandDrawer from '@/components/ChatCommandDrawer';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -184,6 +185,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">{children}</main>
+      <ChatCommandDrawer />
     </div>
   );
 }
