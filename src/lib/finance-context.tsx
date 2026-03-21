@@ -138,7 +138,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       invalidateTx();
       toast.success('Transação criada com sucesso');
     },
-    onError: () => toast.error('Erro ao criar transação'),
+    onError: (err: any) => {
+      console.error('Insert transaction error:', err);
+      toast.error(`Erro ao criar transação: ${err?.message || err}`);
+    },
   });
 
   const addBulkMutation = useMutation({
