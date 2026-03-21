@@ -130,6 +130,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         priority: tx.priority,
         obra_id: (tx as any).obraId || null,
         billing_sent_at: tx.billingSentAt || null,
+        billing_count: tx.billingCount || 0,
       });
       if (error) throw error;
     },
