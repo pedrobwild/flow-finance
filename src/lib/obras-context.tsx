@@ -138,7 +138,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
 
   const addMutation = useMutation({
     mutationFn: async (data: Omit<Obra, 'id' | 'code' | 'createdAt'>) => {
-      const { error } = await supabase.from('obras').insert({
+      const { data: rows, error } = await supabase.from('obras').insert({
         code: generateCode(),
         client_name: data.clientName,
         condominium: data.condominium,
@@ -152,8 +152,9 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
         actual_start_date: data.actualStartDate || null,
         actual_end_date: data.actualEndDate || null,
         notes: data.notes,
-      });
+      }).select().single();
       if (error) throw error;
+      return rowToObra(rows);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['obras'] });
