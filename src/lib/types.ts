@@ -75,7 +75,7 @@ export const PRIORITY_CLASSES: Record<Priority, string> = {
 };
 
 export const COST_CENTER_COLORS: Record<CostCenter, string> = {
-  'Operação': '#0C3547',
+  'OPEX': '#0C3547',
   'Marketing': '#7c3aed',
   'Vendas': '#059669',
   'Produto': '#d97706',

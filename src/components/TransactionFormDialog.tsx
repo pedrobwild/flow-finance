@@ -28,7 +28,7 @@ const empty = (type: TransactionType) => ({
   dueDate: todayISO(),
   paidAt: '',
   status: 'pendente' as const,
-  costCenter: 'Operação' as const,
+  costCenter: 'OPEX' as const,
   category: 'Outros',
   recurrence: 'única' as const,
   paymentMethod: '_none',
