@@ -46,8 +46,9 @@ export default function Dashboard() {
         <motion.div {...section(0.04)} className="lg:col-span-2">
           <MorningBriefing />
         </motion.div>
-        <motion.div {...section(0.08)}>
+        <motion.div {...section(0.08)} className="space-y-6">
           <HealthScore />
+          <ObraRanking />
         </motion.div>
       </div>
 

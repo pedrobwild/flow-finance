@@ -189,6 +189,21 @@ export default function FluxoCaixa() {
               {showControls ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
           )}
+          <ExportDropdown
+            onCSV={() => {
+              const rows = cashFlowToExportRows(days);
+              exportToCSV(rows, 'fluxo-caixa');
+            }}
+            onExcel={() => {
+              const rows = cashFlowToExportRows(days);
+              exportToExcel(rows, 'fluxo-caixa');
+            }}
+            onPDF={() => {
+              const rows = cashFlowToExportRows(days);
+              const headers = Object.keys(rows[0] || {});
+              exportToPDF('Fluxo de Caixa', headers, rows.map(r => headers.map(h => String(r[h] ?? ''))));
+            }}
+          />
         </div>
       </motion.div>
 
