@@ -430,13 +430,14 @@ export default function TransactionTable({ type }: Props) {
                             ) : '—'}
                           </td>
                           <td className="px-3 py-3 text-xs hidden lg:table-cell whitespace-nowrap">
-                            {tx.billingSentAt ? (
+                            {tx.billingCount > 0 && tx.billingSentAt ? (
                               <span className="flex items-center gap-1 text-success">
                                 <Send className="w-3 h-3" />
-                                {formatDateFull(tx.billingSentAt)}
+                                <span className="font-medium">Cobrança {tx.billingCount}</span>
+                                <span className="text-muted-foreground">· {formatDateFull(tx.billingSentAt)}</span>
                               </span>
                             ) : (
-                              <span className="text-muted-foreground/50">Não enviada</span>
+                              <span className="text-muted-foreground/50">Não cobrada</span>
                             )}
                           </td>
                           <td className="px-3 py-3 max-w-[140px] text-xs text-muted-foreground hidden xl:table-cell">
