@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
+import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Calendar, Zap, Lightbulb } from 'lucide-react';

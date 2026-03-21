@@ -12,7 +12,8 @@ const PRIORITY_ORDER: Record<string, number> = { 'crítica': 0, 'alta': 1, 'norm
 const STATUS_ORDER: Record<string, number> = { 'atrasado': 0, 'pendente': 1, 'previsto': 2, 'confirmado': 3 };
 
 export default function ActionList() {
-  const { transactions, confirmTransaction } = useFinance();
+  const { confirmTransaction } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
 
   const actions = useMemo(() => {

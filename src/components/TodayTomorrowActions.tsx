@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export default function TodayTomorrowActions() {
-  const { transactions, confirmTransaction } = useFinance();
+  const { confirmTransaction } = useFinance();
+  const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
   const tomorrow = addDays(today, 1);
 
