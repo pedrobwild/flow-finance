@@ -18,10 +18,6 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip as RechartsTooltip, ReferenceLine,
 } from 'recharts';
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
-  CartesianGrid, Tooltip as RechartsTooltip, ReferenceLine,
-} from 'recharts';
 
 interface Props {
   obra: Obra | null;
