@@ -462,7 +462,23 @@ export default function TransactionTable({ type }: Props) {
                       </td>
                       <td className="pr-5 pl-3 py-3">
                         <div className="flex items-center justify-end gap-0.5">
-                          {!isConfirmed && (
+                          {!isPagar && !isConfirmed && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity hover:bg-primary/10 active:scale-90"
+                              title={tx.billingCount > 0 ? `Reenviar cobrança (atual: ${tx.billingCount})` : 'Marcar cobrança enviada'}
+                              onClick={() => {
+                                const newCount = (tx.billingCount || 0) + 1;
+                                updateTransaction(tx.id, {
+                                  billingSentAt: todayISO(),
+                                  billingCount: newCount,
+                                });
+                              }}
+                            >
+                              <Send className="w-3.5 h-3.5 text-primary" />
+                            </Button>
+                          )}
                             <Button
                               size="icon"
                               variant="ghost"
