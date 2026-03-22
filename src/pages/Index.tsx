@@ -3,7 +3,7 @@ import { todayISO, addDays } from '@/lib/helpers';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import CockpitHeroKPIs from '@/components/CockpitHeroKPIs';
 import CashFlowHeroChart from '@/components/CashFlowHeroChart';
-import UnifiedAlerts from '@/components/UnifiedAlerts';
+
 import MorningBriefing from '@/components/MorningBriefing';
 import ObraCashBalance from '@/components/ObraCashBalance';
 
@@ -40,10 +40,6 @@ export default function Dashboard() {
         <CockpitHeroKPIs period={period} />
       </motion.div>
 
-      {/* === ALERTAS UNIFICADOS === */}
-      <motion.div {...section(0.1)}>
-        <UnifiedAlerts period={period} />
-      </motion.div>
 
       {/* === RADAR DE CAIXA (hero chart) === */}
       <motion.div {...section(0.16)}>
