@@ -17,6 +17,7 @@ import FluxoCaixa from "./pages/FluxoCaixa";
 import Simulador from "./pages/Simulador";
 import Obras from "./pages/Obras";
 import ComandoDeGuerra from "./pages/ComandoDeGuerra";
+import CustosAnalise from "./pages/CustosAnalise";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
                             <Route path="/fluxo" element={<FluxoCaixa />} />
                             <Route path="/simulador" element={<Simulador />} />
                             <Route path="/comando-de-guerra" element={<ComandoDeGuerra />} />
+                            <Route path="/custos" element={<CustosAnalise />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </AppShell>
