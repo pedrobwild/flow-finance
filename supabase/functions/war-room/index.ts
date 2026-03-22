@@ -49,7 +49,8 @@ REGRA CRÍTICA — ANTECIPAÇÃO vs COBRANÇA:
 
 REGRAS:
 - 4-8 ações, cada uma com título claro (verbo + nome + valor)
-- Descrição de 2-3 frases que o CEO entende sem pensar
+- Descrição: UMA frase curta explicando por que essa ação importa
+- Steps: quebre cada ação em 2-4 micro-passos concretos que o CEO segue sem pensar. Cada passo começa com verbo imperativo. Ex: "Ligue para Maria", "Diga: se pagar hoje via PIX...", "Se recusar, ofereça parcelamento em 2x"
 - Ordene por impacto real (maior primeiro)
 - Calcule cobertura total
 - Inclua prefill para ações que envolvam criar transações`;
@@ -85,6 +86,8 @@ PRINCÍPIOS:
 
 REGRAS:
 - 4-8 ações proativas, priorizadas por impacto financeiro
+- Descrição: UMA frase curta explicando por que essa ação importa
+- Steps: quebre cada ação em 2-4 micro-passos concretos. Ex: "Ligue para fornecedor X", "Peça extensão de prazo de 30 para 45 dias", "Confirme por email"
 - Use prioridade "preventiva" ou "importante" (não "imediata" a menos que haja atrasados)
 - Inclua prefill para ações que envolvam criar transações
 - Calcule o ganho total se todas forem executadas`;
@@ -148,7 +151,12 @@ REGRAS:
                         },
                         description: {
                           type: "string",
-                          description: "Detailed explanation with specific names, values, dates and reasoning (2-3 sentences) in Portuguese",
+                          description: "ONE sentence explaining why this action matters. Keep it short and direct. In Portuguese.",
+                        },
+                        steps: {
+                          type: "array",
+                          description: "Break complex actions into 2-4 concrete micro-steps the CEO can follow. Each step starts with a verb. E.g. 'Ligue para Maria', 'Diga: se pagar hoje...', 'Se recusar, ofereça...'",
+                          items: { type: "string" },
                         },
                         impactAmount: {
                           type: "number",

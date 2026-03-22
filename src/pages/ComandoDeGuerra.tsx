@@ -33,6 +33,7 @@ interface WarAction {
   category: 'cobranca' | 'antecipacao' | 'renegociacao' | 'corte' | 'credito' | 'cronograma';
   title: string;
   description: string;
+  steps?: string[];
   impactAmount: number;
   impactLabel: string;
   effort: 'baixo' | 'medio' | 'alto';
@@ -676,101 +677,124 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: isDone ? 0.5 : 1, x: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.3 }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: isDone ? 0.5 : 1, y: 0 }}
+                transition={{ delay: i * 0.04, duration: 0.25 }}
                 className={cn(
-                  'rounded-xl border-2 transition-all overflow-hidden',
-                  isDone ? 'bg-muted/10 border-border/30' : cn(styles.bg, styles.border),
+                  'rounded-xl border transition-all overflow-hidden',
+                  isDone ? 'bg-muted/10 border-border/30' : 'bg-card border-border shadow-sm',
                 )}
               >
-                <div className="flex items-start gap-3 p-4">
-                  {/* Complete toggle */}
+                {/* Header row */}
+                <div className={cn(
+                  'flex items-center gap-3 px-5 py-3 border-b',
+                  isDone ? 'border-border/20' : cn(styles.bg, styles.border),
+                )}>
                   <button
                     onClick={() => toggleCompleted(i)}
-                    className="mt-1 flex-shrink-0 transition-colors"
+                    className="flex-shrink-0 transition-colors"
                     title={isDone ? 'Desmarcar' : 'Marcar como concluída'}
                   >
                     {isDone ? (
-                      <CheckCircle2 className="w-6 h-6 text-success" />
+                      <CheckCircle2 className="w-5 h-5 text-success" />
                     ) : (
-                      <Circle className={cn('w-6 h-6', styles.text, 'opacity-40 hover:opacity-100')} />
+                      <Circle className={cn('w-5 h-5', styles.text, 'opacity-50 hover:opacity-100')} />
                     )}
                   </button>
 
-                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0', isDone ? 'bg-muted/30' : styles.bg)}>
-                    <Icon className={cn('w-5 h-5', isDone ? 'text-muted-foreground' : styles.text)} />
+                  <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', isDone ? 'bg-muted/30' : styles.bg)}>
+                    <Icon className={cn('w-4 h-4', isDone ? 'text-muted-foreground' : styles.text)} />
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={cn('text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', isDone ? 'bg-muted text-muted-foreground line-through' : styles.badge)}>
-                        {action.priority}
-                      </span>
-                      <span className={cn('text-sm font-bold', isDone ? 'text-muted-foreground line-through' : 'text-foreground')}>
-                        {action.title}
-                      </span>
-                    </div>
+                  <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className={cn('text-[10px] font-bold uppercase tracking-wider border-0', isDone ? 'bg-muted text-muted-foreground' : styles.badge)}>
+                      {action.priority}
+                    </Badge>
+                    <h3 className={cn('text-[15px] font-semibold leading-tight', isDone ? 'text-muted-foreground line-through' : 'text-foreground')}>
+                      {action.title}
+                    </h3>
+                  </div>
 
-                    <p className={cn('text-xs leading-relaxed mt-1', isDone ? 'text-muted-foreground/60' : 'text-muted-foreground')}>
-                      {action.description}
-                    </p>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className={cn('text-sm font-bold font-mono', isDone ? 'text-muted-foreground line-through' : action.impactAmount > 0 ? 'text-success' : 'text-destructive')}>
+                      {action.impactLabel}
+                    </span>
+                  </div>
+                </div>
 
-                    {/* Timeline indicator for antecipacao actions */}
-                    {action.category === 'antecipacao' && crisis.negDate && !isDone && (
-                      <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-accent/5 border border-accent/15">
-                        <CalendarClock className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                        <div className="flex items-center gap-1.5 text-[10px] flex-wrap">
-                          <span className="text-muted-foreground">Vencimento original:</span>
-                          <span className="font-semibold text-foreground">{action.deadline.includes('/') ? action.deadline : 'após crise'}</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-destructive font-semibold">Crise: {getDayMonth(crisis.negDate)}</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-success font-semibold">Antecipar para antes de {getDayMonth(crisis.negDate)}</span>
+                {/* Body */}
+                <div className="px-5 py-4 space-y-3">
+                  <p className={cn('text-sm leading-relaxed', isDone ? 'text-muted-foreground/50' : 'text-foreground/80')}>
+                    {action.description}
+                  </p>
+
+                  {/* Sub-steps */}
+                  {action.steps && action.steps.length > 0 && !isDone && (
+                    <div className="space-y-1.5 pl-1">
+                      {action.steps.map((step, si) => (
+                        <div key={si} className="flex items-start gap-2.5">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center mt-0.5">
+                            {si + 1}
+                          </span>
+                          <p className="text-[13px] leading-relaxed text-foreground/70">{step}</p>
                         </div>
-                      </div>
-                    )}
+                      ))}
+                    </div>
+                  )}
 
-                    <div className="flex items-center gap-4 mt-2 flex-wrap">
-                      <span className={cn('text-xs font-bold', isDone ? 'text-muted-foreground line-through' : action.impactAmount > 0 ? 'text-success' : 'text-destructive')}>
-                        ⚡ {action.impactLabel}
+                  {/* Timeline indicator for antecipacao */}
+                  {action.category === 'antecipacao' && crisis.negDate && !isDone && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-accent/5 border border-accent/15">
+                      <CalendarClock className="w-4 h-4 text-accent flex-shrink-0" />
+                      <div className="flex items-center gap-1.5 text-xs flex-wrap">
+                        <span className="text-muted-foreground">Vence:</span>
+                        <span className="font-semibold text-foreground">{action.deadline.includes('/') ? action.deadline : 'após crise'}</span>
+                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-destructive font-semibold">Crise: {getDayMonth(crisis.negDate)}</span>
+                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-success font-semibold">Antecipar</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer: meta + actions */}
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> {action.deadline}
                       </span>
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />{action.deadline}
-                      </span>
-                      <span className={cn('text-[10px]', isDone ? 'text-muted-foreground' : effort.className)}>
+                      <span className={cn('text-xs', isDone ? 'text-muted-foreground' : effort.className)}>
                         {effort.text}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Action buttons */}
-                  {!isDone && (
-                    <div className="flex flex-col gap-1.5 flex-shrink-0">
-                      {hasPrefill && (
-                        <Button
-                          size="sm" className="text-[10px] h-7 gap-1"
-                          onClick={() => handleActionPrefill(action)}
-                        >
-                          <Plus className="w-3 h-3" /> Criar
-                        </Button>
-                      )}
-                      {matchingTx && (action.category === 'renegociacao') && (
-                        <Button
-                          size="sm" variant="outline"
-                          className="text-[10px] h-7 gap-1"
-                          onClick={() => generateScript(matchingTx)}
-                        >
-                          <Phone className="w-3 h-3" /> Script
-                        </Button>
-                      )}
-                      <Link to={action.linkTo}>
-                        <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 w-full">
-                          <ExternalLink className="w-3 h-3" /> Ver
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
+                    {!isDone && (
+                      <div className="flex items-center gap-2">
+                        {matchingTx && action.category === 'renegociacao' && (
+                          <Button
+                            size="sm" variant="outline"
+                            className="text-xs h-8 gap-1.5"
+                            onClick={() => generateScript(matchingTx)}
+                          >
+                            <Phone className="w-3.5 h-3.5" /> Script
+                          </Button>
+                        )}
+                        {hasPrefill && (
+                          <Button
+                            size="sm" className="text-xs h-8 gap-1.5"
+                            onClick={() => handleActionPrefill(action)}
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Criar
+                          </Button>
+                        )}
+                        <Link to={action.linkTo}>
+                          <Button variant="ghost" size="sm" className="text-xs h-8 gap-1.5 text-muted-foreground">
+                            <ExternalLink className="w-3.5 h-3.5" /> Ver
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             );
