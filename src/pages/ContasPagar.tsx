@@ -158,8 +158,8 @@ export default function ContasPagar() {
           </div>
         </div>
 
-        {/* Right side: date + amount + action */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Right side: amount + actions */}
+        <div className="flex items-center gap-2 shrink-0">
           {showDate && (
             <span className="text-[11px] text-muted-foreground hidden sm:block font-medium">
               {getDayMonth(tx.dueDate)}
@@ -177,6 +177,35 @@ export default function ContasPagar() {
           >
             <Check className="w-4 h-4 text-success" />
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90"
+              >
+                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => { setRescheduleTx(tx); setRescheduleDate(tx.dueDate); }}>
+                <CalendarClock className="w-3.5 h-3.5 mr-2" />
+                Reagendar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { setEditingTx(tx); setShowForm(true); }}>
+                <Pencil className="w-3.5 h-3.5 mr-2" />
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setDeleteConfirm(tx)}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </motion.div>
     );
