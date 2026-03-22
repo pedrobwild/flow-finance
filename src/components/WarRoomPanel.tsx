@@ -272,7 +272,15 @@ export default function WarRoomPanel({ period }: WarRoomProps = {}) {
                             )}
                           >
                             <button
-                              onClick={() => toggleCompleted(i)}
+                              onClick={() => {
+                                const wasCompleted = isDone;
+                                toggleCompleted(i);
+                                if (!wasCompleted) {
+                                  toast.success(`Ação concluída: ${action.title}`, {
+                                    description: `Impacto recuperado: ${action.impactLabel}`,
+                                  });
+                                }
+                              }}
                               className="mt-1 flex-shrink-0 transition-colors"
                               title={isDone ? 'Desmarcar' : 'Marcar como concluída'}
                             >
