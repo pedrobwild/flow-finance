@@ -238,7 +238,10 @@ export default function CockpitHeroKPIs({ period }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             onClick={() => navigate('/fluxo')}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
+            className={cn(
+              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer',
+              metrics.runwayDays <= 21 ? 'border-red-500/30' : 'border-white/[0.08]'
+            )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
               <ShieldAlert className="w-3.5 h-3.5 text-white/50" />
@@ -269,7 +272,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
               {formatCurrency(metrics.exits)}
             </p>
             <p className="text-[10px] text-white/30 mt-0.5">
-              A receber: <span className="text-emerald-400/70">{formatCurrency(metrics.entries)}</span>
+              {metrics.pendingPayCount} conta(s) · Receber: <span className="text-emerald-400/70">{formatCurrency(metrics.entries)}</span>
             </p>
           </motion.div>
 
@@ -279,19 +282,22 @@ export default function CockpitHeroKPIs({ period }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             onClick={() => navigate('/receber')}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
+            className={cn(
+              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer',
+              metrics.overdueCount > 0 ? 'border-amber-500/30' : 'border-white/[0.08]'
+            )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">A Cobrar</span>
+              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Inadimplente</span>
             </div>
             <p className={cn('text-2xl font-bold font-mono', overdueColor)}>
               {formatCurrency(metrics.overdueRecTotal)}
             </p>
             <p className="text-[10px] text-white/30 mt-0.5">
               {metrics.overdueCount > 0
-                ? `${metrics.overdueCount} parcela(s) em atraso`
-                : 'Nenhum recebível atrasado'}
+                ? `${metrics.overdueCount} parcela(s) vencida(s)`
+                : 'Tudo em dia ✓'}
             </p>
           </motion.div>
 
@@ -302,30 +308,40 @@ export default function CockpitHeroKPIs({ period }: Props) {
             transition={{ delay: 0.25 }}
             onClick={() => navigate('/receber')}
             className={cn(
-              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer',
-              !metrics.surviveIfDelays && metrics.biggestClient ? 'border-red-500/30 bg-red-500/[0.08]' : 'border-white/[0.08]'
+              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer relative overflow-hidden',
+              !metrics.surviveIfDelays && metrics.biggestClient ? 'border-red-500/40 bg-red-500/[0.06]' : 'border-white/[0.08]'
             )}
           >
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <TrendingDown className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Se atrasar</span>
-            </div>
-            {metrics.biggestClient ? (
-              <>
-                <p className={cn('text-lg font-bold font-mono leading-tight', concentrationColor)}>
-                  {metrics.surviveIfDelays ? 'Coberto' : `Falta ${formatCurrency(metrics.next3dPayables - (metrics.bal + metrics.entries - metrics.biggestAmount))}`}
-                </p>
-                <p className="text-[10px] text-white/30 mt-0.5 truncate" title={metrics.biggestClient}>
-                  {metrics.biggestClient}: <span className="text-white/50 font-mono">{formatCurrency(metrics.biggestAmount)}</span>
-                  <span className="text-white/20"> ({Math.round(metrics.concentrationPct)}% das entradas)</span>
-                </p>
-                <p className="text-[9px] text-white/25 mt-0.5">
-                  Próx. 3d a pagar: {formatCurrency(metrics.next3dPayables)}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-white/30 mt-1">Sem recebíveis no período</p>
+            {!metrics.surviveIfDelays && metrics.biggestClient && (
+              <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none" />
             )}
+            <div className="relative z-10">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <TrendingDown className="w-3.5 h-3.5 text-white/50" />
+                <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">
+                  Teste de Estresse
+                </span>
+              </div>
+              {metrics.biggestClient ? (
+                <>
+                  <p className={cn('text-xl font-bold font-mono leading-tight', concentrationColor)}>
+                    {metrics.surviveIfDelays
+                      ? `+${formatCurrency(metrics.surplus)}`
+                      : `-${formatCurrency(metrics.shortfall)}`
+                    }
+                  </p>
+                  <p className="text-[10px] text-white/40 mt-1 leading-snug">
+                    Se <span className="text-white/60 font-medium">{metrics.biggestClient}</span> atrasar
+                    <span className="text-white/25"> ({formatCurrency(metrics.biggestAmount)} · {Math.round(metrics.concentrationPct)}%)</span>
+                  </p>
+                  <p className="text-[9px] mt-0.5 leading-snug">
+                    <span className="text-white/25">Saldo {formatCurrency(metrics.bal)} − 3d contas {formatCurrency(metrics.next3dPayables)}</span>
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-white/30 mt-1">Sem recebíveis pendentes</p>
+              )}
+            </div>
           </motion.div>
         </div>
       </div>
