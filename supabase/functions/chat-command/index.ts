@@ -853,8 +853,15 @@ ESTILO
     // Build the messages for the streaming call
     let streamMessages: any[];
     let actionsExecuted: string[] = [];
+    let toolStatusEvents: string[] = [];
 
     if (choice?.tool_calls?.length) {
+      // Detect which tools will be called and prepare status events
+      const toolNames = choice.tool_calls.map((tc: any) => tc.function.name);
+      if (toolNames.includes("web_search")) {
+        toolStatusEvents.push("web_search");
+      }
+
       const { results, actionsExecuted: actions } = await executeToolCalls(choice.tool_calls);
       actionsExecuted = actions;
       streamMessages = [
