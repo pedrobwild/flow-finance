@@ -27,8 +27,6 @@ export default function CashRunwayChart({ period }: Props) {
     const points: { date: string; label: string; saldo: number; isToday: boolean }[] = [];
 
     for (let d = 0; d <= horizon; d++) {
-
-    for (let d = 0; d <= HORIZON; d++) {
       const date = addDays(today, d);
       const saldo = projectedBalance(date);
       points.push({
