@@ -99,7 +99,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
     : null;
 
   const runwayColor = metrics.runwayDays > 60 ? 'text-emerald-400' : metrics.runwayDays > 21 ? 'text-amber-300' : 'text-red-400';
-  const gap14d = metrics.entries14d - metrics.exits14d;
+  const gap = metrics.entries - metrics.exits;
   const gapColor = gap14d >= 0 ? 'text-emerald-400' : gap14d > -metrics.bal * 0.5 ? 'text-amber-300' : 'text-red-400';
   const overdueColor = metrics.overdueRecTotal === 0 ? 'text-emerald-400' : metrics.overdueRecTotal < 50000 ? 'text-amber-300' : 'text-red-400';
 
