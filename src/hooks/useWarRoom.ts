@@ -120,44 +120,7 @@ export function useWarRoom(options: UseWarRoomOptions = {}) {
     const projFn = mode === 'panel' ? projectedBalance : globalProjected;
     const txs = mode === 'panel' ? transactions : allTransactions;
 
-    let negDate: string | null = null;
-    let negDays: number | null = null;
-    let minBal = balForPanel;
-    let minDate = today;
-
-    for (let i = 0; i <= 90; i++) {
-      const date = addDays(today, i);
-      const projected = projFn(date);
-      if (projected < minBal) { minBal = projected; minDate = date; }
-      if (projected < 0 && negDate === null) { negDate = date; negDays = i; }
-    }
-
-    const deficit = minBal < 0 ? Math.abs(minBal) : 0;
-    const overdueRec = txs.filter(t => t.type === 'receber' && t.status === 'atrasado');
-    const totalOverdue = overdueRec.reduce((s, t) => s + t.amount, 0);
-    const overduePayables = txs.filter(t => t.type === 'pagar' && t.status === 'atrasado');
-    const totalOverduePay = overduePayables.reduce((s, t) => s + t.amount, 0);
-
-    const upcomingPayables = txs
-      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && (negDate ? t.dueDate <= negDate : t.dueDate <= addDays(today, 30)))
-      .reduce((s, t) => s + t.amount, 0);
-    const pendingReceivables = txs
-      .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && (negDate ? t.dueDate <= negDate : t.dueDate <= addDays(today, 30)))
-      .reduce((s, t) => s + t.amount, 0);
-
-    const next30Out = allTransactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 30)).reduce((s, t) => s + t.amount, 0);
-    const next30In = allTransactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 30)).reduce((s, t) => s + t.amount, 0);
-    const netBurn = next30Out - next30In;
-    const avgDaily = netBurn / 30;
-    const runwayDays = avgDaily > 0 && bal > 0 ? Math.floor(bal / avgDaily) : null;
-
-    return {
-      negDate, negDays, minBal, minDate, deficit, currentBalance: balForPanel,
-      totalOverdue, totalOverduePay, upcomingPayables, pendingReceivables,
-      overdueRecCount: overdueRec.length, overduePayCount: overduePayables.length,
-      runwayDays, avgDailyBurn: avgDaily, netBurn, next30Out, next30In,
-      hasCrisis: negDate !== null || minBal < balForPanel * 0.1,
-    };
+    return detectCrisis({ today, balance: balForPanel, transactions: txs, projectedBalance: projFn });
   }, [transactions, currentBalance, projectedBalance, allTransactions, bal, globalProjected, today, mode]);
 
   const isProactive = !crisis.negDate && crisis.minBal >= crisis.currentBalance * 0.1;
