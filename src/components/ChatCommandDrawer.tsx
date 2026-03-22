@@ -63,6 +63,7 @@ export default function ChatCommandDrawer() {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    setSearchingWeb(false);
 
     try {
       const chatHistory = [...messages, userMsg].map(m => ({
