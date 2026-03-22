@@ -8,7 +8,7 @@ import { AlertTriangle, AlertCircle, ChevronRight, Check, CalendarClock } from '
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface UnifiedAlert {
   id: string;
@@ -31,6 +31,7 @@ export default function UnifiedAlerts({ period }: Props) {
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const { confirmTransaction, currentBalance } = useFinance();
+  const navigate = useNavigate();
   const today = todayISO();
 
   const alerts = useMemo((): UnifiedAlert[] => {
@@ -209,8 +210,10 @@ export default function UnifiedAlerts({ period }: Props) {
                 transition={{ duration: 0.3, delay: i * 0.04 }}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all group',
-                  style.bg, style.border, style.hover
+                  style.bg, style.border, style.hover,
+                  alert.linkTo && 'cursor-pointer',
                 )}
+                onClick={() => alert.linkTo && navigate(alert.linkTo)}
               >
                 {/* Severity dot */}
                 <div className={cn('w-2 h-2 rounded-full flex-shrink-0', style.dot)} />
