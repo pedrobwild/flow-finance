@@ -381,14 +381,14 @@ export default function ContasPagar() {
         open={!!refundTx}
         onClose={() => setRefundTx(null)}
         transaction={null}
-        defaultType="receber"
+        defaultType="pagar"
         defaultObraId={refundTx?.obraId || undefined}
         prefill={{
           description: `Reembolso: ${refundTx?.description || ''}`,
           counterpart: refundTx?.counterpart || '',
           amount: refundTx?.amount || 0,
-          category: 'Reembolso',
-          notes: `Reembolso ref. conta a pagar: ${refundTx?.description || ''}`,
+          category: 'Outros',
+          notes: `Reembolso a funcionário ref.: ${refundTx?.description || ''}`,
         }}
       />
 
