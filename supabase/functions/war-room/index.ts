@@ -298,17 +298,42 @@ REGRAS DE OUTPUT:
       });
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      const rawText = await response.text();
+      if (!rawText || rawText.trim().length === 0) {
+        console.error("AI gateway returned empty response");
+        return new Response(JSON.stringify({ error: "Resposta vazia da IA. Tente novamente." }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error("Failed to parse AI response:", parseErr);
+      return new Response(JSON.stringify({ error: "Resposta incompleta da IA. Tente novamente." }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (toolCall?.function?.arguments) {
-      const result = JSON.parse(toolCall.function.arguments);
+      let result;
+      try {
+        result = JSON.parse(toolCall.function.arguments);
+      } catch (argErr) {
+        console.error("Failed to parse tool_calls arguments:", argErr);
+        return new Response(JSON.stringify({ error: "Resposta truncada da IA. Tente novamente." }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ error: "Resposta inválida da IA" }), {
+    console.error("No tool_calls in response:", JSON.stringify(data.choices?.[0]?.message).slice(0, 500));
+    return new Response(JSON.stringify({ error: "Resposta inválida da IA. Tente novamente." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
