@@ -40,7 +40,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* === WAR ROOM (when negative cash projected) === */}
-      <WarRoomPanel />
+      <WarRoomPanel period={period} />
 
       {/* === ROW 1: KPIs + HEALTH (números primeiro) === */}
       <motion.div {...section(0.04)}>
