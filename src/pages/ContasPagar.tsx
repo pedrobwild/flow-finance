@@ -31,11 +31,16 @@ const sect = (delay: number) => ({
 });
 
 export default function ContasPagar() {
-  const { currentBalance, confirmTransaction } = useFinance();
+  const { currentBalance, confirmTransaction, updateTransaction, deleteTransaction } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras } = useObras();
   const today = todayISO();
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
+  const [rescheduleTx, setRescheduleTx] = useState<Transaction | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
