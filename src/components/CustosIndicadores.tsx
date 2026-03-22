@@ -8,10 +8,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { supabase } from '@/integrations/supabase/client';
 import {
   TrendingUp, TrendingDown, Minus, RefreshCw, Info, Target,
-  AlertTriangle, CheckCircle2, XCircle, Loader2, Sparkles
+  AlertTriangle, CheckCircle2, XCircle, Loader2, Sparkles, BarChart3
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine
+} from 'recharts';
 
 interface Props {
   allTransactions: Transaction[];
@@ -56,10 +60,38 @@ const CATEGORY_LABELS = {
   'operacional': 'Operacional',
 };
 
+// Helper to compute KPI values for a given month's transactions
+function computeKPIValues(payables: Transaction[], receivables: Transaction[]) {
+  const totalReceita = receivables.reduce((s, t) => s + t.amount, 0);
+  const totalCusto = payables.reduce((s, t) => s + t.amount, 0);
+  const maoDeObra = payables.filter(t => ['Mão de Obra', 'Mão de Obra Terceirizada', 'Salários'].some(c => t.category.includes(c))).reduce((s, t) => s + t.amount, 0);
+  const materiais = payables.filter(t => ['Material', 'Materiais'].some(c => t.category.includes(c))).reduce((s, t) => s + t.amount, 0);
+  const custoFixo = payables.filter(t => ['Aluguel', 'Administrativo', 'Contabilidade', 'Seguros', 'Software'].some(c => t.category.includes(c) || t.costCenter === 'Administrativo')).reduce((s, t) => s + t.amount, 0);
+  const adminCosts = payables.filter(t => ['Administrativo', 'Diretoria', 'Jurídico', 'RH'].includes(t.costCenter)).reduce((s, t) => s + t.amount, 0);
+  const byCounterpart = new Map<string, number>();
+  payables.forEach(t => byCounterpart.set(t.counterpart, (byCounterpart.get(t.counterpart) || 0) + t.amount));
+  const sorted = [...byCounterpart.entries()].sort((a, b) => b[1] - a[1]);
+  const top3Total = sorted.slice(0, 3).reduce((s, [, v]) => s + v, 0);
+
+  return {
+    receita_folha: maoDeObra > 0 ? totalReceita / maoDeObra : 0,
+    margem_operacional: totalReceita > 0 ? ((totalReceita - totalCusto) / totalReceita) * 100 : 0,
+    material_receita: totalReceita > 0 ? (materiais / totalReceita) * 100 : 0,
+    fixo_total: totalCusto > 0 ? (custoFixo / totalCusto) * 100 : 0,
+    overhead: totalReceita > 0 ? (adminCosts / totalReceita) * 100 : 0,
+    custo_medio: payables.length > 0 ? totalCusto / payables.length : 0,
+    cobertura: totalCusto > 0 ? totalReceita / totalCusto : 0,
+    concentracao: totalCusto > 0 ? (top3Total / totalCusto) * 100 : 0,
+  };
+}
+
+const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
 export default function CustosIndicadores({ allTransactions, year, month }: Props) {
   const [benchmarks, setBenchmarks] = useState<Record<string, KPIData['benchmark']>>({});
   const [loading, setLoading] = useState(false);
   const [lastFetch, setLastFetch] = useState<string | null>(null);
+  const [showTrends, setShowTrends] = useState(true);
 
   const { from, to } = getMonthRange(year, month);
 
@@ -262,6 +294,35 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
     return groups;
   }, [kpis]);
 
+  // 6-month trend data
+  const trendData = useMemo(() => {
+    const months: { year: number; month: number; label: string }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      let m = month - i;
+      let y = year;
+      while (m < 0) { m += 12; y--; }
+      months.push({ year: y, month: m, label: MONTH_NAMES[m] });
+    }
+
+    return months.map(({ year: y, month: m, label }) => {
+      const { from: mFrom, to: mTo } = getMonthRange(y, m);
+      const pay = allTransactions.filter(t => t.type === 'pagar' && t.dueDate >= mFrom && t.dueDate <= mTo);
+      const rec = allTransactions.filter(t => t.type === 'receber' && t.dueDate >= mFrom && t.dueDate <= mTo);
+      return { label, ...computeKPIValues(pay, rec) };
+    });
+  }, [allTransactions, year, month]);
+
+  const kpiTrendConfig: { id: string; name: string; suffix: string; color: string; decimals: number }[] = [
+    { id: 'receita_folha', name: 'Receita / Folha', suffix: 'x', color: 'hsl(var(--primary))', decimals: 1 },
+    { id: 'margem_operacional', name: 'Margem Operacional', suffix: '%', color: 'hsl(var(--success, 142 76% 36%))', decimals: 1 },
+    { id: 'material_receita', name: 'Material / Receita', suffix: '%', color: 'hsl(var(--accent))', decimals: 1 },
+    { id: 'fixo_total', name: 'Custo Fixo / Total', suffix: '%', color: '#6366f1', decimals: 1 },
+    { id: 'overhead', name: 'Overhead', suffix: '%', color: '#d97706', decimals: 1 },
+    { id: 'cobertura', name: 'Índice de Cobertura', suffix: 'x', color: '#059669', decimals: 2 },
+    { id: 'concentracao', name: 'Concentração Top 3', suffix: '%', color: '#dc2626', decimals: 0 },
+    { id: 'custo_medio', name: 'Ticket Médio', suffix: '', color: '#64748b', decimals: 0 },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header + Fetch Button */}
@@ -365,7 +426,76 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
         </motion.div>
       ))}
 
-      {/* Summary bar */}
+      {/* 6-Month Trend Charts */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <BarChart3 className="w-3.5 h-3.5" />
+            Evolução 6 Meses
+          </h3>
+          <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => setShowTrends(v => !v)}>
+            {showTrends ? 'Ocultar' : 'Mostrar'}
+          </Button>
+        </div>
+        <AnimatePresence>
+          {showTrends && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 overflow-hidden"
+            >
+              {kpiTrendConfig.map(cfg => {
+                const values = trendData.map(d => d[cfg.id as keyof typeof d] as number);
+                const current = values[values.length - 1];
+                const previous = values[values.length - 2];
+                const variation = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+                const isUp = variation > 0;
+
+                return (
+                  <Card key={cfg.id} className="border shadow-sm">
+                    <CardContent className="p-3 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-medium text-muted-foreground truncate">{cfg.name}</span>
+                        <span className={`text-[10px] font-mono font-medium flex items-center gap-0.5 ${
+                          Math.abs(variation) < 1 ? 'text-muted-foreground' : isUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {isUp ? <TrendingUp className="w-3 h-3" /> : variation < -1 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                          {Math.abs(variation).toFixed(0)}%
+                        </span>
+                      </div>
+                      <p className="text-lg font-bold font-mono">
+                        {cfg.id === 'custo_medio' ? formatCurrency(current) : `${current.toFixed(cfg.decimals)}${cfg.suffix}`}
+                      </p>
+                      <div className="h-[80px] -mx-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={trendData} margin={{ top: 5, right: 5, bottom: 0, left: 5 }}>
+                            <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                            <YAxis hide domain={['auto', 'auto']} />
+                            <RechartsTooltip
+                              contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--background))' }}
+                              formatter={(val: number) => [cfg.id === 'custo_medio' ? formatCurrency(val) : `${val.toFixed(cfg.decimals)}${cfg.suffix}`, cfg.name]}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey={cfg.id}
+                              stroke={cfg.color}
+                              strokeWidth={2}
+                              dot={{ r: 3, fill: cfg.color }}
+                              activeDot={{ r: 5 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       <Card className="border-none shadow-sm bg-muted/30">
         <CardContent className="p-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
