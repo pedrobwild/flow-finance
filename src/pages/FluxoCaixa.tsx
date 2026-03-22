@@ -444,7 +444,8 @@ export default function FluxoCaixa() {
                               isDanger && 'bg-destructive/[0.04]',
                               isWarn && 'bg-warning/[0.04]',
                               day.isToday && 'bg-accent/[0.06] border-l-2 border-l-accent',
-                              day.isWeekend && !day.isToday && !isDanger && 'opacity-50'
+                              day.date < today && !day.isToday && 'opacity-60',
+                              day.isWeekend && !day.isToday && !isDanger && day.date >= today && 'opacity-50'
                             )}
                             onClick={() => day.txCount > 0 && toggleDay(day.date)}
                           >
