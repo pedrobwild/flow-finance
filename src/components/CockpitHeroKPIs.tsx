@@ -73,20 +73,14 @@ export default function CockpitHeroKPIs({ period }: Props) {
       if (amount > biggestAmount) { biggestClient = client; biggestAmount = amount; }
     }
     // If that client delays: what's the balance situation?
-    // Tomorrow's payables
-    const tomorrow = addDays(today, 1);
-    const tomorrowPayables = transactions
-      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate === tomorrow)
+    // Payables within the selected period
+    const periodPayables = transactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .reduce((s, t) => s + t.amount, 0);
-    // Next 3 days payables (more realistic)
-    const next3d = addDays(today, 3);
-    const next3dPayables = transactions
-      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= next3d)
-      .reduce((s, t) => s + t.amount, 0);
-    // If biggest client delays: can current balance alone cover next 3 days of bills?
-    const balAfterBills = bal - next3dPayables;
+    // If biggest client delays: can current balance alone cover period bills?
+    const balAfterBills = bal - periodPayables;
     const entriesWithoutBiggest = entries - biggestAmount;
-    const netIfDelays = bal + entriesWithoutBiggest - next3dPayables;
+    const netIfDelays = bal + entriesWithoutBiggest - periodPayables;
     const surviveIfDelays = netIfDelays > 0;
     const shortfall = surviveIfDelays ? 0 : Math.abs(netIfDelays);
     const surplus = surviveIfDelays ? netIfDelays : 0;
