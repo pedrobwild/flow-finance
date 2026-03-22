@@ -9,7 +9,8 @@ import {
   AlertTriangle, ChevronRight, Calendar, TrendingUp, TrendingDown,
   ArrowDownRight, ArrowUpRight, Wallet, ShieldAlert, CheckCircle2,
   BarChart3, Clock, Building2, LineChart, Table2, ArrowRight,
-  Users, FileText, Phone, Receipt, Target, Flame, ArrowDown, ArrowUp
+  Users, FileText, Phone, Receipt, Target, Flame, ArrowDown, ArrowUp, List
+
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
