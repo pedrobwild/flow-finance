@@ -31,6 +31,7 @@ export default function UnifiedAlerts({ period }: Props) {
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const { confirmTransaction, currentBalance } = useFinance();
+  const navigate = useNavigate();
   const today = todayISO();
 
   const alerts = useMemo((): UnifiedAlert[] => {
