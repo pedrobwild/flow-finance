@@ -10,7 +10,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    console.log("war-room: request received");
     const { financialSummary, crisisContext, marketContext } = await req.json();
+    console.log("war-room: parsed body, summary length:", financialSummary?.length);
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -75,7 +77,7 @@ REGRAS:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           {
