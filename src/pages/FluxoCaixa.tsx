@@ -69,11 +69,26 @@ export default function FluxoCaixa() {
     };
   }, [transactions, today]);
 
-  // === MONTH OVER MONTH ANALYSIS ===
-  const monthAnalysis = useMemo(() => {
-    const months: { label: string; month: string; entradas: number; saidas: number; confirmadas: number; pendentes: number; txCount: number }[] = [];
+  // === MONTH OVER MONTH ANALYSIS + DRE ===
+  const DIRECT_COST_CATEGORIES = new Set([
+    'Materiais de Obra', 'Mão de Obra Terceirizada', 'Mão de Obra',
+    'Materiais', 'Empreiteiro', 'Subempreitada', 'Frete',
+  ]);
+  const ADMIN_CATEGORIES = new Set([
+    'Software/SaaS', 'Salários', 'Impostos', 'Juros', 'Empréstimo',
+    'Comissão de Vendas', 'Aluguel', 'Contador', 'Seguros',
+  ]);
 
-    // Get last 3 months + current
+  const monthAnalysis = useMemo(() => {
+    interface MonthData {
+      label: string; month: string;
+      entradas: number; saidas: number; confirmadas: number; pendentes: number; txCount: number;
+      receitas: number; custoDireto: number; despAdmin: number; outrasDesp: number;
+      margemBruta: number; resultadoOp: number; margemBrutaPct: number; margemOpPct: number;
+    }
+
+    const months: MonthData[] = [];
+
     for (let m = -3; m <= 0; m++) {
       const d = new Date();
       d.setMonth(d.getMonth() + m);
@@ -88,10 +103,35 @@ export default function FluxoCaixa() {
       const confirmadas = monthTxs.filter(t => t.status === 'confirmado').reduce((s, t) => s + t.amount, 0);
       const pendentes = monthTxs.filter(t => t.status !== 'confirmado').reduce((s, t) => s + t.amount, 0);
 
-      months.push({ label, month: monthStr, entradas, saidas, confirmadas, pendentes, txCount: monthTxs.length });
+      // DRE classification
+      const receitas = entradas;
+      const pagamentos = monthTxs.filter(t => t.type === 'pagar');
+
+      // Direct costs: has obra OR is in direct cost categories
+      const custoDireto = pagamentos
+        .filter(t => t.obraId || DIRECT_COST_CATEGORIES.has(t.category))
+        .reduce((s, t) => s + t.amount, 0);
+
+      // Admin expenses: admin cost center or admin categories (excluding what's already direct)
+      const despAdmin = pagamentos
+        .filter(t => !t.obraId && !DIRECT_COST_CATEGORIES.has(t.category) && (t.costCenter === 'Administrativo' || ADMIN_CATEGORIES.has(t.category)))
+        .reduce((s, t) => s + t.amount, 0);
+
+      // Other expenses (not classified as direct or admin)
+      const outrasDesp = saidas - custoDireto - despAdmin;
+
+      const margemBruta = receitas - custoDireto;
+      const resultadoOp = margemBruta - despAdmin - (outrasDesp > 0 ? outrasDesp : 0);
+      const margemBrutaPct = receitas > 0 ? (margemBruta / receitas) * 100 : 0;
+      const margemOpPct = receitas > 0 ? (resultadoOp / receitas) * 100 : 0;
+
+      months.push({
+        label, month: monthStr, entradas, saidas, confirmadas, pendentes, txCount: monthTxs.length,
+        receitas, custoDireto, despAdmin, outrasDesp: Math.max(outrasDesp, 0),
+        margemBruta, resultadoOp, margemBrutaPct, margemOpPct,
+      });
     }
 
-    // MoM changes
     const current = months[months.length - 1];
     const previous = months[months.length - 2];
     const entradaMoM = previous.entradas > 0 ? ((current.entradas - previous.entradas) / previous.entradas) * 100 : 0;
