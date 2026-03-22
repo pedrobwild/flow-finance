@@ -9,7 +9,7 @@ import MorningBriefing from '@/components/MorningBriefing';
 import WeeklyCashProjection from '@/components/WeeklyCashProjection';
 import ObraCashBalance from '@/components/ObraCashBalance';
 import CashRunwayChart from '@/components/CashRunwayChart';
-import WarRoomPanel from '@/components/WarRoomPanel';
+
 
 import { motion } from 'framer-motion';
 
@@ -39,8 +39,6 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* === WAR ROOM (when negative cash projected) === */}
-      <WarRoomPanel period={period} />
 
       {/* === ROW 1: KPIs + HEALTH (números primeiro) === */}
       <motion.div {...section(0.04)}>
