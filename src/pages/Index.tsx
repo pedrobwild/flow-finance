@@ -74,7 +74,7 @@ export default function Dashboard() {
 
       {/* === ROW 6: PROJEÇÃO SEMANAL === */}
       <motion.div {...section(0.24)}>
-        <WeeklyCashProjection />
+        <WeeklyCashProjection period={period} />
       </motion.div>
 
       {/* === ROW 7: SALDO POR OBRA === */}
