@@ -262,6 +262,8 @@ export default function ComandoDeGuerra() {
     return lines.join('\n');
   }, [crisis, obras, allTransactions, bal, globalProjected, today, getObraFinancials]);
 
+  const isProactive = !crisis.negDate && crisis.minBal >= bal * 0.1;
+
   const crisisContext = useMemo(() => {
     if (crisis.negDate) {
       return `O caixa da empresa ficará NEGATIVO em ${crisis.negDays} dias (${formatDateFull(crisis.negDate)}).
@@ -273,13 +275,16 @@ Saídas pendentes até D-Day: ${formatCurrency(crisis.upcomingPayables)}.
 Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.
 Runway estimado: ${crisis.runwayDays ?? '∞'} dias.`;
     }
-    return `O caixa NÃO ficará negativo nos próximos 90 dias, mas o ponto mais apertado será ${formatCurrency(crisis.minBal)} em ${getDayMonth(crisis.minDate)}.
+    return `O caixa NÃO ficará negativo nos próximos 90 dias.
 Saldo atual: ${formatCurrency(crisis.currentBalance)}.
+Ponto mais apertado: ${formatCurrency(crisis.minBal)} em ${getDayMonth(crisis.minDate)}.
 Recebíveis atrasados: ${formatCurrency(crisis.totalOverdue)} (${crisis.overdueRecCount} transações).
 Pagáveis atrasados: ${formatCurrency(crisis.totalOverduePay)} (${crisis.overduePayCount} transações).
 Runway estimado: ${crisis.runwayDays ?? '∞'} dias.
 Queima líquida 30d: ${formatCurrency(crisis.netBurn)}.
-O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.`;
+Saídas próximos 30d: ${formatCurrency(crisis.next30Out)}.
+Entradas próximos 30d: ${formatCurrency(crisis.next30In)}.
+O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e PROTEGER o caixa.`;
   }, [crisis]);
 
   // === FETCH AI PLAN ===
@@ -296,7 +301,7 @@ O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.
       } catch { /* optional */ }
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke('war-room', {
-        body: { financialSummary, crisisContext, marketContext },
+        body: { financialSummary, crisisContext, marketContext, mode: isProactive ? 'proactive' : 'crisis' },
       });
 
       if (fnError) throw new Error(fnError.message);
@@ -308,7 +313,7 @@ O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.
     } finally {
       setLoading(false);
     }
-  }, [financialSummary, crisisContext]);
+  }, [financialSummary, crisisContext, isProactive]);
 
   // Auto-fetch on mount
   useEffect(() => {
@@ -411,11 +416,19 @@ O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <Siren className={cn('w-5 h-5', sConfig.color)} />
-            <h1 className="text-lg font-bold tracking-tight">Comando de Guerra</h1>
+            {isProactive ? (
+              <Shield className={cn('w-5 h-5', 'text-success')} />
+            ) : (
+              <Siren className={cn('w-5 h-5', sConfig.color)} />
+            )}
+            <h1 className="text-lg font-bold tracking-tight">
+              {isProactive ? 'Comando Estratégico' : 'Comando de Guerra'}
+            </h1>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Análise completa da IA — tudo que você pode fazer para proteger o caixa
+            {isProactive
+              ? 'Caixa saudável — oportunidades de otimização e proteção identificadas pela IA'
+              : 'Análise completa da IA — tudo que você pode fazer para proteger o caixa'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -558,17 +571,23 @@ O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.
       )}
 
       {/* === COVERAGE BAR === */}
-      {aiData && !loading && crisis.deficit > 0 && (
+      {aiData && !loading && (crisis.deficit > 0 || isProactive) && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
-              Potencial de recuperação: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span>
+              {isProactive ? (
+                <>Ganho potencial: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span></>
+              ) : (
+                <>Potencial de recuperação: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span></>
+              )}
             </span>
-            <span className={cn('font-bold', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
-              {aiData.coveragePercentage.toFixed(0)}% do gap
-            </span>
+            {!isProactive && (
+              <span className={cn('font-bold', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
+                {aiData.coveragePercentage.toFixed(0)}% do gap
+              </span>
+            )}
           </div>
-          <Progress value={Math.min(100, aiData.coveragePercentage)} className="h-2.5" />
+          {!isProactive && <Progress value={Math.min(100, aiData.coveragePercentage)} className="h-2.5" />}
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
             <span>{completedActions.size}/{aiData.actions.length} ações concluídas</span>
             <span>
@@ -589,7 +608,9 @@ O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground animate-pulse">
-                IA analisando dados financeiros, cobranças, obras e mercado...
+                {isProactive
+                  ? 'IA buscando oportunidades de otimização financeira...'
+                  : 'IA analisando dados financeiros, cobranças, obras e mercado...'}
               </p>
               <p className="text-[10px] text-muted-foreground">Isso pode levar alguns segundos</p>
             </div>
@@ -625,9 +646,15 @@ O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.
       {aiData && !loading && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-foreground" />
+            {isProactive ? (
+              <Sparkles className="w-4 h-4 text-accent" />
+            ) : (
+              <ShieldAlert className="w-4 h-4 text-foreground" />
+            )}
             <h2 className="text-sm font-bold uppercase tracking-wider">
-              Plano de Ação — {aiData.actions.length} Recomendações
+              {isProactive
+                ? `Oportunidades — ${aiData.actions.length} Sugestões Proativas`
+                : `Plano de Ação — ${aiData.actions.length} Recomendações`}
             </h2>
           </div>
 
