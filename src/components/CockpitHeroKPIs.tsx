@@ -80,11 +80,11 @@ export default function CockpitHeroKPIs({ period }: Props) {
     }
 
     return {
-      bal, balAge, balDate, runwayDays, coverage14d,
-      exits14d, entries14d, inadRate, overdueRecTotal,
+      bal, balAge, balDate, runwayDays, coverage,
+      exits, entries, inadRate, overdueRecTotal,
       avgMargin, sparkData, overdueCount: overdueRec.length,
     };
-  }, [transactions, filteredBalance, filteredProjectedBalance, obras, today]);
+  }, [transactions, filteredBalance, filteredProjectedBalance, obras, today, period]);
 
   const handleSaveBalance = () => {
     const val = parseFloat(balanceInput.replace(/[^\d.,-]/g, '').replace(',', '.'));
