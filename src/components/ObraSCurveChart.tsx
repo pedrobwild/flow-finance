@@ -15,6 +15,7 @@ import {
 interface ObraStage {
   id: string;
   name: string;
+  supplier: string;
   estimatedValue: number;
   estimatedStartDate: string | null;
   estimatedEndDate: string | null;
