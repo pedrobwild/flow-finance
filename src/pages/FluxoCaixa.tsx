@@ -491,6 +491,39 @@ export default function FluxoCaixa() {
 
           {/* === ANALYSIS TAB === */}
           <TabsContent value="analise" className="mt-0 space-y-4">
+            {/* DRE Simplificado */}
+            <div className="card-elevated overflow-hidden">
+              <div className="px-4 py-3 border-b flex items-center gap-2.5">
+                <TrendingUp className="w-4 h-4 text-accent" />
+                <div>
+                  <h3 className="font-semibold text-sm">DRE Simplificado</h3>
+                  <p className="text-[10px] text-muted-foreground">Receitas − Custos Diretos = Margem Bruta − Despesas Administrativas = Resultado Operacional</p>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/30">
+                      <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase w-[200px]">Linha</th>
+                      {monthAnalysis.months.map((m, i) => (
+                        <th key={m.month} className="text-right px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase capitalize">
+                          {m.label} {i === monthAnalysis.months.length - 1 && <Badge variant="outline" className="text-[8px] ml-0.5">Atual</Badge>}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <DRERow label="Receitas (Entradas)" values={monthAnalysis.months.map(m => m.receitas)} bold color="text-success" />
+                    <DRERow label="(−) Custos Diretos" values={monthAnalysis.months.map(m => -m.custoDireto)} sub color="text-destructive" />
+                    <DRERow label="= Margem Bruta" values={monthAnalysis.months.map(m => m.margemBruta)} bold highlight pctValues={monthAnalysis.months.map(m => m.margemBrutaPct)} />
+                    <DRERow label="(−) Despesas Administrativas" values={monthAnalysis.months.map(m => -m.despAdmin)} sub color="text-destructive" />
+                    <DRERow label="(−) Outras Despesas" values={monthAnalysis.months.map(m => -m.outrasDesp)} sub color="text-muted-foreground" />
+                    <DRERow label="= Resultado Operacional" values={monthAnalysis.months.map(m => m.resultadoOp)} bold highlight pctValues={monthAnalysis.months.map(m => m.margemOpPct)} />
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             {/* MoM Summary */}
             <div className="grid grid-cols-2 gap-3">
               <div className="card-elevated p-4">
@@ -600,46 +633,6 @@ export default function FluxoCaixa() {
                   })}
                 </tbody>
               </table>
-            </div>
-
-
-            {/* DRE Simplificado */}
-            <div className="card-elevated overflow-hidden">
-              <div className="px-4 py-3 border-b flex items-center gap-2.5">
-                <TrendingUp className="w-4 h-4 text-accent" />
-                <div>
-                  <h3 className="font-semibold text-sm">DRE Simplificado</h3>
-                  <p className="text-[10px] text-muted-foreground">Receitas − Custos Diretos = Margem Bruta − Despesas Administrativas = Resultado Operacional</p>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/30">
-                      <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase w-[200px]">Linha</th>
-                      {monthAnalysis.months.map((m, i) => (
-                        <th key={m.month} className="text-right px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase capitalize">
-                          {m.label} {i === monthAnalysis.months.length - 1 && <Badge variant="outline" className="text-[8px] ml-0.5">Atual</Badge>}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* Receitas */}
-                    <DRERow label="Receitas (Entradas)" values={monthAnalysis.months.map(m => m.receitas)} bold color="text-success" />
-                    {/* Custos Diretos */}
-                    <DRERow label="(−) Custos Diretos" values={monthAnalysis.months.map(m => -m.custoDireto)} sub color="text-destructive" />
-                    {/* Margem Bruta */}
-                    <DRERow label="= Margem Bruta" values={monthAnalysis.months.map(m => m.margemBruta)} bold highlight pctValues={monthAnalysis.months.map(m => m.margemBrutaPct)} />
-                    {/* Despesas Admin */}
-                    <DRERow label="(−) Despesas Administrativas" values={monthAnalysis.months.map(m => -m.despAdmin)} sub color="text-destructive" />
-                    {/* Outras Despesas */}
-                    <DRERow label="(−) Outras Despesas" values={monthAnalysis.months.map(m => -m.outrasDesp)} sub color="text-muted-foreground" />
-                    {/* Resultado Operacional */}
-                    <DRERow label="= Resultado Operacional" values={monthAnalysis.months.map(m => m.resultadoOp)} bold highlight pctValues={monthAnalysis.months.map(m => m.margemOpPct)} />
-                  </tbody>
-                </table>
-              </div>
             </div>
           </TabsContent>
         </Tabs>
