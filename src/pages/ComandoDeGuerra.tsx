@@ -608,7 +608,9 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground animate-pulse">
-                IA analisando dados financeiros, cobranças, obras e mercado...
+                {isProactive
+                  ? 'IA buscando oportunidades de otimização financeira...'
+                  : 'IA analisando dados financeiros, cobranças, obras e mercado...'}
               </p>
               <p className="text-[10px] text-muted-foreground">Isso pode levar alguns segundos</p>
             </div>
