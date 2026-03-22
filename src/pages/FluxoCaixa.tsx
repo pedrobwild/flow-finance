@@ -262,15 +262,16 @@ export default function FluxoCaixa() {
         </div>
         <div className="flex items-center gap-2">
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
-        <ExportDropdown
-          onCSV={() => exportToCSV(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
-          onExcel={() => exportToExcel(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
-          onPDF={() => {
-            const rows = cashFlowToExportRows(exportDays);
-            const headers = Object.keys(rows[0] || {});
-            exportToPDF('Fluxo de Caixa', headers, rows.map(r => headers.map(h => String(r[h] ?? ''))));
-          }}
-        />
+          <ExportDropdown
+            onCSV={() => exportToCSV(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
+            onExcel={() => exportToExcel(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
+            onPDF={() => {
+              const rows = cashFlowToExportRows(exportDays);
+              const headers = Object.keys(rows[0] || {});
+              exportToPDF('Fluxo de Caixa', headers, rows.map(r => headers.map(h => String(r[h] ?? ''))));
+            }}
+          />
+        </div>
       </motion.div>
 
       {/* Quick Status Strip */}
