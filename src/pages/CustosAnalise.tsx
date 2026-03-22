@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
-import { ChevronLeft, ChevronRight, TrendingDown, Layers, Tag, Building2, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingDown, Layers, Tag, Building2, Calendar, GitCompareArrows } from 'lucide-react';
 import { motion } from 'framer-motion';
+import CustosComparativo from '@/components/CustosComparativo';
 
 function getMonthLabel(year: number, month: number) {
   const d = new Date(year, month);
@@ -195,6 +196,9 @@ export default function CustosAnalise() {
           </TabsTrigger>
           <TabsTrigger value="obra" className="gap-1.5 text-xs">
             <Building2 className="w-3.5 h-3.5" /> Por Obra
+          </TabsTrigger>
+          <TabsTrigger value="comparativo" className="gap-1.5 text-xs">
+            <GitCompareArrows className="w-3.5 h-3.5" /> Comparativo
           </TabsTrigger>
         </TabsList>
 
@@ -397,6 +401,11 @@ export default function CustosAnalise() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Comparativo Tab */}
+        <TabsContent value="comparativo">
+          <CustosComparativo allTransactions={filteredTransactions} year={year} month={month} />
         </TabsContent>
       </Tabs>
     </div>
