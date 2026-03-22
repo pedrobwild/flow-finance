@@ -12,6 +12,7 @@ import {
   Check, Pencil, AlertTriangle,
 } from 'lucide-react';
 import TransactionFormDialog from './TransactionFormDialog';
+import ObraSCurveChart from './ObraSCurveChart';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip as RechartsTooltip, ReferenceLine,
