@@ -49,7 +49,8 @@ REGRA CRÍTICA — ANTECIPAÇÃO vs COBRANÇA:
 
 REGRAS:
 - 4-8 ações, cada uma com título claro (verbo + nome + valor)
-- Descrição de 2-3 frases que o CEO entende sem pensar
+- Descrição: UMA frase curta explicando por que essa ação importa
+- Steps: quebre cada ação em 2-4 micro-passos concretos que o CEO segue sem pensar. Cada passo começa com verbo imperativo. Ex: "Ligue para Maria", "Diga: se pagar hoje via PIX...", "Se recusar, ofereça parcelamento em 2x"
 - Ordene por impacto real (maior primeiro)
 - Calcule cobertura total
 - Inclua prefill para ações que envolvam criar transações`;
