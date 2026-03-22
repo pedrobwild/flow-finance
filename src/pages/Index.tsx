@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { todayISO, addDays } from '@/lib/helpers';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import DashboardKPIs from '@/components/DashboardKPIs';
-import HealthScoreCompact from '@/components/HealthScoreCompact';
+
 
 import UnifiedAlerts from '@/components/UnifiedAlerts';
 import MorningBriefing from '@/components/MorningBriefing';
@@ -40,16 +40,9 @@ export default function Dashboard() {
       </motion.div>
 
 
-      {/* === ROW 1: KPIs + HEALTH (números primeiro) === */}
+      {/* === ROW 1: KPIs === */}
       <motion.div {...section(0.04)}>
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <DashboardKPIs period={period} />
-          </div>
-          <div className="lg:w-[220px] flex-shrink-0">
-            <HealthScoreCompact />
-          </div>
-        </div>
+        <DashboardKPIs period={period} />
       </motion.div>
 
 
