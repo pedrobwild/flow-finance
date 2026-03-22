@@ -214,8 +214,8 @@ export default function UnifiedAlerts({ period }: Props) {
                   alert.linkTo && 'cursor-pointer',
                 )}
                 onClick={() => {
-                  if (alert.linkTo) {
-                    window.location.href = alert.linkTo;
+                  if (alert.linkTo) navigate(alert.linkTo);
+                }
                   }
                 }}
               >
