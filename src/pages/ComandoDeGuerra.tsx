@@ -731,6 +731,7 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
                       </div>
                     )}
 
+                    <div className="flex items-center gap-4 mt-2 flex-wrap">
                       <span className={cn('text-xs font-bold', isDone ? 'text-muted-foreground line-through' : action.impactAmount > 0 ? 'text-success' : 'text-destructive')}>
                         ⚡ {action.impactLabel}
                       </span>
