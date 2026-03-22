@@ -8,7 +8,7 @@ import {
   Siren, ShieldAlert, ChevronDown, ChevronUp, RefreshCw,
   Phone, Receipt, Pause, ArrowRightLeft, CalendarClock,
   TrendingDown, AlertTriangle, Landmark, HandCoins, Ban,
-  Scissors, Clock, Zap, Sparkles, Plus, ExternalLink,
+  Scissors, Clock, Zap, Sparkles, Plus, ExternalLink, CheckCircle2, Circle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -79,11 +79,32 @@ export default function WarRoomPanel() {
   const [aiData, setAiData] = useState<WarRoomData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completedActions, setCompletedActions] = useState<Set<number>>(() => {
+    try {
+      const saved = localStorage.getItem('war-room-completed');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
   const [txFormOpen, setTxFormOpen] = useState(false);
   const [txFormDefaults, setTxFormDefaults] = useState<{
     type: TransactionType; description?: string; counterpart?: string;
     amount?: number; category?: string; notes?: string; obraId?: string;
   } | null>(null);
+
+  const toggleCompleted = (index: number) => {
+    setCompletedActions(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      localStorage.setItem('war-room-completed', JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  // Reset completed when new AI data loads
+  const clearCompleted = useCallback(() => {
+    setCompletedActions(new Set());
+    localStorage.removeItem('war-room-completed');
+  }, []);
 
   // Crisis detection
   const crisis = useMemo(() => {
@@ -214,6 +235,7 @@ Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.`;
     if (!crisis) return;
     setLoading(true);
     setError(null);
+    clearCompleted();
     try {
       // Fetch market data in parallel (non-blocking)
       let marketContext: string | null = null;
@@ -455,6 +477,18 @@ Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.`;
                       <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
                         Plano de Ação IA ({aiData.actions.length} recomendações)
                       </h3>
+                      <div className="flex-1" />
+                      {completedActions.size > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold text-success">
+                            {completedActions.size}/{aiData.actions.length} concluídas
+                          </span>
+                          <Progress
+                            value={(completedActions.size / aiData.actions.length) * 100}
+                            className="h-1.5 w-20"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       {aiData.actions.map((action, i) => {
@@ -462,29 +496,46 @@ Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.`;
                         const Icon = categoryIcons[action.category] || Zap;
                         const effort = effortLabels[action.effort] || effortLabels.medio;
                         const hasPrefill = !!action.prefill;
+                        const isDone = completedActions.has(i);
 
                         return (
                           <motion.div
                             key={i}
                             initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
+                            animate={{ opacity: isDone ? 0.5 : 1, x: 0 }}
                             transition={{ delay: i * 0.06, duration: 0.3 }}
-                            className={cn('flex items-start gap-3 p-3 rounded-lg border', styles.bg, styles.border)}
+                            className={cn(
+                              'flex items-start gap-3 p-3 rounded-lg border transition-all',
+                              isDone ? 'bg-muted/20 border-border/30' : cn(styles.bg, styles.border),
+                            )}
                           >
-                            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5', styles.bg)}>
-                              <Icon className={cn('w-4 h-4', styles.text)} />
+                            {/* Complete toggle */}
+                            <button
+                              onClick={() => toggleCompleted(i)}
+                              className="mt-1 flex-shrink-0 transition-colors"
+                              title={isDone ? 'Desmarcar' : 'Marcar como concluída'}
+                            >
+                              {isDone ? (
+                                <CheckCircle2 className="w-5 h-5 text-success" />
+                              ) : (
+                                <Circle className={cn('w-5 h-5', styles.text, 'opacity-40 hover:opacity-100')} />
+                              )}
+                            </button>
+
+                            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5', isDone ? 'bg-muted/30' : styles.bg)}>
+                              <Icon className={cn('w-4 h-4', isDone ? 'text-muted-foreground' : styles.text)} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                <span className={cn('text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded', styles.badge)}>
+                                <span className={cn('text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded', isDone ? 'bg-muted text-muted-foreground line-through' : styles.badge)}>
                                   {action.priority}
                                 </span>
-                                <span className="text-xs font-semibold text-foreground">{action.title}</span>
-                                <span className={cn('text-[9px]', effort.className)}>{effort.text}</span>
+                                <span className={cn('text-xs font-semibold', isDone ? 'text-muted-foreground line-through' : 'text-foreground')}>{action.title}</span>
+                                <span className={cn('text-[9px]', isDone ? 'text-muted-foreground' : effort.className)}>{effort.text}</span>
                               </div>
-                              <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{action.description}</p>
+                              <p className={cn('text-[10px] leading-relaxed mt-1', isDone ? 'text-muted-foreground/60' : 'text-muted-foreground')}>{action.description}</p>
                               <div className="flex items-center gap-3 mt-1.5">
-                                <span className={cn('text-[10px] font-bold', action.impactAmount > 0 ? 'text-success' : 'text-destructive')}>
+                                <span className={cn('text-[10px] font-bold', isDone ? 'text-muted-foreground line-through' : action.impactAmount > 0 ? 'text-success' : 'text-destructive')}>
                                   ⚡ {action.impactLabel}
                                 </span>
                                 <span className="text-[9px] text-muted-foreground">
@@ -493,7 +544,7 @@ Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.`;
                               </div>
                             </div>
                             <div className="flex flex-col gap-1.5 flex-shrink-0">
-                              {hasPrefill && (
+                              {hasPrefill && !isDone && (
                                 <Button
                                   size="sm" variant="default"
                                   className="text-[10px] h-7 gap-1"
@@ -502,11 +553,13 @@ Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.`;
                                   <Plus className="w-3 h-3" /> Criar
                                 </Button>
                               )}
-                              <Link to={action.linkTo}>
-                                <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 w-full">
-                                  <ExternalLink className="w-3 h-3" /> Ver
-                                </Button>
-                              </Link>
+                              {!isDone && (
+                                <Link to={action.linkTo}>
+                                  <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 w-full">
+                                    <ExternalLink className="w-3 h-3" /> Ver
+                                  </Button>
+                                </Link>
+                              )}
                             </div>
                           </motion.div>
                         );
