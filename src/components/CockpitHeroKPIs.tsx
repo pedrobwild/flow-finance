@@ -8,7 +8,7 @@ import { formatCurrency, todayISO, daysBetween, addDays } from '@/lib/helpers';
 import { motion } from 'framer-motion';
 import {
   Wallet, ShieldAlert, TrendingDown, Clock, Edit3, Check, X,
-  AlertTriangle, ArrowDown, ArrowUp, Target,
+  AlertTriangle, ArrowDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -50,28 +50,45 @@ export default function CockpitHeroKPIs({ period }: Props) {
     const entries = transactions
       .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .reduce((s, t) => s + t.amount, 0);
-    const coverage = exits > 0 ? (entries / exits) * 100 : 100;
 
-    // Overdue receivables (inadimplência)
+    // Overdue receivables
     const overdueRec = transactions.filter(t => t.type === 'receber' && t.status === 'atrasado');
     const overdueRecTotal = overdueRec.reduce((s, t) => s + t.amount, 0);
-    const totalRecPeriod = transactions
-      .filter(t => t.type === 'receber')
-      .reduce((s, t) => s + t.amount, 0);
-    const inadRate = totalRecPeriod > 0 ? (overdueRecTotal / totalRecPeriod) * 100 : 0;
 
-    // Average margin across active obras
-    const activeObras = obras.filter(o => o.status === 'ativa');
-    let avgMargin = 0;
-    if (activeObras.length > 0) {
-      const margins = activeObras.map(o => {
-        const obraTxs = transactions.filter(t => t.obraId === o.id);
-        const received = obraTxs.filter(t => t.type === 'receber' && t.status === 'confirmado').reduce((s, t) => s + t.amount, 0);
-        const paid = obraTxs.filter(t => t.type === 'pagar' && t.status === 'confirmado').reduce((s, t) => s + t.amount, 0);
-        return received > 0 ? ((received - paid) / received) * 100 : 0;
-      });
-      avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length;
+    // --- CONCENTRATION RISK ---
+    // Pending receivables in period, grouped by counterpart (client)
+    const pendingRec = transactions.filter(
+      t => t.type === 'receber' && t.status !== 'confirmado' && t.status !== 'atrasado'
+        && t.dueDate >= period.from && t.dueDate <= period.to
+    );
+    // Group by counterpart
+    const byClient = new Map<string, number>();
+    for (const t of pendingRec) {
+      byClient.set(t.counterpart || 'Sem cliente', (byClient.get(t.counterpart || 'Sem cliente') ?? 0) + t.amount);
     }
+    // Find biggest single client
+    let biggestClient = '';
+    let biggestAmount = 0;
+    for (const [client, amount] of byClient) {
+      if (amount > biggestAmount) { biggestClient = client; biggestAmount = amount; }
+    }
+    // If that client delays: what's the balance situation?
+    // Tomorrow's payables
+    const tomorrow = addDays(today, 1);
+    const tomorrowPayables = transactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate === tomorrow)
+      .reduce((s, t) => s + t.amount, 0);
+    // Next 3 days payables (more realistic)
+    const next3d = addDays(today, 3);
+    const next3dPayables = transactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= next3d)
+      .reduce((s, t) => s + t.amount, 0);
+    // If biggest client delays: balance without their money vs upcoming bills
+    const balWithoutBiggest = bal + (entries - biggestAmount) - exits;
+    const concentrationPct = entries > 0 ? (biggestAmount / entries) * 100 : 0;
+    // Can survive without biggest client?
+    const surviveWithout = bal - next3dPayables > 0;
+    const surviveIfDelays = (bal - next3dPayables + (entries - biggestAmount)) > 0;
 
     // Sparkline for hero chart
     const sparkData: { d: number; v: number }[] = [];
@@ -80,9 +97,14 @@ export default function CockpitHeroKPIs({ period }: Props) {
     }
 
     return {
-      bal, balAge, balDate, runwayDays, coverage,
-      exits, entries, inadRate, overdueRecTotal,
-      avgMargin, sparkData, overdueCount: overdueRec.length,
+      bal, balAge, balDate, runwayDays,
+      exits, entries, overdueRecTotal,
+      sparkData, overdueCount: overdueRec.length,
+      // Concentration
+      biggestClient, biggestAmount, concentrationPct,
+      tomorrowPayables, next3dPayables,
+      balWithoutBiggest, surviveWithout, surviveIfDelays,
+      clientCount: byClient.size,
     };
   }, [transactions, filteredBalance, filteredProjectedBalance, obras, today, period]);
 
@@ -99,9 +121,9 @@ export default function CockpitHeroKPIs({ period }: Props) {
     : null;
 
   const runwayColor = metrics.runwayDays > 60 ? 'text-emerald-400' : metrics.runwayDays > 21 ? 'text-amber-300' : 'text-red-400';
-  const gap = metrics.entries - metrics.exits;
-  const gapColor = gap >= 0 ? 'text-emerald-400' : gap > -metrics.bal * 0.5 ? 'text-amber-300' : 'text-red-400';
   const overdueColor = metrics.overdueRecTotal === 0 ? 'text-emerald-400' : metrics.overdueRecTotal < 50000 ? 'text-amber-300' : 'text-red-400';
+  const concentrationColor = !metrics.biggestClient ? 'text-white/40'
+    : metrics.surviveIfDelays ? 'text-emerald-400' : 'text-red-400';
 
   return (
     <div className="hero-panel p-0">
@@ -265,24 +287,37 @@ export default function CockpitHeroKPIs({ period }: Props) {
             </p>
           </motion.div>
 
-          {/* Gap → Fluxo */}
+          {/* Concentration Risk → Receber */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            onClick={() => navigate('/fluxo')}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
+            onClick={() => navigate('/receber')}
+            className={cn(
+              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer',
+              !metrics.surviveIfDelays && metrics.biggestClient ? 'border-red-500/30 bg-red-500/[0.08]' : 'border-white/[0.08]'
+            )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <Target className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Gap {period.label}</span>
+              <TrendingDown className="w-3.5 h-3.5 text-white/50" />
+              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Se atrasar</span>
             </div>
-            <p className={cn('text-2xl font-bold font-mono', gapColor)}>
-              {gap >= 0 ? '+' : ''}{formatCurrency(gap)}
-            </p>
-            <p className="text-[10px] text-white/30 mt-0.5">
-              {gap >= 0 ? 'Entradas cobrem saídas' : 'Saídas superam entradas'}
-            </p>
+            {metrics.biggestClient ? (
+              <>
+                <p className={cn('text-lg font-bold font-mono leading-tight', concentrationColor)}>
+                  {metrics.surviveIfDelays ? 'Coberto' : `Falta ${formatCurrency(metrics.next3dPayables - (metrics.bal + metrics.entries - metrics.biggestAmount))}`}
+                </p>
+                <p className="text-[10px] text-white/30 mt-0.5 truncate" title={metrics.biggestClient}>
+                  {metrics.biggestClient}: <span className="text-white/50 font-mono">{formatCurrency(metrics.biggestAmount)}</span>
+                  <span className="text-white/20"> ({Math.round(metrics.concentrationPct)}% das entradas)</span>
+                </p>
+                <p className="text-[9px] text-white/25 mt-0.5">
+                  Próx. 3d a pagar: {formatCurrency(metrics.next3dPayables)}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-white/30 mt-1">Sem recebíveis no período</p>
+            )}
           </motion.div>
         </div>
       </div>
