@@ -283,7 +283,7 @@ export default function CashFlowTable() {
             ))}
             {/* Totals row */}
             <TableRow className="bg-muted/40 border-t-2">
-              <TableCell className="text-xs font-bold py-2.5" colSpan={2}>Total 30 dias</TableCell>
+              <TableCell className="text-xs font-bold py-2.5" colSpan={2}>Total {periodLabel}</TableCell>
               <TableCell className="text-right font-mono text-xs font-bold text-success py-2.5">
                 {formatCurrency(totals.entradas)}
               </TableCell>
