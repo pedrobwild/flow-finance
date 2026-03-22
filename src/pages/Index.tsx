@@ -63,9 +63,6 @@ export default function Dashboard() {
         <MorningBriefing />
       </motion.div>
 
-      {/* === ROW 5: RUNWAY === */}
-      <CashRunwayChart period={period} />
-
       {/* === ROW 6: PROJEÇÃO SEMANAL === */}
       <motion.div {...section(0.24)}>
         <WeeklyCashProjection period={period} />
