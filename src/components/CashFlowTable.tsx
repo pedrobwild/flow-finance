@@ -38,13 +38,50 @@ interface DayRow {
   transactions: Transaction[];
 }
 
-export default function CashFlowTable() {
+interface CashFlowTableProps {
+  /** Optional external period to sync with a parent filter */
+  period?: { from: string; to: string; label: string };
+}
+
+export default function CashFlowTable({ period }: CashFlowTableProps = {}) {
   const { filteredTransactions: transactions, filteredProjectedBalance } = useObraFilter();
   const today = todayISO();
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState(2); // 30d default
-  const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
-  const [isCustom, setIsCustom] = useState(false);
+
+  // Derive initial state from external period if provided
+  const externalPresetIdx = period
+    ? PERIOD_PRESETS.findIndex(p => p.label === period.label)
+    : -1;
+
+  const [selectedPreset, setSelectedPreset] = useState(() =>
+    externalPresetIdx >= 0 ? externalPresetIdx : 2
+  );
+  const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>(() => {
+    if (period && externalPresetIdx < 0) {
+      return { from: new Date(period.from + 'T12:00:00'), to: new Date(period.to + 'T12:00:00') };
+    }
+    return { from: undefined, to: undefined };
+  });
+  const [isCustom, setIsCustom] = useState(() =>
+    !!period && externalPresetIdx < 0 && period.label !== ''
+  );
+
+  // Sync when external period changes
+  const lastPeriodRef = useMemo(() => period, [period?.from, period?.to, period?.label]);
+  useMemo(() => {
+    if (!lastPeriodRef) return;
+    const idx = PERIOD_PRESETS.findIndex(p => p.label === lastPeriodRef.label);
+    if (idx >= 0) {
+      setSelectedPreset(idx);
+      setIsCustom(false);
+    } else {
+      setCustomRange({
+        from: new Date(lastPeriodRef.from + 'T12:00:00'),
+        to: new Date(lastPeriodRef.to + 'T12:00:00'),
+      });
+      setIsCustom(true);
+    }
+  }, [lastPeriodRef]);
 
   const numDays = useMemo(() => {
     if (isCustom && customRange.from && customRange.to) {

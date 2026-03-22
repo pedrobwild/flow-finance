@@ -652,7 +652,7 @@ export default function FluxoCaixa() {
 
           {/* === TABLE TAB === */}
           <TabsContent value="tabela" className="mt-0">
-            <CashFlowTable />
+            <CashFlowTable period={period} />
           </TabsContent>
         </Tabs>
       </motion.div>
