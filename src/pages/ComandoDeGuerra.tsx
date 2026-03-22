@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import TransactionFormDialog from '@/components/TransactionFormDialog';
 import type { Transaction, TransactionType } from '@/lib/types';
 import {
-  Siren, CheckCircle2, Circle, Phone, MessageSquare, Copy,
+  Siren, CheckCircle2, Circle, Phone, MessageSquare, Copy, Mail,
   AlertTriangle, ArrowRight, ShieldAlert, Clock,
   Sparkles, Loader2, Plus, ExternalLink,
   RefreshCw, Zap, CalendarClock, HandCoins, ArrowLeftRight,
