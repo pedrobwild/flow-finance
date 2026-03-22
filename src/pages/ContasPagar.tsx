@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
-import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth } from '@/lib/helpers';
-import { ArrowDownRight, AlertTriangle, Clock, Check, CheckCheck, CalendarDays, Wallet } from 'lucide-react';
+import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth, formatDateFull } from '@/lib/helpers';
+import {
+  ArrowDownRight, AlertTriangle, Clock, Check, CheckCheck, CalendarDays, Wallet,
+  CreditCard, Tag, Building2, ChevronDown, ChevronUp, FileText
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PRIORITY_LABELS, PRIORITY_CLASSES } from '@/lib/types';
 import TransactionTable from '@/components/TransactionTable';
 
 const sect = (delay: number) => ({
@@ -21,6 +25,10 @@ export default function ContasPagar() {
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras } = useObras();
   const today = todayISO();
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (key: string) =>
+    setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const agenda = useMemo(() => {
     const pagar = transactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado');
@@ -32,7 +40,6 @@ export default function ContasPagar() {
     const todayTxs = pagar.filter(t => t.dueDate === today && t.status !== 'atrasado');
     const tomorrowTxs = pagar.filter(t => t.dueDate === addDays(today, 1));
 
-    // Next 7 days (excluding today/tomorrow)
     const day2 = addDays(today, 2);
     const day7 = addDays(today, 7);
     const weekTxs = pagar
@@ -56,71 +63,174 @@ export default function ContasPagar() {
     txs.forEach(t => confirmTransaction(t.id));
   };
 
-  const renderTxRow = (tx: typeof transactions[0], showDate = false) => {
+  const renderTxCard = (tx: typeof transactions[0], showDate = false) => {
     const obraCode = getObraCode(tx.obraId);
     const days = tx.status === 'atrasado' ? daysBetween(tx.dueDate, today) : 0;
 
     return (
       <motion.div
         key={tx.id}
-        initial={{ opacity: 0, x: -6 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -4, height: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
-          'flex items-center gap-3 px-3 py-2.5 rounded-lg group/row transition-colors',
+          'flex items-start gap-3 px-4 py-3 rounded-lg group/row transition-all',
           tx.status === 'atrasado'
-            ? 'bg-destructive/5 hover:bg-destructive/10'
-            : 'hover:bg-muted/50'
+            ? 'bg-destructive/[0.04] hover:bg-destructive/[0.08] border border-destructive/10'
+            : 'hover:bg-muted/50 border border-transparent hover:border-border/50'
         )}
       >
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-medium truncate">{tx.description}</p>
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-1.5">
+          {/* Row 1: Description + badges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-[13px] font-semibold truncate max-w-[260px]">{tx.description}</p>
             {tx.status === 'atrasado' && (
-              <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 shrink-0">
+              <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-[18px] shrink-0 gap-0.5">
+                <AlertTriangle className="w-2.5 h-2.5" />
                 {days}d atraso
               </Badge>
             )}
+            {tx.priority === 'crítica' && (
+              <Badge className={cn('text-[9px] px-1.5 py-0 h-[18px]', PRIORITY_CLASSES[tx.priority])}>
+                {PRIORITY_LABELS[tx.priority]}
+              </Badge>
+            )}
+            {tx.priority === 'alta' && (
+              <Badge className={cn('text-[9px] px-1.5 py-0 h-[18px]', PRIORITY_CLASSES[tx.priority])}>
+                {PRIORITY_LABELS[tx.priority]}
+              </Badge>
+            )}
           </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs text-muted-foreground truncate">{tx.counterpart || '—'}</span>
+
+          {/* Row 2: Supplier + metadata */}
+          <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
+            {tx.counterpart && (
+              <span className="flex items-center gap-1">
+                <Building2 className="w-3 h-3 shrink-0" />
+                <span className="truncate max-w-[140px]">{tx.counterpart}</span>
+              </span>
+            )}
             {obraCode && (
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 shrink-0">{obraCode}</Badge>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[18px] font-mono shrink-0">
+                {obraCode}
+              </Badge>
+            )}
+            {tx.category && tx.category !== 'Outros' && (
+              <span className="flex items-center gap-1">
+                <Tag className="w-3 h-3 shrink-0" />
+                {tx.category}
+              </span>
             )}
             {tx.paymentMethod && (
-              <span className="text-[10px] text-muted-foreground/70">{tx.paymentMethod}</span>
+              <span className="flex items-center gap-1 text-primary/70">
+                <CreditCard className="w-3 h-3 shrink-0" />
+                {tx.paymentMethod}
+              </span>
+            )}
+            {tx.notes && (
+              <span className="flex items-center gap-1 text-muted-foreground/60 truncate max-w-[120px]" title={tx.notes}>
+                <FileText className="w-3 h-3 shrink-0" />
+                {tx.notes}
+              </span>
             )}
           </div>
         </div>
 
-        {/* Date */}
-        {showDate && (
-          <span className="text-[11px] text-muted-foreground shrink-0 hidden sm:block">
-            {getDayMonth(tx.dueDate)}
+        {/* Right side: date + amount + action */}
+        <div className="flex items-center gap-3 shrink-0">
+          {showDate && (
+            <span className="text-[11px] text-muted-foreground hidden sm:block font-medium">
+              {getDayMonth(tx.dueDate)}
+            </span>
+          )}
+          <span className="text-sm font-mono font-bold text-destructive min-w-[80px] text-right">
+            {formatCurrency(tx.amount)}
           </span>
-        )}
-
-        {/* Amount */}
-        <span className="text-sm font-mono font-bold text-destructive shrink-0">
-          {formatCurrency(tx.amount)}
-        </span>
-
-        {/* Confirm */}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-7 w-7 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90"
-          onClick={() => confirmTransaction(tx.id)}
-          title="Confirmar pagamento"
-        >
-          <Check className="w-4 h-4 text-success" />
-        </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90 hover:bg-success/10"
+            onClick={() => confirmTransaction(tx.id)}
+            title="Confirmar pagamento"
+          >
+            <Check className="w-4 h-4 text-success" />
+          </Button>
+        </div>
       </motion.div>
     );
   };
 
+  const renderSection = (
+    key: string,
+    icon: React.ReactNode,
+    title: string,
+    txs: typeof transactions,
+    total: number,
+    borderColor: string,
+    showDate = false,
+  ) => {
+    if (txs.length === 0) return null;
+    const isCollapsed = collapsedSections[key];
+
+    return (
+      <div className={cn('card-elevated overflow-hidden border-l-[3px]', borderColor)}>
+        <button
+          onClick={() => toggleSection(key)}
+          className="w-full px-4 py-3 border-b flex items-center justify-between hover:bg-muted/30 transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            {icon}
+            <span className="text-sm font-bold">{title}</span>
+            <Badge variant="outline" className="text-[10px] px-1.5 h-5 font-mono">
+              {txs.length}
+            </Badge>
+            <span className="text-xs text-muted-foreground font-mono">
+              {formatCurrency(total)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {txs.length > 1 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[10px] gap-1 px-2.5"
+                onClick={(e) => { e.stopPropagation(); confirmAll(txs); }}
+              >
+                <CheckCheck className="w-3.5 h-3.5" /> Confirmar tudo
+              </Button>
+            )}
+            {isCollapsed
+              ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              : <ChevronUp className="w-4 h-4 text-muted-foreground" />
+            }
+          </div>
+        </button>
+        <AnimatePresence>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="p-2 space-y-1">
+                {txs.map(tx => renderTxCard(tx, showDate))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   const hasUrgent = agenda.overdue.length > 0 || agenda.todayTxs.length > 0 || agenda.tomorrowTxs.length > 0 || agenda.weekTxs.length > 0;
+
+  // Quick summary numbers
+  const totalUrgent = agenda.totalOverdue + agenda.totalToday + agenda.totalTomorrow + agenda.totalWeek;
+  const countUrgent = agenda.overdue.length + agenda.todayTxs.length + agenda.tomorrowTxs.length + agenda.weekTxs.length;
 
   return (
     <div className="space-y-5">
@@ -135,118 +245,66 @@ export default function ContasPagar() {
             <p className="text-muted-foreground text-xs">O que pagar, quando e como.</p>
           </div>
         </div>
-        {currentBalance && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-xs">
-            <Wallet className="w-3.5 h-3.5 text-primary" />
-            <span className="text-muted-foreground">Saldo:</span>
-            <span className={cn('font-bold font-mono', currentBalance.amount >= 0 ? 'text-success' : 'text-destructive')}>
-              {formatCurrency(currentBalance.amount)}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {currentBalance && (
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/50 border border-border/50 text-xs">
+              <Wallet className="w-3.5 h-3.5 text-primary" />
+              <span className="text-muted-foreground">Saldo:</span>
+              <span className={cn('font-bold font-mono text-sm', currentBalance.amount >= 0 ? 'text-success' : 'text-destructive')}>
+                {formatCurrency(currentBalance.amount)}
+              </span>
+            </div>
+          )}
+          {hasUrgent && (
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-destructive/5 border border-destructive/15 text-xs">
+              <Clock className="w-3.5 h-3.5 text-destructive" />
+              <span className="text-muted-foreground">{countUrgent} pendência(s):</span>
+              <span className="font-bold font-mono text-sm text-destructive">
+                {formatCurrency(totalUrgent)}
+              </span>
+            </div>
+          )}
+        </div>
       </motion.div>
 
       {/* Action agenda */}
       {hasUrgent && (
         <motion.div {...sect(0.05)} className="space-y-3">
-
-          {/* OVERDUE */}
-          {agenda.overdue.length > 0 && (
-            <div className="card-elevated overflow-hidden border-l-[3px] border-l-destructive">
-              <div className="px-4 py-2.5 border-b bg-destructive/[0.03] flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-destructive" />
-                  <span className="text-sm font-bold text-destructive">Atrasados</span>
-                  <Badge variant="destructive" className="text-[10px] px-1.5 h-5">
-                    {agenda.overdue.length}
-                  </Badge>
-                  <span className="text-xs text-destructive/70 font-mono ml-1">
-                    {formatCurrency(agenda.totalOverdue)}
-                  </span>
-                </div>
-                {agenda.overdue.length > 1 && (
-                  <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => confirmAll(agenda.overdue)}>
-                    <CheckCheck className="w-3.5 h-3.5" /> Confirmar tudo
-                  </Button>
-                )}
-              </div>
-              <div className="p-2 space-y-0.5">
-                {agenda.overdue.map(tx => renderTxRow(tx))}
-              </div>
-            </div>
+          {renderSection(
+            'overdue',
+            <AlertTriangle className="w-4 h-4 text-destructive" />,
+            'Atrasados',
+            agenda.overdue,
+            agenda.totalOverdue,
+            'border-l-destructive',
           )}
 
-          {/* TODAY */}
-          {agenda.todayTxs.length > 0 && (
-            <div className="card-elevated overflow-hidden border-l-[3px] border-l-warning">
-              <div className="px-4 py-2.5 border-b flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-warning" />
-                  <span className="text-sm font-bold">Hoje</span>
-                  <Badge variant="outline" className="text-[10px] px-1.5 h-5 border-warning/40">
-                    {agenda.todayTxs.length}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground font-mono ml-1">
-                    {formatCurrency(agenda.totalToday)}
-                  </span>
-                </div>
-                {agenda.todayTxs.length > 1 && (
-                  <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => confirmAll(agenda.todayTxs)}>
-                    <CheckCheck className="w-3.5 h-3.5" /> Confirmar tudo
-                  </Button>
-                )}
-              </div>
-              <div className="p-2 space-y-0.5">
-                {agenda.todayTxs.map(tx => renderTxRow(tx))}
-              </div>
-            </div>
+          {renderSection(
+            'today',
+            <CalendarDays className="w-4 h-4 text-warning" />,
+            'Hoje',
+            agenda.todayTxs,
+            agenda.totalToday,
+            'border-l-warning',
           )}
 
-          {/* TOMORROW */}
-          {agenda.tomorrowTxs.length > 0 && (
-            <div className="card-elevated overflow-hidden border-l-[3px] border-l-primary/40">
-              <div className="px-4 py-2.5 border-b flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-primary/70" />
-                  <span className="text-sm font-bold">Amanhã</span>
-                  <Badge variant="outline" className="text-[10px] px-1.5 h-5">
-                    {agenda.tomorrowTxs.length}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground font-mono ml-1">
-                    {formatCurrency(agenda.totalTomorrow)}
-                  </span>
-                </div>
-                {agenda.tomorrowTxs.length > 1 && (
-                  <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => confirmAll(agenda.tomorrowTxs)}>
-                    <CheckCheck className="w-3.5 h-3.5" /> Confirmar tudo
-                  </Button>
-                )}
-              </div>
-              <div className="p-2 space-y-0.5">
-                {agenda.tomorrowTxs.map(tx => renderTxRow(tx))}
-              </div>
-            </div>
+          {renderSection(
+            'tomorrow',
+            <CalendarDays className="w-4 h-4 text-primary/70" />,
+            'Amanhã',
+            agenda.tomorrowTxs,
+            agenda.totalTomorrow,
+            'border-l-primary/40',
           )}
 
-          {/* THIS WEEK */}
-          {agenda.weekTxs.length > 0 && (
-            <div className="card-elevated overflow-hidden">
-              <div className="px-4 py-2.5 border-b flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-bold">Próximos 7 dias</span>
-                  <Badge variant="outline" className="text-[10px] px-1.5 h-5">
-                    {agenda.weekTxs.length}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground font-mono ml-1">
-                    {formatCurrency(agenda.totalWeek)}
-                  </span>
-                </div>
-              </div>
-              <div className="p-2 space-y-0.5">
-                {agenda.weekTxs.map(tx => renderTxRow(tx, true))}
-              </div>
-            </div>
+          {renderSection(
+            'week',
+            <Clock className="w-4 h-4 text-muted-foreground" />,
+            'Próximos 7 dias',
+            agenda.weekTxs,
+            agenda.totalWeek,
+            'border-l-border',
+            true,
           )}
         </motion.div>
       )}
