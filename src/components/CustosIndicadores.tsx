@@ -8,10 +8,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { supabase } from '@/integrations/supabase/client';
 import {
   TrendingUp, TrendingDown, Minus, RefreshCw, Info, Target,
-  AlertTriangle, CheckCircle2, XCircle, Loader2, Sparkles
+  AlertTriangle, CheckCircle2, XCircle, Loader2, Sparkles, BarChart3
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine
+} from 'recharts';
 
 interface Props {
   allTransactions: Transaction[];
