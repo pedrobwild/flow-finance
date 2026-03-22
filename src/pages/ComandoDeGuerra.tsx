@@ -287,35 +287,117 @@ export default function ComandoDeGuerra() {
       )}
 
       {/* === COVERAGE BAR === */}
-      {aiData && !loading && (crisis.deficit > 0 || isProactive) && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">
-              {isProactive ? (
-                <>Ganho potencial: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span></>
-              ) : (
-                <>Potencial de recuperação: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span></>
+      {aiData && !loading && (crisis.deficit > 0 || isProactive) && (() => {
+        const completedImpact = aiData.actions
+          .filter((_, i) => completedActions.has(i))
+          .reduce((sum, a) => sum + a.impactAmount, 0);
+        const totalImpact = aiData.totalRecoverable;
+        const targetAmount = isProactive ? totalImpact : crisis.deficit;
+        const completedPct = targetAmount > 0 ? Math.min(100, (completedImpact / targetAmount) * 100) : 0;
+        const totalPct = targetAmount > 0 ? Math.min(100, (totalImpact / targetAmount) * 100) : 0;
+        const remainingActions = aiData.actions.length - completedActions.size;
+
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-border bg-card p-4 space-y-3"
+          >
+            {/* Header row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  'w-8 h-8 rounded-lg flex items-center justify-center',
+                  completedPct >= 100 ? 'bg-success/10' : 'bg-primary/10',
+                )}>
+                  {completedPct >= 100 ? (
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                  ) : (
+                    <Zap className="w-4 h-4 text-primary" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold">
+                    {isProactive ? 'Progresso das Otimizações' : 'Progresso de Recuperação'}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {completedActions.size}/{aiData.actions.length} ações concluídas
+                    {remainingActions > 0 && ` · ${remainingActions} pendentes`}
+                  </p>
+                </div>
+              </div>
+              {!isProactive && (
+                <div className="text-right">
+                  <span className={cn(
+                    'text-lg font-bold font-mono tabular-nums',
+                    completedPct >= 100 ? 'text-success' : completedPct >= 50 ? 'text-warning' : 'text-destructive',
+                  )}>
+                    {completedPct.toFixed(0)}%
+                  </span>
+                  <p className="text-[9px] text-muted-foreground">do gap coberto</p>
+                </div>
               )}
-            </span>
-            {!isProactive && (
-              <span className={cn('font-bold', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
-                {aiData.coveragePercentage.toFixed(0)}% do gap
-              </span>
-            )}
-          </div>
-          {!isProactive && <Progress value={Math.min(100, aiData.coveragePercentage)} className="h-2.5" />}
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{completedActions.size}/{aiData.actions.length} ações concluídas</span>
-            <span>
-              {completedActions.size > 0 && (
-                <span className="text-success font-medium">
-                  {((completedActions.size / aiData.actions.length) * 100).toFixed(0)}% executado
-                </span>
+            </div>
+
+            {/* Stacked progress bar */}
+            <div className="relative h-3 rounded-full bg-muted/40 overflow-hidden">
+              {/* Total potential (lighter) */}
+              {!isProactive && (
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${totalPct}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                  className="absolute inset-y-0 left-0 rounded-full bg-primary/15"
+                />
               )}
-            </span>
-          </div>
-        </div>
-      )}
+              {/* Completed (solid) */}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${isProactive ? (completedActions.size / aiData.actions.length) * 100 : completedPct}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+                className={cn(
+                  'absolute inset-y-0 left-0 rounded-full',
+                  completedPct >= 100 ? 'bg-success' : 'bg-primary',
+                )}
+              />
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-2 rounded-lg bg-muted/20">
+                <p className="text-xs font-bold text-success font-mono tabular-nums">
+                  {formatCurrency(completedImpact)}
+                </p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">
+                  {isProactive ? 'Ganho conquistado' : 'Recuperado'}
+                </p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-muted/20">
+                <p className="text-xs font-bold text-foreground font-mono tabular-nums">
+                  {formatCurrency(totalImpact - completedImpact)}
+                </p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">
+                  Potencial restante
+                </p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-muted/20">
+                <p className={cn(
+                  'text-xs font-bold font-mono tabular-nums',
+                  !isProactive && crisis.deficit > completedImpact ? 'text-destructive' : 'text-success',
+                )}>
+                  {isProactive
+                    ? formatCurrency(totalImpact)
+                    : formatCurrency(Math.max(0, crisis.deficit - completedImpact))
+                  }
+                </p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">
+                  {isProactive ? 'Ganho total possível' : 'Gap restante'}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })()}
 
       {/* === LOADING STATE === */}
       {loading && (
