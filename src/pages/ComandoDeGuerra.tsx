@@ -1,11 +1,12 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
-import { formatCurrency, todayISO, daysBetween, getDayMonth } from '@/lib/helpers';
+import { useObraFilter } from '@/lib/obra-filter-context';
+import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth, formatDateFull } from '@/lib/helpers';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -16,24 +17,44 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import TransactionFormDialog from '@/components/TransactionFormDialog';
+import type { Transaction, TransactionType } from '@/lib/types';
 import {
-  Siren, ChevronRight, ChevronLeft, CheckCircle2, Circle, Phone,
-  MessageSquare, Copy, AlertTriangle, TrendingDown, ArrowRight,
-  Target, ShieldAlert, Clock, Sparkles, Loader2, FileText, BookOpen,
-  ArrowLeftRight, ClipboardList,
+  Siren, CheckCircle2, Circle, Phone, MessageSquare, Copy,
+  AlertTriangle, TrendingDown, ArrowRight, ShieldAlert, Clock,
+  Sparkles, Loader2, FileText, BookOpen, Plus, ExternalLink,
+  RefreshCw, Zap, CalendarClock, HandCoins, ArrowLeftRight,
+  Scissors, Landmark, ChevronDown, ChevronUp, Shield, Flame,
 } from 'lucide-react';
-import type { Transaction } from '@/lib/types';
 
-// === WIZARD STEPS ===
-const STEPS = [
-  { id: 'diagnostico', label: 'Diagnóstico', icon: ShieldAlert },
-  { id: 'priorizacao', label: 'Priorização', icon: Target },
-  { id: 'negociacao', label: 'Negociação', icon: Phone },
-  { id: 'simulador', label: 'Simulador', icon: ArrowLeftRight },
-  { id: 'registro', label: 'Registro', icon: ClipboardList },
-] as const;
+// === TYPES ===
+interface WarAction {
+  priority: 'imediata' | 'urgente' | 'importante' | 'preventiva';
+  category: 'cobranca' | 'antecipacao' | 'renegociacao' | 'corte' | 'credito' | 'cronograma';
+  title: string;
+  description: string;
+  impactAmount: number;
+  impactLabel: string;
+  effort: 'baixo' | 'medio' | 'alto';
+  deadline: string;
+  linkTo: string;
+  prefill?: {
+    type?: TransactionType;
+    description?: string;
+    counterpart?: string;
+    amount?: number;
+    category?: string;
+    notes?: string;
+    obraCode?: string;
+  };
+}
 
-type StepId = typeof STEPS[number]['id'];
+interface WarRoomData {
+  summary: string;
+  totalRecoverable: number;
+  coveragePercentage: number;
+  actions: WarAction[];
+}
 
 interface NegotiationScript {
   supplierProfile: string;
@@ -51,138 +72,265 @@ interface NegotiationScript {
   tips: string[];
 }
 
-interface NegotiationRecord {
-  transactionId: string;
-  counterpart: string;
-  result: 'pendente' | 'aceito' | 'recusado' | 'contraproposta';
-  notes: string;
-  proposedAmount?: number;
-  proposedDate?: string;
-}
+const categoryIcons: Record<string, React.ElementType> = {
+  cobranca: Phone,
+  antecipacao: HandCoins,
+  renegociacao: ArrowLeftRight,
+  corte: Scissors,
+  credito: Landmark,
+  cronograma: CalendarClock,
+};
+
+const priorityStyles = {
+  imediata: { bg: 'bg-destructive/10', border: 'border-destructive/30', text: 'text-destructive', badge: 'bg-destructive text-destructive-foreground' },
+  urgente: { bg: 'bg-warning/10', border: 'border-warning/30', text: 'text-warning', badge: 'bg-warning text-warning-foreground' },
+  importante: { bg: 'bg-accent/10', border: 'border-accent/30', text: 'text-accent', badge: 'bg-accent text-accent-foreground' },
+  preventiva: { bg: 'bg-muted/30', border: 'border-border', text: 'text-muted-foreground', badge: 'bg-muted text-muted-foreground' },
+};
+
+const effortLabels = {
+  baixo: { text: '⚡ Rápido', className: 'text-success' },
+  medio: { text: '⏱ Médio', className: 'text-warning' },
+  alto: { text: '🔧 Complexo', className: 'text-destructive' },
+};
 
 export default function ComandoDeGuerra() {
-  const { transactions, currentBalance, projectedBalance } = useFinance();
-  const { obras } = useObras();
+  const { transactions: allTransactions, currentBalance: globalBalance, projectedBalance: globalProjected, confirmTransaction } = useFinance();
+  const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
+  const { obras, getObraFinancials } = useObras();
   const today = todayISO();
-  const [currentStep, setCurrentStep] = useState<StepId>('diagnostico');
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+
+  const [aiData, setAiData] = useState<WarRoomData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [completedActions, setCompletedActions] = useState<Set<number>>(() => {
+    try {
+      const saved = localStorage.getItem('war-room-completed');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  // Negotiation script
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [negotiationScript, setNegotiationScript] = useState<NegotiationScript | null>(null);
   const [loadingScript, setLoadingScript] = useState(false);
-  const [negotiations, setNegotiations] = useState<NegotiationRecord[]>([]);
-  const [renegDays, setRenegDays] = useState<Record<string, number>>({});
+  const [showNegotiation, setShowNegotiation] = useState(false);
 
-  const bal = currentBalance?.amount ?? 0;
+  // Transaction form
+  const [txFormOpen, setTxFormOpen] = useState(false);
+  const [txFormDefaults, setTxFormDefaults] = useState<{
+    type: TransactionType; description?: string; counterpart?: string;
+    amount?: number; category?: string; notes?: string; obraId?: string;
+  } | null>(null);
 
-  // === DIAGNOSIS DATA ===
-  const diagnosis = useMemo(() => {
-    const pendingPayables = transactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado');
-    const overduePayables = pendingPayables.filter(t => t.status === 'atrasado');
-    const overdueReceivables = transactions.filter(t => t.type === 'receber' && t.status === 'atrasado');
-    const totalPendingOut = pendingPayables.reduce((s, t) => s + t.amount, 0);
-    const totalOverdueOut = overduePayables.reduce((s, t) => s + t.amount, 0);
-    const totalOverdueIn = overdueReceivables.reduce((s, t) => s + t.amount, 0);
+  const bal = globalBalance?.amount ?? 0;
 
-    // Find first day of negative cash
-    let firstNegDay: string | null = null;
-    for (let d = 0; d < 90; d++) {
-      const date = todayISO();
-      const proj = projectedBalance(date);
-      if (proj < 0 && !firstNegDay) {
-        firstNegDay = date;
-        break;
+  const toggleCompleted = (index: number) => {
+    setCompletedActions(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      localStorage.setItem('war-room-completed', JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  // === CRISIS DETECTION ===
+  const crisis = useMemo(() => {
+    let negDate: string | null = null;
+    let negDays: number | null = null;
+    let minBal = bal;
+    let minDate = today;
+
+    for (let i = 0; i <= 90; i++) {
+      const date = addDays(today, i);
+      const projected = globalProjected(date);
+      if (projected < minBal) { minBal = projected; minDate = date; }
+      if (projected < 0 && negDate === null) { negDate = date; negDays = i; }
+    }
+
+    const deficit = minBal < 0 ? Math.abs(minBal) : 0;
+    const overdueRec = allTransactions.filter(t => t.type === 'receber' && t.status === 'atrasado');
+    const totalOverdue = overdueRec.reduce((s, t) => s + t.amount, 0);
+    const overduePayables = allTransactions.filter(t => t.type === 'pagar' && t.status === 'atrasado');
+    const totalOverduePay = overduePayables.reduce((s, t) => s + t.amount, 0);
+
+    const upcomingPayables = allTransactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && (negDate ? t.dueDate <= negDate : t.dueDate <= addDays(today, 30)))
+      .reduce((s, t) => s + t.amount, 0);
+    const pendingReceivables = allTransactions
+      .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && (negDate ? t.dueDate <= negDate : t.dueDate <= addDays(today, 30)))
+      .reduce((s, t) => s + t.amount, 0);
+
+    // Runway
+    const next30Out = allTransactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 30)).reduce((s, t) => s + t.amount, 0);
+    const next30In = allTransactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 30)).reduce((s, t) => s + t.amount, 0);
+    const netBurn = next30Out - next30In;
+    const avgDaily = netBurn / 30;
+    const runwayDays = avgDaily > 0 && bal > 0 ? Math.floor(bal / avgDaily) : null;
+
+    return {
+      negDate, negDays, minBal, minDate, deficit, currentBalance: bal,
+      totalOverdue, totalOverduePay, upcomingPayables, pendingReceivables,
+      overdueRecCount: overdueRec.length, overduePayCount: overduePayables.length,
+      runwayDays, avgDailyBurn: avgDaily, netBurn, next30Out, next30In,
+      hasCrisis: negDate !== null || minBal < bal * 0.1,
+    };
+  }, [allTransactions, bal, globalProjected, today]);
+
+  // === FINANCIAL SUMMARY FOR AI ===
+  const financialSummary = useMemo(() => {
+    const activeObras = obras.filter(o => o.status === 'ativa');
+    const lines: string[] = [];
+
+    lines.push(`Data: ${today}`);
+    lines.push(`Saldo atual: ${formatCurrency(bal)}`);
+    if (crisis.negDate) {
+      lines.push(`CAIXA NEGATIVO PREVISTO PARA: ${formatDateFull(crisis.negDate)} (${crisis.negDays} dias)`);
+      lines.push(`Déficit projetado: ${formatCurrency(crisis.deficit)}`);
+    } else {
+      lines.push(`Caixa sem previsão de negativo nos próximos 90 dias`);
+      lines.push(`Ponto mínimo: ${formatCurrency(crisis.minBal)} em ${getDayMonth(crisis.minDate)}`);
+    }
+    lines.push(`Runway: ${crisis.runwayDays !== null ? `${crisis.runwayDays} dias` : 'Entradas superam saídas'}`);
+    lines.push('');
+
+    lines.push('=== OBRAS ATIVAS ===');
+    activeObras.forEach(obra => {
+      const fin = getObraFinancials(obra.id);
+      lines.push(`${obra.code} (${obra.clientName}):`);
+      lines.push(`  Contrato: ${formatCurrency(obra.contractValue)} | Recebido: ${formatCurrency(fin.totalReceived)} | Custos: ${formatCurrency(fin.totalPaidCost)}`);
+      lines.push(`  Margem: ${fin.grossMarginPercentage.toFixed(0)}% | Saldo obra: ${formatCurrency(fin.obraNetCashFlow)}`);
+      if (fin.totalOverdueReceivable > 0) lines.push(`  ⚠ Atrasado: ${formatCurrency(fin.totalOverdueReceivable)}`);
+      if (fin.nextReceivable) lines.push(`  Próx entrada: ${formatCurrency(fin.nextReceivable.amount)} em ${getDayMonth(fin.nextReceivable.dueDate)} (${fin.nextReceivable.status})`);
+      if (fin.nextPayable) lines.push(`  Próx saída: ${formatCurrency(fin.nextPayable.amount)} em ${getDayMonth(fin.nextPayable.dueDate)} — ${fin.nextPayable.counterpart || fin.nextPayable.category}`);
+
+      const obraRec = allTransactions.filter(t => t.obraId === obra.id && t.type === 'receber');
+      const withBilling = obraRec.filter(t => t.billingCount > 0);
+      if (withBilling.length > 0) {
+        lines.push(`  📧 Cobranças:`);
+        withBilling.forEach(t => {
+          const dl = daysBetween(today, t.dueDate);
+          lines.push(`    ${formatCurrency(t.amount)} (${t.status}, ${dl > 0 ? `${dl}d` : `${Math.abs(dl)}d atraso`}): ${t.billingCount}x cobrança${t.billingSentAt ? ` (última ${getDayMonth(t.billingSentAt)})` : ''}`);
+        });
+      }
+
+      const futureRec = obraRec.filter(t => t.status !== 'confirmado' && t.dueDate > today).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      if (futureRec.length > 0) {
+        lines.push(`  📅 Parcelas futuras:`);
+        futureRec.slice(0, 5).forEach(t => {
+          lines.push(`    ${formatCurrency(t.amount)} em ${getDayMonth(t.dueDate)} (${daysBetween(today, t.dueDate)}d)`);
+        });
+      }
+    });
+
+    lines.push('');
+    lines.push('=== FLUXO SEMANAL (6 semanas) ===');
+    for (let w = 0; w < 6; w++) {
+      const ws = addDays(today, w * 7);
+      const we = addDays(today, w * 7 + 6);
+      const out = allTransactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we).reduce((s, t) => s + t.amount, 0);
+      const inc = allTransactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we).reduce((s, t) => s + t.amount, 0);
+      const projEnd = globalProjected(we);
+      lines.push(`S${w + 1} (${getDayMonth(ws)}–${getDayMonth(we)}): -${formatCurrency(out)} / +${formatCurrency(inc)} | Saldo fim: ${formatCurrency(projEnd)}${projEnd < 0 ? ' ⚠ NEGATIVO' : ''}`);
+    }
+
+    const overdue = allTransactions.filter(t => t.status === 'atrasado');
+    if (overdue.length > 0) {
+      lines.push('');
+      lines.push(`=== ATRASADOS (${overdue.length}) ===`);
+      overdue.forEach(t => {
+        const dl = daysBetween(t.dueDate, today);
+        const oRef = t.obraId ? obras.find(o => o.id === t.obraId) : null;
+        lines.push(`${t.type === 'receber' ? '📥' : '📤'} ${formatCurrency(t.amount)} — ${t.description} (${dl}d) ${t.billingCount > 0 ? `[${t.billingCount}x cobrado]` : ''} ${oRef ? `[${oRef.code}]` : ''}`);
+      });
+    }
+
+    if (crisis.negDate) {
+      const payablesBeforeDDay = allTransactions
+        .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= crisis.negDate)
+        .sort((a, b) => b.amount - a.amount);
+      if (payablesBeforeDDay.length > 0) {
+        lines.push('');
+        lines.push(`=== SAÍDAS ATÉ D-DAY (${payablesBeforeDDay.length}, total ${formatCurrency(payablesBeforeDDay.reduce((s, t) => s + t.amount, 0))}) ===`);
+        payablesBeforeDDay.slice(0, 10).forEach(t => {
+          const oRef = t.obraId ? obras.find(o => o.id === t.obraId) : null;
+          lines.push(`${formatCurrency(t.amount)} em ${getDayMonth(t.dueDate)} — ${t.description} (${t.priority}) ${t.counterpart ? `[${t.counterpart}]` : ''} ${oRef ? `[${oRef.code}]` : ''}`);
+        });
       }
     }
 
-    const proj30 = projectedBalance(todayISO());
-    const gap = proj30 < 0 ? Math.abs(proj30) : 0;
+    return lines.join('\n');
+  }, [crisis, obras, allTransactions, bal, globalProjected, today, getObraFinancials]);
 
-    return {
-      balance: bal,
-      totalPendingOut,
-      totalOverdueOut,
-      totalOverdueIn,
-      pendingPayables,
-      overduePayables,
-      overdueReceivables,
-      gap,
-      firstNegDay,
-      pendingCount: pendingPayables.length,
-      overdueOutCount: overduePayables.length,
-      overdueInCount: overdueReceivables.length,
-    };
-  }, [transactions, bal, projectedBalance]);
-
-  // === PRIORITIZED PAYABLES (by negotiation impact) ===
-  const prioritizedPayables = useMemo(() => {
-    const payables = transactions
-      .filter(t => t.type === 'pagar' && t.status !== 'confirmado')
-      .map(t => {
-        const daysUntilDue = daysBetween(today, t.dueDate);
-        const isOverdue = t.status === 'atrasado';
-        const daysOverdue = isOverdue ? daysBetween(t.dueDate, today) : 0;
-        const obra = t.obraId ? obras.find(o => o.id === t.obraId) : null;
-
-        // Score: higher = more worth negotiating
-        let score = 0;
-        score += t.amount / 1000; // bigger amounts first
-        if (isOverdue) score += 20 + daysOverdue;
-        if (daysUntilDue <= 7 && !isOverdue) score += 15;
-        if (t.recurrence !== 'única') score += 10; // recurring = leverage
-        if (t.priority === 'baixa' || t.priority === 'normal') score += 5;
-
-        return { ...t, score, daysUntilDue, daysOverdue, isOverdue, obra };
-      })
-      .sort((a, b) => b.score - a.score);
-
-    return payables;
-  }, [transactions, today, obras]);
-
-  // === RENEGOTIATION SIMULATOR ===
-  const simulatedSavings = useMemo(() => {
-    return Object.entries(renegDays).reduce((total, [id, days]) => {
-      const tx = transactions.find(t => t.id === id);
-      if (!tx) return total;
-      // Estimate: postponing doesn't save money directly but relieves pressure
-      return total;
-    }, 0);
-  }, [renegDays, transactions]);
-
-  const simulatedProjection = useMemo(() => {
-    // Calculate how renegotiation changes the cash flow
-    const adjustedTxs = transactions.map(t => {
-      const adjustment = renegDays[t.id];
-      if (!adjustment || t.type !== 'pagar') return t;
-      const newDate = new Date(t.dueDate + 'T12:00:00');
-      newDate.setDate(newDate.getDate() + adjustment);
-      return { ...t, dueDate: newDate.toISOString().split('T')[0] };
-    });
-
-    // Project 30 days with adjusted dates
-    const points: Array<{ day: number; original: number; adjusted: number }> = [];
-    for (let d = 0; d <= 30; d++) {
-      const date = new Date();
-      date.setDate(date.getDate() + d);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      const originalFlow = transactions
-        .filter(t => t.status !== 'confirmado' && t.dueDate <= dateStr)
-        .reduce((s, t) => s + (t.type === 'receber' ? t.amount : -t.amount), 0);
-      
-      const adjustedFlow = adjustedTxs
-        .filter(t => t.status !== 'confirmado' && t.dueDate <= dateStr)
-        .reduce((s, t) => s + (t.type === 'receber' ? t.amount : -t.amount), 0);
-
-      points.push({ day: d, original: bal + originalFlow, adjusted: bal + adjustedFlow });
+  const crisisContext = useMemo(() => {
+    if (crisis.negDate) {
+      return `O caixa da empresa ficará NEGATIVO em ${crisis.negDays} dias (${formatDateFull(crisis.negDate)}).
+Déficit projetado: ${formatCurrency(crisis.deficit)}.
+Saldo atual: ${formatCurrency(crisis.currentBalance)}.
+Recebíveis atrasados: ${formatCurrency(crisis.totalOverdue)} (${crisis.overdueRecCount} transações).
+Pagáveis atrasados: ${formatCurrency(crisis.totalOverduePay)} (${crisis.overduePayCount} transações).
+Saídas pendentes até D-Day: ${formatCurrency(crisis.upcomingPayables)}.
+Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.
+Runway estimado: ${crisis.runwayDays ?? '∞'} dias.`;
     }
-    return points;
-  }, [transactions, renegDays, bal]);
+    return `O caixa NÃO ficará negativo nos próximos 90 dias, mas o ponto mais apertado será ${formatCurrency(crisis.minBal)} em ${getDayMonth(crisis.minDate)}.
+Saldo atual: ${formatCurrency(crisis.currentBalance)}.
+Recebíveis atrasados: ${formatCurrency(crisis.totalOverdue)} (${crisis.overdueRecCount} transações).
+Pagáveis atrasados: ${formatCurrency(crisis.totalOverduePay)} (${crisis.overduePayCount} transações).
+Runway estimado: ${crisis.runwayDays ?? '∞'} dias.
+Queima líquida 30d: ${formatCurrency(crisis.netBurn)}.
+O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.`;
+  }, [crisis]);
 
-  // === GENERATE NEGOTIATION SCRIPT ===
+  // === FETCH AI PLAN ===
+  const fetchWarPlan = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setCompletedActions(new Set());
+    localStorage.removeItem('war-room-completed');
+    try {
+      let marketContext: string | null = null;
+      try {
+        const { data: marketData } = await supabase.functions.invoke('market-data');
+        if (marketData?.marketContext) marketContext = marketData.marketContext;
+      } catch { /* optional */ }
+
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('war-room', {
+        body: { financialSummary, crisisContext, marketContext },
+      });
+
+      if (fnError) throw new Error(fnError.message);
+      if (fnData?.error) throw new Error(fnData.error);
+      setAiData(fnData as WarRoomData);
+    } catch (e) {
+      console.error('War room error:', e);
+      setError(e instanceof Error ? e.message : 'Erro ao gerar plano');
+    } finally {
+      setLoading(false);
+    }
+  }, [financialSummary, crisisContext]);
+
+  // Auto-fetch on mount
+  useEffect(() => {
+    if (!aiData && !loading && !error) fetchWarPlan();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-retry once
+  const [retried, setRetried] = useState(false);
+  useEffect(() => {
+    if (error && !retried && !loading) {
+      setRetried(true);
+      const timer = setTimeout(() => fetchWarPlan(), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, retried, loading, fetchWarPlan]);
+
+  // === NEGOTIATION SCRIPT ===
   const generateScript = useCallback(async (tx: Transaction) => {
-    setSelectedTransaction(tx);
+    setSelectedTx(tx);
+    setShowNegotiation(true);
     setLoadingScript(true);
     setNegotiationScript(null);
-
     try {
       const { data, error } = await supabase.functions.invoke('negotiation-script', {
         body: {
@@ -194,7 +342,6 @@ export default function ComandoDeGuerra() {
           companyContext: `Saldo atual: R$ ${bal.toFixed(2)}. Empresa de reformas de alto padrão.`,
         },
       });
-
       if (error) throw error;
       setNegotiationScript(data as NegotiationScript);
     } catch (e) {
@@ -205,37 +352,59 @@ export default function ComandoDeGuerra() {
     }
   }, [today, bal]);
 
-  // === RECORD NEGOTIATION ===
-  const recordNegotiation = useCallback(async (record: NegotiationRecord) => {
-    try {
-      const { error } = await supabase.from('negotiations').insert({
-        transaction_id: record.transactionId,
-        counterpart: record.counterpart,
-        original_amount: transactions.find(t => t.id === record.transactionId)?.amount ?? 0,
-        proposed_amount: record.proposedAmount,
-        proposed_due_date: record.proposedDate,
-        result: record.result,
-        notes: record.notes,
-        contacted_at: new Date().toISOString(),
-        resolved_at: record.result !== 'pendente' ? new Date().toISOString() : null,
-      });
-      if (error) throw error;
-      setNegotiations(prev => [...prev, record]);
-      toast.success('Negociação registrada!');
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao registrar negociação');
-    }
-  }, [transactions]);
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copiado!');
   };
 
-  const stepIndex = STEPS.findIndex(s => s.id === currentStep);
-  const canNext = stepIndex < STEPS.length - 1;
-  const canPrev = stepIndex > 0;
+  const handleActionPrefill = (action: WarAction) => {
+    if (!action.prefill) return;
+    const p = action.prefill;
+    const obraId = p.obraCode ? obras.find(o => o.code === p.obraCode)?.id : undefined;
+    setTxFormDefaults({
+      type: p.type || 'pagar',
+      description: p.description,
+      counterpart: p.counterpart,
+      amount: p.amount,
+      category: p.category,
+      notes: p.notes,
+      obraId,
+    });
+    setTxFormOpen(true);
+  };
+
+  // Projection chart data
+  const projectionData = useMemo(() => {
+    const points: Array<{ day: number; label: string; saldo: number }> = [];
+    const horizon = 60;
+    for (let d = 0; d <= horizon; d++) {
+      const date = addDays(today, d);
+      points.push({
+        day: d,
+        label: d === 0 ? 'Hoje' : getDayMonth(date),
+        saldo: globalProjected(date),
+      });
+    }
+    return points;
+  }, [globalProjected, today]);
+
+  const severity = crisis.negDate && crisis.negDays !== null && crisis.negDays <= 7
+    ? 'critical'
+    : crisis.negDate && crisis.negDays !== null && crisis.negDays <= 14
+      ? 'warning'
+      : crisis.negDate
+        ? 'caution'
+        : 'monitoring';
+
+  const severityConfig = {
+    critical: { bg: 'bg-destructive/10', border: 'border-destructive/40', icon: Flame, label: 'CAIXA EM RISCO IMINENTE', color: 'text-destructive' },
+    warning: { bg: 'bg-warning/10', border: 'border-warning/40', icon: AlertTriangle, label: 'CAIXA APERTADO', color: 'text-warning' },
+    caution: { bg: 'bg-accent/10', border: 'border-accent/40', icon: TrendingDown, label: 'MONITORAR CAIXA', color: 'text-accent' },
+    monitoring: { bg: 'bg-muted/20', border: 'border-border', icon: Shield, label: 'CAIXA SOB CONTROLE', color: 'text-success' },
+  };
+
+  const sConfig = severityConfig[severity];
+  const SIcon = sConfig.icon;
 
   return (
     <div className="space-y-6 pb-8">
@@ -243,782 +412,472 @@ export default function ComandoDeGuerra() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <Siren className="w-5 h-5 text-destructive" />
+            <Siren className={cn('w-5 h-5', sConfig.color)} />
             <h1 className="text-lg font-bold tracking-tight">Comando de Guerra</h1>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Resolução de crise passo a passo — siga o wizard para proteger seu caixa
+            Análise completa da IA — tudo que você pode fazer para proteger o caixa
           </p>
         </div>
-        <Link to="/">
-          <Button variant="outline" size="sm" className="text-xs">← Dashboard</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline" size="sm" className="text-xs gap-1.5"
+            onClick={() => { setRetried(false); fetchWarPlan(); }}
+            disabled={loading}
+          >
+            <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} /> Atualizar análise
+          </Button>
+          <Link to="/">
+            <Button variant="outline" size="sm" className="text-xs">← Dashboard</Button>
+          </Link>
+        </div>
       </div>
 
-      {/* WIZARD STEPPER */}
-      <div className="flex items-center gap-1 bg-card border rounded-xl p-2">
-        {STEPS.map((step, i) => {
-          const isActive = step.id === currentStep;
-          const isDone = i < stepIndex;
-          const Icon = step.icon;
-          return (
-            <button
-              key={step.id}
-              onClick={() => setCurrentStep(step.id)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all flex-1 justify-center',
-                isActive && 'bg-primary text-primary-foreground shadow-sm',
-                isDone && !isActive && 'bg-success/10 text-success',
-                !isActive && !isDone && 'text-muted-foreground hover:bg-muted',
+      {/* === STATUS BANNER === */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={cn('rounded-xl border-2 p-5', sConfig.bg, sConfig.border)}
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-14 h-14 rounded-xl bg-background/80 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <SIcon className={cn('w-7 h-7', sConfig.color)} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-2">
+              <span className={cn('text-[10px] font-bold tracking-[0.15em] uppercase', sConfig.color)}>
+                {sConfig.label}
+              </span>
+              {crisis.negDate && crisis.negDays !== null && (
+                <Badge variant="destructive" className="text-xs">
+                  D-Day: {formatDateFull(crisis.negDate)} ({crisis.negDays}d)
+                </Badge>
               )}
-            >
-              {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{step.label}</span>
-              <span className="sm:hidden">{i + 1}</span>
-            </button>
-          );
-        })}
-      </div>
+            </div>
+            {/* Metrics row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mt-3">
+              {[
+                { label: 'Saldo Atual', value: formatCurrency(bal), color: bal >= 0 ? 'text-success' : 'text-destructive' },
+                { label: 'Runway', value: crisis.runwayDays !== null ? `${crisis.runwayDays}d` : '∞', color: crisis.runwayDays !== null && crisis.runwayDays <= 14 ? 'text-destructive' : 'text-foreground' },
+                { label: 'Queima/dia', value: crisis.avgDailyBurn > 0 ? formatCurrency(crisis.avgDailyBurn) : '—', color: 'text-destructive' },
+                { label: 'Recebíveis Atrasados', value: `${formatCurrency(crisis.totalOverdue)} (${crisis.overdueRecCount})`, color: 'text-warning' },
+                { label: 'Saídas 30d', value: formatCurrency(crisis.next30Out), color: 'text-destructive' },
+                { label: 'Entradas 30d', value: formatCurrency(crisis.next30In), color: 'text-success' },
+              ].map(m => (
+                <div key={m.label} className="bg-background/60 rounded-lg p-2.5 border border-border/40">
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{m.label}</p>
+                  <p className={cn('text-sm font-bold font-mono mt-0.5', m.color)}>{m.value}</p>
+                </div>
+              ))}
+            </div>
 
-      {/* STEP CONTENT */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentStep}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.25 }}
-        >
-          {currentStep === 'diagnostico' && (
-            <DiagnosticoStep diagnosis={diagnosis} />
-          )}
-
-          {currentStep === 'priorizacao' && (
-            <PriorizacaoStep
-              payables={prioritizedPayables}
-              onSelect={(tx) => {
-                setSelectedTransaction(tx);
-                setCurrentStep('negociacao');
-                generateScript(tx);
-              }}
-            />
-          )}
-
-          {currentStep === 'negociacao' && (
-            <NegociacaoStep
-              transaction={selectedTransaction}
-              script={negotiationScript}
-              loading={loadingScript}
-              onGenerate={generateScript}
-              onCopy={copyToClipboard}
-              payables={prioritizedPayables}
-              onRecord={(result, notes) => {
-                if (!selectedTransaction) return;
-                recordNegotiation({
-                  transactionId: selectedTransaction.id,
-                  counterpart: selectedTransaction.counterpart,
-                  result,
-                  notes,
-                  proposedAmount: negotiationScript?.scenarios?.[0]?.proposedAmount,
-                  proposedDate: negotiationScript?.scenarios?.[0]?.proposedDate,
-                });
-              }}
-            />
-          )}
-
-          {currentStep === 'simulador' && (
-            <SimuladorStep
-              payables={prioritizedPayables}
-              renegDays={renegDays}
-              setRenegDays={setRenegDays}
-              projection={simulatedProjection}
-              balance={bal}
-            />
-          )}
-
-          {currentStep === 'registro' && (
-            <RegistroStep negotiations={negotiations} />
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* NAV BUTTONS */}
-      <div className="flex items-center justify-between pt-4 border-t">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => canPrev && setCurrentStep(STEPS[stepIndex - 1].id)}
-          disabled={!canPrev}
-          className="gap-1.5"
-        >
-          <ChevronLeft className="w-4 h-4" /> Anterior
-        </Button>
-        <span className="text-xs text-muted-foreground">
-          Passo {stepIndex + 1} de {STEPS.length}
-        </span>
-        <Button
-          size="sm"
-          onClick={() => canNext && setCurrentStep(STEPS[stepIndex + 1].id)}
-          disabled={!canNext}
-          className="gap-1.5"
-        >
-          Próximo <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ============= STEP 1: DIAGNÓSTICO =============
-function DiagnosticoStep({ diagnosis }: { diagnosis: any }) {
-  const metrics = [
-    { label: 'Saldo atual', value: formatCurrency(diagnosis.balance), color: diagnosis.balance >= 0 ? 'text-success' : 'text-destructive', icon: TrendingDown },
-    { label: 'Saídas pendentes', value: formatCurrency(diagnosis.totalPendingOut), color: 'text-destructive', count: diagnosis.pendingCount },
-    { label: 'Pagáveis atrasados', value: formatCurrency(diagnosis.totalOverdueOut), color: 'text-destructive', count: diagnosis.overdueOutCount },
-    { label: 'Recebíveis atrasados', value: formatCurrency(diagnosis.totalOverdueIn), color: 'text-warning', count: diagnosis.overdueInCount },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <Card className="card-elevated border-destructive/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-destructive" />
-            Diagnóstico da Situação
-          </CardTitle>
-          <CardDescription className="text-xs">Visão geral da pressão sobre o caixa</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {metrics.map((m, i) => (
-              <div key={i} className="bg-muted/50 rounded-lg p-3 space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{m.label}</p>
-                <p className={cn('text-lg font-bold font-mono', m.color)}>{m.value}</p>
-                {m.count !== undefined && (
-                  <p className="text-[10px] text-muted-foreground">{m.count} transações</p>
+            {crisis.deficit > 0 && (
+              <div className="mt-3 flex items-center gap-3 p-2.5 rounded-lg bg-destructive/5 border border-destructive/15">
+                <TrendingDown className="w-4 h-4 text-destructive flex-shrink-0" />
+                <div className="flex-1">
+                  <span className="text-xs font-semibold text-destructive">
+                    GAP de {formatCurrency(crisis.deficit)} precisa ser coberto
+                  </span>
+                  <span className="text-[10px] text-muted-foreground ml-2">
+                    Pior ponto: {formatCurrency(crisis.minBal)} em {getDayMonth(crisis.minDate)}
+                  </span>
+                </div>
+                {aiData && (
+                  <div className="text-right flex-shrink-0">
+                    <span className={cn('text-sm font-bold font-mono', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
+                      {aiData.coveragePercentage.toFixed(0)}%
+                    </span>
+                    <p className="text-[8px] text-muted-foreground">cobertura</p>
+                  </div>
                 )}
               </div>
-            ))}
+            )}
           </div>
+        </div>
+      </motion.div>
 
-          {diagnosis.gap > 0 && (
-            <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-destructive" />
-                <span className="text-sm font-semibold text-destructive">
-                  Gap de caixa: {formatCurrency(diagnosis.gap)}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Esse é o valor que precisa ser coberto para evitar saldo negativo. Avance para priorizar negociações.
-              </p>
-            </div>
-          )}
-
-          <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-lg">
-            <p className="text-xs font-medium mb-1">💡 Próximo passo</p>
-            <p className="text-xs text-muted-foreground">
-              Avance para a etapa de <strong>Priorização</strong> para identificar quais fornecedores negociar primeiro,
-              baseado no impacto no caixa e na facilidade de renegociação.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// ============= STEP 2: PRIORIZAÇÃO =============
-function PriorizacaoStep({ payables, onSelect }: { payables: any[]; onSelect: (tx: Transaction) => void }) {
-  return (
-    <div className="space-y-4">
+      {/* === PROJECTION CHART === */}
       <Card className="card-elevated">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Target className="w-4 h-4 text-primary" />
-            Ranking de Negociação
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Fornecedores ordenados por impacto e facilidade — negocie de cima para baixo
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {payables.slice(0, 15).map((tx, i) => (
-              <button
-                key={tx.id}
-                onClick={() => onSelect(tx)}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left"
-              >
-                <span className={cn(
-                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
-                  i < 3 ? 'bg-destructive/10 text-destructive' : i < 6 ? 'bg-warning/10 text-warning' : 'bg-muted text-muted-foreground',
-                )}>
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium truncate">{tx.counterpart || tx.description}</span>
-                    {tx.isOverdue && (
-                      <Badge variant="destructive" className="text-[9px] px-1 py-0">
-                        {tx.daysOverdue}d atrasado
-                      </Badge>
-                    )}
-                    {tx.recurrence !== 'única' && (
-                      <Badge variant="outline" className="text-[9px] px-1 py-0">{tx.recurrence}</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-muted-foreground">{tx.category}</span>
-                    <span className="text-[10px] text-muted-foreground">· Vence {getDayMonth(tx.dueDate)}</span>
-                    {tx.obra && (
-                      <span className="text-[10px] text-muted-foreground">· {tx.obra.code}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-sm font-bold font-mono text-destructive">{formatCurrency(tx.amount)}</span>
-                  <div className="flex items-center gap-1 justify-end mt-0.5">
-                    <span className="text-[10px] text-primary">Negociar</span>
-                    <ArrowRight className="w-3 h-3 text-primary" />
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-          {payables.length === 0 && (
-            <div className="p-8 text-center">
-              <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Nenhuma conta a pagar pendente</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// ============= STEP 3: NEGOCIAÇÃO =============
-function NegociacaoStep({
-  transaction,
-  script,
-  loading,
-  onGenerate,
-  onCopy,
-  payables,
-  onRecord,
-}: {
-  transaction: Transaction | null;
-  script: NegotiationScript | null;
-  loading: boolean;
-  onGenerate: (tx: Transaction) => void;
-  onCopy: (text: string) => void;
-  payables: any[];
-  onRecord: (result: 'aceito' | 'recusado' | 'contraproposta', notes: string) => void;
-}) {
-  const [resultNotes, setResultNotes] = useState('');
-
-  if (!transaction) {
-    return (
-      <Card className="card-elevated">
-        <CardContent className="p-8 text-center">
-          <Phone className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground mb-3">
-            Selecione um fornecedor na etapa de Priorização ou escolha abaixo:
-          </p>
-          <div className="space-y-2 max-w-md mx-auto">
-            {payables.slice(0, 5).map(tx => (
-              <Button
-                key={tx.id}
-                variant="outline"
-                className="w-full justify-between text-xs"
-                onClick={() => onGenerate(tx)}
-              >
-                <span className="truncate">{tx.counterpart || tx.description}</span>
-                <span className="font-mono text-destructive">{formatCurrency(tx.amount)}</span>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Selected transaction header */}
-      <Card className="card-elevated">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold">{transaction.counterpart || transaction.description}</p>
-              <p className="text-xs text-muted-foreground">{transaction.category} · Vence {getDayMonth(transaction.dueDate)}</p>
-            </div>
-            <span className="text-lg font-bold font-mono text-destructive">{formatCurrency(transaction.amount)}</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {loading && (
-        <Card className="card-elevated">
-          <CardContent className="p-8 text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">Gerando scripts de negociação personalizados...</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {script && !loading && (
-        <>
-          {/* Profile & approach */}
-          <Card className="card-elevated">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <BookOpen className="w-4 h-4" /> Perfil & Estratégia
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-xs">{script.supplierProfile}</p>
-              <Badge variant="outline" className="text-xs">
-                Abordagem recomendada: {script.recommendedApproach}
-              </Badge>
-            </CardContent>
-          </Card>
-
-          {/* Scenarios */}
-          {script.scenarios?.map((scenario, i) => (
-            <Card key={i} className={cn('card-elevated', i === 0 && 'border-success/30')}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    {i === 0 ? '🎯' : i === 1 ? '🔄' : '⚡'} Cenário {scenario.name}
-                  </CardTitle>
-                  {scenario.savings > 0 && (
-                    <Badge className="bg-success/10 text-success border-success/20 text-xs">
-                      Economia: {formatCurrency(scenario.savings)}
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription className="text-xs">{scenario.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex gap-3 text-xs">
-                  <div className="bg-muted/50 rounded p-2 flex-1">
-                    <p className="text-muted-foreground">Valor proposto</p>
-                    <p className="font-bold font-mono">{formatCurrency(scenario.proposedAmount)}</p>
-                  </div>
-                  <div className="bg-muted/50 rounded p-2 flex-1">
-                    <p className="text-muted-foreground">Data proposta</p>
-                    <p className="font-bold">{scenario.proposedDate ? getDayMonth(scenario.proposedDate) : '—'}</p>
-                  </div>
-                </div>
-
-                {/* Phone script */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium flex items-center gap-1.5">
-                      <Phone className="w-3 h-3" /> Script para ligação
-                    </span>
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={() => onCopy(scenario.script)}>
-                      <Copy className="w-3 h-3" /> Copiar
-                    </Button>
-                  </div>
-                  <div className="bg-muted/30 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap border">
-                    {scenario.script}
-                  </div>
-                </div>
-
-                {/* WhatsApp message */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium flex items-center gap-1.5">
-                      <MessageSquare className="w-3 h-3" /> Mensagem WhatsApp
-                    </span>
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={() => onCopy(scenario.whatsappMessage)}>
-                      <Copy className="w-3 h-3" /> Copiar
-                    </Button>
-                  </div>
-                  <div className="bg-success/5 rounded-lg p-3 text-xs leading-relaxed border border-success/10">
-                    {scenario.whatsappMessage}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Objections */}
-          {script.objections?.length > 0 && (
-            <Card className="card-elevated">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4" /> Objeções e Respostas
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {script.objections.map((obj, i) => (
-                  <div key={i} className="bg-muted/30 rounded-lg p-3 space-y-1">
-                    <p className="text-xs font-medium text-destructive">❝ {obj.objection}</p>
-                    <p className="text-xs text-muted-foreground">→ {obj.response}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Tips */}
-          {script.tips?.length > 0 && (
-            <Card className="card-elevated">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Dicas para esta negociação
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-1.5">
-                  {script.tips.map((tip, i) => (
-                    <li key={i} className="text-xs flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      {tip}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Record result */}
-          <Card className="card-elevated border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <FileText className="w-4 h-4" /> Registrar resultado
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea
-                placeholder="Anote o resultado da conversa..."
-                value={resultNotes}
-                onChange={e => setResultNotes(e.target.value)}
-                className="text-xs min-h-[60px]"
-              />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="text-xs bg-success hover:bg-success/90"
-                  onClick={() => { onRecord('aceito', resultNotes); setResultNotes(''); }}
-                >
-                  ✓ Aceito
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                  onClick={() => { onRecord('contraproposta', resultNotes); setResultNotes(''); }}
-                >
-                  ↔ Contraproposta
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="text-xs"
-                  onClick={() => { onRecord('recusado', resultNotes); setResultNotes(''); }}
-                >
-                  ✕ Recusado
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ============= STEP 4: SIMULADOR DE RENEGOCIAÇÃO =============
-function SimuladorStep({
-  payables,
-  renegDays,
-  setRenegDays,
-  projection,
-  balance,
-}: {
-  payables: any[];
-  renegDays: Record<string, number>;
-  setRenegDays: (v: Record<string, number>) => void;
-  projection: Array<{ day: number; original: number; adjusted: number }>;
-  balance: number;
-}) {
-  const totalPostponed = Object.keys(renegDays).length;
-  const minOriginal = Math.min(...projection.map(p => p.original));
-  const minAdjusted = Math.min(...projection.map(p => p.adjusted));
-  const improvement = minAdjusted - minOriginal;
-
-  return (
-    <div className="space-y-4">
-      <Card className="card-elevated">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <ArrowLeftRight className="w-4 h-4 text-primary" />
-            Simulador de Renegociação
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Arraste os dias para adiar pagamentos e veja o impacto no caixa em tempo real
-          </CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Projeção de Caixa — 60 dias</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Impact summary */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="bg-muted/50 rounded-lg p-2.5 text-center">
-              <p className="text-[10px] text-muted-foreground">Contas ajustadas</p>
-              <p className="text-lg font-bold">{totalPostponed}</p>
-            </div>
-            <div className="bg-muted/50 rounded-lg p-2.5 text-center">
-              <p className="text-[10px] text-muted-foreground">Pior ponto original</p>
-              <p className={cn('text-lg font-bold font-mono', minOriginal < 0 ? 'text-destructive' : 'text-success')}>
-                {formatCurrency(minOriginal)}
-              </p>
-            </div>
-            <div className="bg-muted/50 rounded-lg p-2.5 text-center">
-              <p className="text-[10px] text-muted-foreground">Pior ponto ajustado</p>
-              <p className={cn('text-lg font-bold font-mono', minAdjusted < 0 ? 'text-destructive' : 'text-success')}>
-                {formatCurrency(minAdjusted)}
-              </p>
-            </div>
-          </div>
-
-          {improvement > 0 && (
-            <div className="mb-4 p-2.5 bg-success/10 border border-success/20 rounded-lg text-center">
-              <p className="text-xs font-medium text-success">
-                🎯 Melhoria no pior ponto: +{formatCurrency(improvement)}
-              </p>
-            </div>
-          )}
-
-          {/* Chart: Original vs Adjusted */}
-          <div className="mb-4 rounded-lg border bg-muted/20 p-3" style={{ height: 240 }}>
-            <p className="text-[10px] text-muted-foreground mb-2 font-medium">Projeção de caixa — 30 dias</p>
-            <ResponsiveContainer width="100%" height="90%">
-              <AreaChart data={projection} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+          <div style={{ height: 200 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={projectionData} margin={{ top: 5, right: 10, bottom: 5, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
                 <XAxis
-                  dataKey="day"
+                  dataKey="label"
                   tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(d: number) => d === 0 ? 'Hoje' : `${d}d`}
-                  axisLine={false}
-                  tickLine={false}
-                  interval={4}
+                  axisLine={false} tickLine={false}
+                  interval={9}
                 />
                 <YAxis
                   tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v: number) => v === 0 ? '0' : `${(v / 1000).toFixed(0)}k`}
+                  axisLine={false} tickLine={false}
+                  tickFormatter={v => v === 0 ? '0' : `${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
-                  content={({ active, payload, label }: any) => {
+                  content={({ active, payload }: any) => {
                     if (!active || !payload?.length) return null;
+                    const p = payload[0];
                     return (
-                      <div className="bg-card border rounded-lg p-2.5 shadow-xl text-xs space-y-1 min-w-[160px]">
-                        <p className="font-semibold">Dia {label}</p>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Original</span>
-                          <span className={cn('font-mono', payload[0]?.value < 0 ? 'text-destructive' : 'text-foreground')}>
-                            {formatCurrency(payload[0]?.value ?? 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Ajustado</span>
-                          <span className={cn('font-mono', payload[1]?.value < 0 ? 'text-destructive' : 'text-success')}>
-                            {formatCurrency(payload[1]?.value ?? 0)}
-                          </span>
-                        </div>
-                        {payload[1]?.value - payload[0]?.value !== 0 && (
-                          <div className="flex justify-between pt-1 border-t">
-                            <span className="text-muted-foreground">Diferença</span>
-                            <span className="font-mono text-success">
-                              +{formatCurrency(payload[1]?.value - payload[0]?.value)}
-                            </span>
-                          </div>
-                        )}
+                      <div className="bg-card border rounded-lg p-2 shadow-xl text-xs">
+                        <p className="font-semibold">{p.payload.label}</p>
+                        <p className={cn('font-mono font-bold', p.value < 0 ? 'text-destructive' : 'text-success')}>
+                          {formatCurrency(p.value)}
+                        </p>
                       </div>
                     );
                   }}
                 />
                 <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeWidth={1.5} strokeOpacity={0.4} />
+                <defs>
+                  <linearGradient id="saldoGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <Area
-                  type="monotone"
-                  dataKey="original"
-                  stroke="hsl(var(--muted-foreground))"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 3"
-                  fill="hsl(var(--muted-foreground))"
-                  fillOpacity={0.05}
-                  name="Original"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="adjusted"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fill="hsl(var(--primary))"
-                  fillOpacity={0.1}
-                  name="Ajustado"
+                  type="monotone" dataKey="saldo"
+                  stroke="hsl(var(--primary))" strokeWidth={2}
+                  fill="url(#saldoGrad)"
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-
-          {/* Legend */}
-          <div className="flex items-center gap-4 mb-4 text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-0 border-t-2 border-dashed border-muted-foreground" /> Original
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-0.5 bg-primary rounded" /> Com renegociação
-            </span>
-          </div>
-
-          {/* Payable adjuster list */}
-          <div className="divide-y max-h-[400px] overflow-y-auto">
-            {payables.slice(0, 12).map(tx => {
-              const days = renegDays[tx.id] || 0;
-              return (
-                <div key={tx.id} className="py-2.5 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{tx.counterpart || tx.description}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {formatCurrency(tx.amount)} · Vence {getDayMonth(tx.dueDate)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-xs"
-                      onClick={() => setRenegDays({ ...renegDays, [tx.id]: Math.max(0, days - 7) })}
-                    >
-                      −
-                    </Button>
-                    <span className={cn(
-                      'text-xs font-mono w-10 text-center',
-                      days > 0 ? 'text-primary font-bold' : 'text-muted-foreground',
-                    )}>
-                      +{days}d
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-xs"
-                      onClick={() => setRenegDays({ ...renegDays, [tx.id]: days + 7 })}
-                    >
-                      +
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {totalPostponed > 0 && (
-            <div className="mt-3 pt-3 border-t">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground"
-                onClick={() => setRenegDays({})}
-              >
-                Limpar todos os ajustes
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
-    </div>
-  );
-}
 
-// ============= STEP 5: REGISTRO =============
-function RegistroStep({ negotiations }: { negotiations: NegotiationRecord[] }) {
-  const resultColors: Record<string, string> = {
-    aceito: 'bg-success/10 text-success',
-    recusado: 'bg-destructive/10 text-destructive',
-    contraproposta: 'bg-warning/10 text-warning',
-    pendente: 'bg-muted text-muted-foreground',
-  };
+      {/* === AI SUMMARY === */}
+      {aiData?.summary && !loading && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-3 p-4 rounded-xl bg-accent/5 border border-accent/15"
+        >
+          <Sparkles className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-semibold text-accent mb-1">Análise da IA</p>
+            <p className="text-sm leading-relaxed text-foreground">{aiData.summary}</p>
+          </div>
+        </motion.div>
+      )}
 
-  const resultLabels: Record<string, string> = {
-    aceito: 'Aceito',
-    recusado: 'Recusado',
-    contraproposta: 'Contraproposta',
-    pendente: 'Pendente',
-  };
+      {/* === COVERAGE BAR === */}
+      {aiData && !loading && crisis.deficit > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">
+              Potencial de recuperação: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span>
+            </span>
+            <span className={cn('font-bold', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
+              {aiData.coveragePercentage.toFixed(0)}% do gap
+            </span>
+          </div>
+          <Progress value={Math.min(100, aiData.coveragePercentage)} className="h-2.5" />
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>{completedActions.size}/{aiData.actions.length} ações concluídas</span>
+            <span>
+              {completedActions.size > 0 && (
+                <span className="text-success font-medium">
+                  {((completedActions.size / aiData.actions.length) * 100).toFixed(0)}% executado
+                </span>
+              )}
+            </span>
+          </div>
+        </div>
+      )}
 
-  return (
-    <div className="space-y-4">
-      <Card className="card-elevated">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-primary" />
-            Registro de Negociações
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Acompanhe o resultado de cada contato com fornecedores
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {negotiations.length === 0 ? (
-            <div className="p-8 text-center">
-              <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Nenhuma negociação registrada ainda.
+      {/* === LOADING STATE === */}
+      {loading && (
+        <Card className="card-elevated">
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground animate-pulse">
+                IA analisando dados financeiros, cobranças, obras e mercado...
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Vá para a etapa de Negociação, gere um script e registre o resultado.
-              </p>
+              <p className="text-[10px] text-muted-foreground">Isso pode levar alguns segundos</p>
             </div>
-          ) : (
-            <div className="divide-y">
-              {negotiations.map((neg, i) => (
-                <div key={i} className="py-3 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{neg.counterpart}</span>
-                    <Badge className={cn('text-[10px]', resultColors[neg.result])}>
-                      {resultLabels[neg.result]}
-                    </Badge>
+            <div className="mt-6 space-y-3">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="flex gap-3 items-start p-3 rounded-lg bg-muted/20 border border-border/30">
+                  <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 bg-muted rounded animate-pulse" style={{ width: `${60 + i * 7}%` }} />
+                    <div className="h-3 bg-muted rounded animate-pulse" style={{ width: `${40 + i * 10}%` }} />
                   </div>
-                  {neg.proposedAmount && (
-                    <p className="text-xs text-muted-foreground">
-                      Proposta: {formatCurrency(neg.proposedAmount)}
-                      {neg.proposedDate && ` · até ${getDayMonth(neg.proposedDate)}`}
-                    </p>
-                  )}
-                  {neg.notes && (
-                    <p className="text-xs text-muted-foreground italic">"{neg.notes}"</p>
-                  )}
                 </div>
               ))}
             </div>
-          )}
+          </CardContent>
+        </Card>
+      )}
 
-          {negotiations.length > 0 && (
-            <div className="mt-3 pt-3 border-t">
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div>
-                  <p className="text-lg font-bold text-success">{negotiations.filter(n => n.result === 'aceito').length}</p>
-                  <p className="text-[10px] text-muted-foreground">Aceitas</p>
+      {/* === ERROR STATE === */}
+      {error && !loading && (
+        <Card className="card-elevated">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <Button size="sm" onClick={() => { setRetried(false); fetchWarPlan(); }} className="text-xs">
+              Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* === ACTION PLAN === */}
+      {aiData && !loading && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-foreground" />
+            <h2 className="text-sm font-bold uppercase tracking-wider">
+              Plano de Ação — {aiData.actions.length} Recomendações
+            </h2>
+          </div>
+
+          {aiData.actions.map((action, i) => {
+            const styles = priorityStyles[action.priority] || priorityStyles.importante;
+            const Icon = categoryIcons[action.category] || Zap;
+            const effort = effortLabels[action.effort] || effortLabels.medio;
+            const hasPrefill = !!action.prefill;
+            const isDone = completedActions.has(i);
+
+            // Find matching transaction for negotiation
+            const matchingTx = action.category === 'cobranca' || action.category === 'renegociacao'
+              ? allTransactions.find(t =>
+                  (action.prefill?.counterpart && t.counterpart?.toLowerCase().includes(action.prefill.counterpart.toLowerCase())) ||
+                  (action.prefill?.amount && t.amount === action.prefill.amount)
+                )
+              : null;
+
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: isDone ? 0.5 : 1, x: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.3 }}
+                className={cn(
+                  'rounded-xl border-2 transition-all overflow-hidden',
+                  isDone ? 'bg-muted/10 border-border/30' : cn(styles.bg, styles.border),
+                )}
+              >
+                <div className="flex items-start gap-3 p-4">
+                  {/* Complete toggle */}
+                  <button
+                    onClick={() => toggleCompleted(i)}
+                    className="mt-1 flex-shrink-0 transition-colors"
+                    title={isDone ? 'Desmarcar' : 'Marcar como concluída'}
+                  >
+                    {isDone ? (
+                      <CheckCircle2 className="w-6 h-6 text-success" />
+                    ) : (
+                      <Circle className={cn('w-6 h-6', styles.text, 'opacity-40 hover:opacity-100')} />
+                    )}
+                  </button>
+
+                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0', isDone ? 'bg-muted/30' : styles.bg)}>
+                    <Icon className={cn('w-5 h-5', isDone ? 'text-muted-foreground' : styles.text)} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={cn('text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', isDone ? 'bg-muted text-muted-foreground line-through' : styles.badge)}>
+                        {action.priority}
+                      </span>
+                      <span className={cn('text-sm font-bold', isDone ? 'text-muted-foreground line-through' : 'text-foreground')}>
+                        {action.title}
+                      </span>
+                    </div>
+
+                    <p className={cn('text-xs leading-relaxed mt-1', isDone ? 'text-muted-foreground/60' : 'text-muted-foreground')}>
+                      {action.description}
+                    </p>
+
+                    <div className="flex items-center gap-4 mt-2 flex-wrap">
+                      <span className={cn('text-xs font-bold', isDone ? 'text-muted-foreground line-through' : action.impactAmount > 0 ? 'text-success' : 'text-destructive')}>
+                        ⚡ {action.impactLabel}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3" />{action.deadline}
+                      </span>
+                      <span className={cn('text-[10px]', isDone ? 'text-muted-foreground' : effort.className)}>
+                        {effort.text}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  {!isDone && (
+                    <div className="flex flex-col gap-1.5 flex-shrink-0">
+                      {hasPrefill && (
+                        <Button
+                          size="sm" className="text-[10px] h-7 gap-1"
+                          onClick={() => handleActionPrefill(action)}
+                        >
+                          <Plus className="w-3 h-3" /> Criar
+                        </Button>
+                      )}
+                      {matchingTx && (action.category === 'renegociacao') && (
+                        <Button
+                          size="sm" variant="outline"
+                          className="text-[10px] h-7 gap-1"
+                          onClick={() => generateScript(matchingTx)}
+                        >
+                          <Phone className="w-3 h-3" /> Script
+                        </Button>
+                      )}
+                      <Link to={action.linkTo}>
+                        <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 w-full">
+                          <ExternalLink className="w-3 h-3" /> Ver
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-lg font-bold text-warning">{negotiations.filter(n => n.result === 'contraproposta').length}</p>
-                  <p className="text-[10px] text-muted-foreground">Contrapropostas</p>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* === NEGOTIATION SCRIPT DRAWER === */}
+      <AnimatePresence>
+        {showNegotiation && selectedTx && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <Card className="card-elevated border-primary/30">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-primary" />
+                    Script de Negociação — {selectedTx.counterpart || selectedTx.description}
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => setShowNegotiation(false)} className="h-7 text-xs">
+                    Fechar
+                  </Button>
                 </div>
-                <div>
-                  <p className="text-lg font-bold text-destructive">{negotiations.filter(n => n.result === 'recusado').length}</p>
-                  <p className="text-[10px] text-muted-foreground">Recusadas</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <CardDescription className="text-xs">
+                  {selectedTx.category} · {formatCurrency(selectedTx.amount)} · Vence {getDayMonth(selectedTx.dueDate)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {loadingScript && (
+                  <div className="py-8 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">Gerando scripts personalizados...</p>
+                  </div>
+                )}
+
+                {negotiationScript && !loadingScript && (
+                  <>
+                    <div className="bg-muted/30 rounded-lg p-3 border">
+                      <p className="text-xs font-medium mb-1">Perfil do fornecedor</p>
+                      <p className="text-xs text-muted-foreground">{negotiationScript.supplierProfile}</p>
+                      <Badge variant="outline" className="mt-2 text-[10px]">
+                        {negotiationScript.recommendedApproach}
+                      </Badge>
+                    </div>
+
+                    {negotiationScript.scenarios?.map((scenario, i) => (
+                      <div key={i} className={cn('rounded-lg border p-4 space-y-3', i === 0 ? 'border-success/30 bg-success/5' : 'bg-muted/20')}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold">{i === 0 ? '🎯' : i === 1 ? '🔄' : '⚡'} {scenario.name}</span>
+                          {scenario.savings > 0 && (
+                            <Badge className="bg-success/10 text-success border-success/20 text-[10px]">
+                              Economia: {formatCurrency(scenario.savings)}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{scenario.description}</p>
+
+                        <div className="flex gap-3 text-xs">
+                          <div className="bg-background rounded p-2 flex-1 border">
+                            <p className="text-[10px] text-muted-foreground">Valor</p>
+                            <p className="font-bold font-mono">{formatCurrency(scenario.proposedAmount)}</p>
+                          </div>
+                          <div className="bg-background rounded p-2 flex-1 border">
+                            <p className="text-[10px] text-muted-foreground">Data</p>
+                            <p className="font-bold">{scenario.proposedDate ? getDayMonth(scenario.proposedDate) : '—'}</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-medium flex items-center gap-1"><Phone className="w-3 h-3" /> Script ligação</span>
+                            <Button variant="ghost" size="sm" className="h-5 px-2 text-[9px] gap-1" onClick={() => copyToClipboard(scenario.script)}>
+                              <Copy className="w-3 h-3" /> Copiar
+                            </Button>
+                          </div>
+                          <div className="bg-background rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap border">{scenario.script}</div>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-medium flex items-center gap-1"><MessageSquare className="w-3 h-3" /> WhatsApp</span>
+                            <Button variant="ghost" size="sm" className="h-5 px-2 text-[9px] gap-1" onClick={() => copyToClipboard(scenario.whatsappMessage)}>
+                              <Copy className="w-3 h-3" /> Copiar
+                            </Button>
+                          </div>
+                          <div className="bg-success/5 rounded-lg p-3 text-xs leading-relaxed border border-success/10">{scenario.whatsappMessage}</div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {negotiationScript.objections?.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+                          <ShieldAlert className="w-3.5 h-3.5" /> Objeções e Respostas
+                        </p>
+                        <div className="space-y-2">
+                          {negotiationScript.objections.map((obj, i) => (
+                            <div key={i} className="bg-muted/30 rounded-lg p-3 space-y-1 border">
+                              <p className="text-xs font-medium text-destructive">❝ {obj.objection}</p>
+                              <p className="text-xs text-muted-foreground">→ {obj.response}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Footer */}
+      <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/20 border border-border/30">
+        <Sparkles className="w-3.5 h-3.5 text-accent mt-0.5 flex-shrink-0" />
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          Plano gerado pela IA com base em dados financeiros em tempo real, histórico de cobranças e indicadores macro.
+          Clique em "Atualizar análise" após confirmar transações para recalcular.
+        </p>
+      </div>
+
+      {/* Transaction form from AI suggestions */}
+      {txFormDefaults && (
+        <TransactionFormDialog
+          open={txFormOpen}
+          onClose={() => { setTxFormOpen(false); setTxFormDefaults(null); }}
+          transaction={null}
+          defaultType={txFormDefaults.type}
+          defaultObraId={txFormDefaults.obraId}
+          prefill={{
+            description: txFormDefaults.description,
+            counterpart: txFormDefaults.counterpart,
+            amount: txFormDefaults.amount,
+            category: txFormDefaults.category,
+            notes: txFormDefaults.notes,
+          }}
+        />
+      )}
     </div>
   );
 }
