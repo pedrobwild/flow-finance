@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BalanceHistoryDrawer from '@/components/BalanceHistoryDrawer';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function CockpitHeroKPIs({ period }: Props) {
+  const navigate = useNavigate();
   const { updateCashBalance, currentBalance } = useFinance();
   const { filteredTransactions: transactions, filteredBalance, filteredProjectedBalance } = useObraFilter();
   const { obras } = useObras();
@@ -41,14 +43,14 @@ export default function CockpitHeroKPIs({ period }: Props) {
     }
     if (runwayDays === 0) runwayDays = 180;
 
-    // Next 14d cash gap
-    const exits14d = transactions
-      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 14))
+    // Cash gap within period range
+    const exits = transactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .reduce((s, t) => s + t.amount, 0);
-    const entries14d = transactions
-      .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 14))
+    const entries = transactions
+      .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .reduce((s, t) => s + t.amount, 0);
-    const coverage14d = exits14d > 0 ? (entries14d / exits14d) * 100 : 100;
+    const coverage = exits > 0 ? (entries / exits) * 100 : 100;
 
     // Overdue receivables (inadimplência)
     const overdueRec = transactions.filter(t => t.type === 'receber' && t.status === 'atrasado');
@@ -78,11 +80,11 @@ export default function CockpitHeroKPIs({ period }: Props) {
     }
 
     return {
-      bal, balAge, balDate, runwayDays, coverage14d,
-      exits14d, entries14d, inadRate, overdueRecTotal,
+      bal, balAge, balDate, runwayDays, coverage,
+      exits, entries, inadRate, overdueRecTotal,
       avgMargin, sparkData, overdueCount: overdueRec.length,
     };
-  }, [transactions, filteredBalance, filteredProjectedBalance, obras, today]);
+  }, [transactions, filteredBalance, filteredProjectedBalance, obras, today, period]);
 
   const handleSaveBalance = () => {
     const val = parseFloat(balanceInput.replace(/[^\d.,-]/g, '').replace(',', '.'));
@@ -97,8 +99,8 @@ export default function CockpitHeroKPIs({ period }: Props) {
     : null;
 
   const runwayColor = metrics.runwayDays > 60 ? 'text-emerald-400' : metrics.runwayDays > 21 ? 'text-amber-300' : 'text-red-400';
-  const gap14d = metrics.entries14d - metrics.exits14d;
-  const gapColor = gap14d >= 0 ? 'text-emerald-400' : gap14d > -metrics.bal * 0.5 ? 'text-amber-300' : 'text-red-400';
+  const gap = metrics.entries - metrics.exits;
+  const gapColor = gap >= 0 ? 'text-emerald-400' : gap > -metrics.bal * 0.5 ? 'text-amber-300' : 'text-red-400';
   const overdueColor = metrics.overdueRecTotal === 0 ? 'text-emerald-400' : metrics.overdueRecTotal < 50000 ? 'text-amber-300' : 'text-red-400';
 
   return (
@@ -200,12 +202,13 @@ export default function CockpitHeroKPIs({ period }: Props) {
 
         {/* Bottom: Actionable R$ KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
-          {/* Runway */}
+          {/* Runway → Fluxo */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors"
+            onClick={() => navigate('/fluxo')}
+            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
               <ShieldAlert className="w-3.5 h-3.5 text-white/50" />
@@ -220,31 +223,33 @@ export default function CockpitHeroKPIs({ period }: Props) {
             </p>
           </motion.div>
 
-          {/* Saídas 14d */}
+          {/* Saídas → Contas a Pagar */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors"
+            onClick={() => navigate('/pagar')}
+            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
               <ArrowDown className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Saídas 14 dias</span>
+              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">A Pagar ({period.label})</span>
             </div>
             <p className="text-2xl font-bold font-mono text-red-400">
-              {formatCurrency(metrics.exits14d)}
+              {formatCurrency(metrics.exits)}
             </p>
             <p className="text-[10px] text-white/30 mt-0.5">
-              Entradas previstas: <span className="text-emerald-400/70">{formatCurrency(metrics.entries14d)}</span>
+              A receber: <span className="text-emerald-400/70">{formatCurrency(metrics.entries)}</span>
             </p>
           </motion.div>
 
-          {/* A Receber Atrasado */}
+          {/* A Cobrar → Contas a Receber */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors"
+            onClick={() => navigate('/receber')}
+            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-white/50" />
@@ -260,22 +265,23 @@ export default function CockpitHeroKPIs({ period }: Props) {
             </p>
           </motion.div>
 
-          {/* Gap de Caixa 14d */}
+          {/* Gap → Fluxo */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors"
+            onClick={() => navigate('/fluxo')}
+            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
               <Target className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Gap 14 dias</span>
+              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Gap {period.label}</span>
             </div>
             <p className={cn('text-2xl font-bold font-mono', gapColor)}>
-              {gap14d >= 0 ? '+' : ''}{formatCurrency(gap14d)}
+              {gap >= 0 ? '+' : ''}{formatCurrency(gap)}
             </p>
             <p className="text-[10px] text-white/30 mt-0.5">
-              {gap14d >= 0 ? 'Entradas cobrem saídas' : 'Saídas superam entradas'}
+              {gap >= 0 ? 'Entradas cobrem saídas' : 'Saídas superam entradas'}
             </p>
           </motion.div>
         </div>
