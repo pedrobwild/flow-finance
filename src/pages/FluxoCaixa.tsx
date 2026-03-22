@@ -663,3 +663,35 @@ function StatusCard({ icon: Icon, label, value, sub, iconBg, iconColor, valueCol
     </motion.div>
   );
 }
+
+function DRERow({ label, values, bold, sub, highlight, color, pctValues }: {
+  label: string; values: number[]; bold?: boolean; sub?: boolean; highlight?: boolean;
+  color?: string; pctValues?: number[];
+}) {
+  return (
+    <tr className={cn(
+      'border-b transition-colors',
+      highlight && 'bg-accent/[0.04]',
+      sub && 'text-muted-foreground',
+    )}>
+      <td className={cn('px-4 py-2.5 text-xs', bold && 'font-semibold', sub && 'pl-6')}>
+        {label}
+      </td>
+      {values.map((v, i) => (
+        <td key={i} className={cn(
+          'px-4 py-2.5 text-right font-mono text-xs',
+          bold && 'font-bold',
+          color || (v >= 0 ? '' : 'text-destructive'),
+          highlight && (v >= 0 ? 'text-success' : 'text-destructive'),
+        )}>
+          <div>{formatCurrency(Math.abs(v))}</div>
+          {pctValues && (
+            <div className={cn('text-[9px] mt-0.5', pctValues[i] >= 0 ? 'text-success' : 'text-destructive')}>
+              {pctValues[i].toFixed(1)}%
+            </div>
+          )}
+        </td>
+      ))}
+    </tr>
+  );
+}
