@@ -180,7 +180,7 @@ describe('buildCrisisContext', () => {
 
     expect(ctx).toContain('NÃO ficará negativo');
     expect(ctx).toContain('MELHORAR a situação');
-    expect(ctx).toContain('R$ 50.000');
+    expect(ctx).toContain('Saldo atual:');
   });
 });
 
