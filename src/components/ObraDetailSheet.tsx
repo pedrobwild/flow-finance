@@ -12,6 +12,7 @@ import {
   Check, Pencil, AlertTriangle,
 } from 'lucide-react';
 import TransactionFormDialog from './TransactionFormDialog';
+import ObraSCurveChart from './ObraSCurveChart';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip as RechartsTooltip, ReferenceLine,
@@ -281,6 +282,16 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
                 </div>
               </div>
             )}
+
+            {/* S-Curve: Planned vs Actual */}
+            <ObraSCurveChart
+              obraId={obra.id}
+              contractValue={obra.contractValue}
+              budgetTarget={obra.budgetTarget}
+              transactions={obraTxs}
+              expectedStartDate={obra.expectedStartDate}
+              expectedEndDate={obra.expectedEndDate}
+            />
 
             {/* Additional info */}
             {(obra.address || obra.expectedStartDate || obra.notes) && (
