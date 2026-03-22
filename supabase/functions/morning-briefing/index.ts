@@ -73,7 +73,7 @@ REGRAS DE PREFILL (campo "prefill" nas sugestões):
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Dados financeiros de hoje:\n\n${financialSummary}${marketContext ? `\n\n=== DADOS DE MERCADO EM TEMPO REAL (Perplexity) ===\n${marketContext}` : '\n\n(Dados de mercado indisponíveis hoje)'}` },
