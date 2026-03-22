@@ -33,6 +33,7 @@ interface WarAction {
   category: 'cobranca' | 'antecipacao' | 'renegociacao' | 'corte' | 'credito' | 'cronograma';
   title: string;
   description: string;
+  steps?: string[];
   impactAmount: number;
   impactLabel: string;
   effort: 'baixo' | 'medio' | 'alto';
