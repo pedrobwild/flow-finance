@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings } from 'lucide-react';
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings, Siren } from 'lucide-react';
 import ChatCommandDrawer from '@/components/ChatCommandDrawer';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ const navItems = [
   { label: 'A Receber', icon: ArrowUpCircle, path: '/receber' },
   { label: 'Fluxo', icon: TrendingUp, path: '/fluxo' },
   { label: 'Simulador', icon: Beaker, path: '/simulador' },
+  { label: 'Comando de Guerra', icon: Siren, path: '/comando-de-guerra' },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
