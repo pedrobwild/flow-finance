@@ -201,6 +201,9 @@ export default function CustosAnalise() {
           <TabsTrigger value="comparativo" className="gap-1.5 text-xs">
             <GitCompareArrows className="w-3.5 h-3.5" /> Comparativo
           </TabsTrigger>
+          <TabsTrigger value="indicadores" className="gap-1.5 text-xs">
+            <Sparkles className="w-3.5 h-3.5" /> Indicadores
+          </TabsTrigger>
         </TabsList>
 
         {/* Cost Center Tab */}
