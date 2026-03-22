@@ -102,7 +102,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = ['PIX', 'Boleto', 'Cartão de Cr
 export const PAGAR_CATEGORIES = [
   'Materiais de Obra', 'Mão de Obra Terceirizada', 'Aluguel', 'Salários', 'Encargos Trabalhistas',
   'Impostos', 'Marketing/Tráfego', 'Software/SaaS', 'Contador', 'Jurídico',
-  'Veículos', 'Alimentação', 'Benefícios', 'Seguros', 'Serviços Gerais', 'Outros'
+  'Veículos', 'Alimentação', 'Benefícios', 'Seguros', 'Serviços Gerais', 'Reembolso', 'Outros'
 ];
 
 export const RECEBER_CATEGORIES = [
