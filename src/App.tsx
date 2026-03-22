@@ -16,6 +16,7 @@ import ContasReceber from "./pages/ContasReceber";
 import FluxoCaixa from "./pages/FluxoCaixa";
 import Simulador from "./pages/Simulador";
 import Obras from "./pages/Obras";
+import ComandoDeGuerra from "./pages/ComandoDeGuerra";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
