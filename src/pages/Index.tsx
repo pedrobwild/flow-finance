@@ -8,7 +8,7 @@ import UnifiedAlerts from '@/components/UnifiedAlerts';
 import MorningBriefing from '@/components/MorningBriefing';
 import WeeklyCashProjection from '@/components/WeeklyCashProjection';
 import ObraCashBalance from '@/components/ObraCashBalance';
-import CashRunwayChart from '@/components/CashRunwayChart';
+
 
 
 import { motion } from 'framer-motion';
@@ -62,9 +62,6 @@ export default function Dashboard() {
       <motion.div {...section(0.16)}>
         <MorningBriefing />
       </motion.div>
-
-      {/* === ROW 5: RUNWAY === */}
-      <CashRunwayChart period={period} />
 
       {/* === ROW 6: PROJEÇÃO SEMANAL === */}
       <motion.div {...section(0.24)}>
