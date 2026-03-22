@@ -294,6 +294,35 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
     return groups;
   }, [kpis]);
 
+  // 6-month trend data
+  const trendData = useMemo(() => {
+    const months: { year: number; month: number; label: string }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      let m = month - i;
+      let y = year;
+      while (m < 0) { m += 12; y--; }
+      months.push({ year: y, month: m, label: MONTH_NAMES[m] });
+    }
+
+    return months.map(({ year: y, month: m, label }) => {
+      const { from: mFrom, to: mTo } = getMonthRange(y, m);
+      const pay = allTransactions.filter(t => t.type === 'pagar' && t.dueDate >= mFrom && t.dueDate <= mTo);
+      const rec = allTransactions.filter(t => t.type === 'receber' && t.dueDate >= mFrom && t.dueDate <= mTo);
+      return { label, ...computeKPIValues(pay, rec) };
+    });
+  }, [allTransactions, year, month]);
+
+  const kpiTrendConfig: { id: string; name: string; suffix: string; color: string; decimals: number }[] = [
+    { id: 'receita_folha', name: 'Receita / Folha', suffix: 'x', color: 'hsl(var(--primary))', decimals: 1 },
+    { id: 'margem_operacional', name: 'Margem Operacional', suffix: '%', color: 'hsl(var(--success, 142 76% 36%))', decimals: 1 },
+    { id: 'material_receita', name: 'Material / Receita', suffix: '%', color: 'hsl(var(--accent))', decimals: 1 },
+    { id: 'fixo_total', name: 'Custo Fixo / Total', suffix: '%', color: '#6366f1', decimals: 1 },
+    { id: 'overhead', name: 'Overhead', suffix: '%', color: '#d97706', decimals: 1 },
+    { id: 'cobertura', name: 'Índice de Cobertura', suffix: 'x', color: '#059669', decimals: 2 },
+    { id: 'concentracao', name: 'Concentração Top 3', suffix: '%', color: '#dc2626', decimals: 0 },
+    { id: 'custo_medio', name: 'Ticket Médio', suffix: '', color: '#64748b', decimals: 0 },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header + Fetch Button */}
