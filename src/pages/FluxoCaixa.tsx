@@ -510,13 +510,19 @@ export default function FluxoCaixa() {
                                           <span className={cn('font-mono font-bold whitespace-nowrap text-xs', tx.type === 'pagar' ? 'text-destructive' : 'text-success')}>
                                             {tx.type === 'pagar' ? '−' : '+'}{formatCurrency(tx.amount)}
                                           </span>
-                                          <Button
-                                            size="sm" variant="ghost"
-                                            className="h-6 px-2 text-[10px] opacity-0 group-hover/tx:opacity-100 transition-opacity text-success hover:text-success hover:bg-success/10"
-                                            onClick={(e) => { e.stopPropagation(); confirmTransaction(tx.id); }}
-                                          >
-                                            <CheckCircle2 className="w-3 h-3 mr-1" /> Confirmar
-                                          </Button>
+                                          {tx.status === 'confirmado' ? (
+                                            <Badge variant="outline" className="text-[9px] px-1.5 h-5 text-success border-success/30 shrink-0">
+                                              <CheckCircle2 className="w-3 h-3 mr-0.5" /> Pago
+                                            </Badge>
+                                          ) : (
+                                            <Button
+                                              size="sm" variant="ghost"
+                                              className="h-6 px-2 text-[10px] opacity-0 group-hover/tx:opacity-100 transition-opacity text-success hover:text-success hover:bg-success/10"
+                                              onClick={(e) => { e.stopPropagation(); confirmTransaction(tx.id, tx.amount, tx.type); }}
+                                            >
+                                              <CheckCircle2 className="w-3 h-3 mr-1" /> Confirmar
+                                            </Button>
+                                          )}
                                         </div>
                                       ))}
                                     </div>
