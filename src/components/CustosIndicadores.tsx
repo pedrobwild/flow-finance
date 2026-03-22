@@ -457,6 +457,56 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
         </motion.div>
       ))}
 
+      {/* Consecutive Decline Alerts */}
+      {declineAlerts.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-destructive flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Alertas de Deterioração
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {declineAlerts.map(alert => {
+              const upIsGood = kpiDirection[alert.id] ?? true;
+              const totalChange = alert.values.length >= 2
+                ? ((alert.values[alert.values.length - 1] - alert.values[0]) / (alert.values[0] || 1)) * 100
+                : 0;
+
+              return (
+                <motion.div
+                  key={alert.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3"
+                >
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                    {upIsGood
+                      ? <TrendingDown className="w-4 h-4 text-destructive" />
+                      : <TrendingUp className="w-4 h-4 text-destructive" />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground">{alert.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Piorando há <span className="font-semibold text-destructive">{alert.months} meses consecutivos</span>
+                      {' · '}
+                      <span className="font-mono">
+                        {alert.id === 'custo_medio'
+                          ? `${formatCurrency(alert.values[0])} → ${formatCurrency(alert.values[alert.values.length - 1])}`
+                          : `${alert.values[0].toFixed(alert.decimals)}${alert.suffix} → ${alert.values[alert.values.length - 1].toFixed(alert.decimals)}${alert.suffix}`
+                        }
+                      </span>
+                    </p>
+                  </div>
+                  <Badge variant="destructive" className="text-[10px] shrink-0">
+                    {totalChange > 0 ? '+' : ''}{totalChange.toFixed(0)}%
+                  </Badge>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
       {/* 6-Month Trend Charts */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
         <div className="flex items-center justify-between">
