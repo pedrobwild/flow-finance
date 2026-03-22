@@ -3,7 +3,7 @@ import { todayISO, addDays } from '@/lib/helpers';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import CockpitHeroKPIs from '@/components/CockpitHeroKPIs';
 import CashFlowHeroChart from '@/components/CashFlowHeroChart';
-import UnifiedAlerts from '@/components/UnifiedAlerts';
+
 import MorningBriefing from '@/components/MorningBriefing';
 import ObraCashBalance from '@/components/ObraCashBalance';
 
