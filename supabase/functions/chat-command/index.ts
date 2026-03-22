@@ -916,6 +916,10 @@ ESTILO
 
     const body = new ReadableStream({
       async start(controller) {
+        // Send tool status events (e.g. web_search indicator)
+        for (const toolStatus of toolStatusEvents) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "tool_status", tool: toolStatus })}\n\n`));
+        }
         if (actionsExecuted.length > 0) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "actions", actions: actionsExecuted })}\n\n`));
         }
