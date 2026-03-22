@@ -97,8 +97,9 @@ export default function CockpitHeroKPIs({ period }: Props) {
     : null;
 
   const runwayColor = metrics.runwayDays > 60 ? 'text-emerald-400' : metrics.runwayDays > 21 ? 'text-amber-300' : 'text-red-400';
-  const coverageColor = metrics.coverage14d >= 100 ? 'text-emerald-400' : metrics.coverage14d >= 60 ? 'text-amber-300' : 'text-red-400';
-  const inadColor = metrics.inadRate <= 5 ? 'text-emerald-400' : metrics.inadRate <= 15 ? 'text-amber-300' : 'text-red-400';
+  const gap14d = metrics.entries14d - metrics.exits14d;
+  const gapColor = gap14d >= 0 ? 'text-emerald-400' : gap14d > -metrics.bal * 0.5 ? 'text-amber-300' : 'text-red-400';
+  const overdueColor = metrics.overdueRecTotal === 0 ? 'text-emerald-400' : metrics.overdueRecTotal < 50000 ? 'text-amber-300' : 'text-red-400';
 
   return (
     <div className="hero-panel p-0">
