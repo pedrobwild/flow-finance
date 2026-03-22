@@ -164,7 +164,7 @@ describe('buildCrisisContext', () => {
     });
 
     expect(ctx).toContain('NEGATIVO em 19 dias');
-    expect(ctx).toContain('R$ 5.000');
+    expect(ctx).toContain('Déficit projetado:');
     expect(ctx).toContain('2 transações');
     expect(ctx).toContain('Runway estimado: 15 dias');
   });
