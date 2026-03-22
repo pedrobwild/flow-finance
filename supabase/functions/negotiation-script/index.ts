@@ -78,6 +78,18 @@ ESTRUTURA DOS SCRIPTS
 - Incluir valor e data exatos
 - Terminar com pergunta que convida resposta
 
+**Email formal** deve seguir:
+1. **Assunto**: Claro e profissional (ex: "Proposta de renegociação - [Empresa] / NF [número]")
+2. **Saudação**: Formal ("Prezado(a) Sr(a). [Nome],")
+3. **Contexto**: 1-2 parágrafos explicando a situação com dados concretos
+4. **Proposta**: Parágrafo dedicado com valor, data e condições específicas
+5. **Contrapartida**: O que oferece em troca (fidelização, volume, antecipação futura)
+6. **Fechamento**: Solicite confirmação formal e disponibilize-se para reunião
+7. **Assinatura**: Nome completo, cargo, empresa, telefone
+- Tom: corporativo, respeitoso, sem informalidade
+- Extensão: 3-5 parágrafos (nem curto demais nem prolixo)
+- Deve poder ser enviado como está, sem edições
+
 ═══════════════════════════════════════════
 REGRAS
 ═══════════════════════════════════════════
@@ -141,8 +153,9 @@ Preciso de scripts prontos para ligar e negociar.`,
                         savings: { type: "number", description: "How much the company saves vs original" },
                         script: { type: "string", description: "Word-for-word script to use on the phone (2-3 paragraphs)" },
                         whatsappMessage: { type: "string", description: "Ready-to-send WhatsApp message" },
+                        formalEmail: { type: "string", description: "Ready-to-send formal email with subject line on first line, then blank line, then body. Professional corporate tone." },
                       },
-                      required: ["name", "description", "proposedAmount", "proposedDate", "savings", "script", "whatsappMessage"],
+                      required: ["name", "description", "proposedAmount", "proposedDate", "savings", "script", "whatsappMessage", "formalEmail"],
                       additionalProperties: false,
                     },
                   },
