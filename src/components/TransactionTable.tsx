@@ -162,70 +162,91 @@ export default function TransactionTable({ type }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          {
-            icon: isPagar ? ArrowDownRight : ArrowUpRight,
-            iconBg: 'bg-primary/10',
-            iconColor: 'text-primary',
-            label: 'Total',
-            value: formatCurrency(totals.total),
-            sub: `${filtered.length} transação(ões)`,
-            ring: '',
-          },
-          {
-            icon: AlertTriangle,
-            iconBg: totals.overdueCount > 0 ? 'bg-destructive/10' : 'bg-muted',
-            iconColor: totals.overdueCount > 0 ? 'text-destructive' : 'text-muted-foreground',
-            label: isPagar ? 'Atrasados' : 'Não recebidos',
-            value: formatCurrency(totals.overdueTotal),
-            valueColor: totals.overdueCount > 0 ? 'text-destructive' : '',
-            sub: `${totals.overdueCount} item(ns)`,
-            ring: totals.overdueCount > 0 ? 'ring-1 ring-destructive/15' : '',
-            pulse: totals.overdueCount > 0,
-          },
-          {
-            icon: CalendarDays,
-            iconBg: 'bg-warning/10',
-            iconColor: 'text-warning',
-            label: 'Próximos 7 dias',
-            value: formatCurrency(totals.next7Total),
-            sub: `${totals.next7Count} vencimento(s)`,
-            ring: '',
-          },
-          {
-            icon: Check,
-            iconBg: 'bg-success/10',
-            iconColor: 'text-success',
-            label: isPagar ? 'Pagos' : 'Recebidos',
-            value: formatCurrency(totals.confirmedTotal),
-            valueColor: 'text-success',
-            sub: `${totals.confirmedCount} confirmado(s)`,
-            ring: '',
-          },
-        ].map((card, i) => (
-          <motion.div
-            key={card.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-            className={cn('card-elevated p-4 group hover:shadow-md transition-shadow duration-200', card.ring)}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110', card.iconBg)}>
-                <card.icon className={cn('w-3.5 h-3.5', card.iconColor)} />
+      {/* Summary strip */}
+      {!isPagar && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              icon: isPagar ? ArrowDownRight : ArrowUpRight,
+              iconBg: 'bg-primary/10',
+              iconColor: 'text-primary',
+              label: 'Total',
+              value: formatCurrency(totals.total),
+              sub: `${filtered.length} transação(ões)`,
+              ring: '',
+            },
+            {
+              icon: AlertTriangle,
+              iconBg: totals.overdueCount > 0 ? 'bg-destructive/10' : 'bg-muted',
+              iconColor: totals.overdueCount > 0 ? 'text-destructive' : 'text-muted-foreground',
+              label: 'Não recebidos',
+              value: formatCurrency(totals.overdueTotal),
+              valueColor: totals.overdueCount > 0 ? 'text-destructive' : '',
+              sub: `${totals.overdueCount} item(ns)`,
+              ring: totals.overdueCount > 0 ? 'ring-1 ring-destructive/15' : '',
+              pulse: totals.overdueCount > 0,
+            },
+            {
+              icon: CalendarDays,
+              iconBg: 'bg-warning/10',
+              iconColor: 'text-warning',
+              label: 'Próximos 7 dias',
+              value: formatCurrency(totals.next7Total),
+              sub: `${totals.next7Count} vencimento(s)`,
+              ring: '',
+            },
+            {
+              icon: Check,
+              iconBg: 'bg-success/10',
+              iconColor: 'text-success',
+              label: 'Recebidos',
+              value: formatCurrency(totals.confirmedTotal),
+              valueColor: 'text-success',
+              sub: `${totals.confirmedCount} confirmado(s)`,
+              ring: '',
+            },
+          ].map((card, i) => (
+            <motion.div
+              key={card.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+              className={cn('card-elevated p-4 group hover:shadow-md transition-shadow duration-200', card.ring)}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110', card.iconBg)}>
+                  <card.icon className={cn('w-3.5 h-3.5', card.iconColor)} />
+                </div>
+                <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">{card.label}</span>
+                {card.pulse && <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />}
               </div>
-              <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">{card.label}</span>
-              {card.pulse && <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />}
-            </div>
-            <p className={cn('text-xl font-bold font-mono tracking-tight', card.valueColor)}>
-              {card.value}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-1">{card.sub}</p>
-          </motion.div>
-        ))}
-      </div>
+              <p className={cn('text-xl font-bold font-mono tracking-tight', card.valueColor)}>
+                {card.value}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-1">{card.sub}</p>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Inline summary for pagar */}
+      {isPagar && (
+        <div className="flex items-center gap-4 flex-wrap text-xs px-1">
+          <span className="text-muted-foreground">
+            {filtered.length} transação(ões) · Total: <span className="font-mono font-bold text-foreground">{formatCurrency(totals.total)}</span>
+          </span>
+          {totals.overdueCount > 0 && (
+            <span className="text-destructive font-medium">
+              {totals.overdueCount} atrasado(s): {formatCurrency(totals.overdueTotal)}
+            </span>
+          )}
+          {totals.confirmedCount > 0 && (
+            <span className="text-success font-medium">
+              {totals.confirmedCount} pago(s): {formatCurrency(totals.confirmedTotal)}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Filters + Actions */}
       <motion.div
