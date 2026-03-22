@@ -235,6 +235,7 @@ Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.`;
     if (!crisis) return;
     setLoading(true);
     setError(null);
+    clearCompleted();
     try {
       // Fetch market data in parallel (non-blocking)
       let marketContext: string | null = null;
