@@ -8,7 +8,7 @@ import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth, formatDate
 import {
   ArrowDownRight, AlertTriangle, Clock, Check, CheckCheck, CalendarDays, Wallet,
   CreditCard, Tag, Building2, ChevronDown, ChevronUp, FileText, MoreHorizontal,
-  Pencil, Trash2, CalendarClock
+  Pencil, Trash2, CalendarClock, RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
