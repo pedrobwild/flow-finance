@@ -50,7 +50,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
     const entries = transactions
       .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .reduce((s, t) => s + t.amount, 0);
-    const coverage14d = exits14d > 0 ? (entries14d / exits14d) * 100 : 100;
+    const coverage = exits > 0 ? (entries / exits) * 100 : 100;
 
     // Overdue receivables (inadimplência)
     const overdueRec = transactions.filter(t => t.type === 'receber' && t.status === 'atrasado');
