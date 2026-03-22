@@ -19,13 +19,19 @@ const ACTION_LABELS: Record<string, string> = {
   create_transaction: 'Transação criada',
   update_billing: 'Cobrança atualizada',
   update_transaction: 'Transação atualizada',
+  analyze_scenario: 'Cenário analisado',
+  cash_projection: 'Projeção gerada',
+  obra_analysis: 'Análise de obra',
+  executive_summary: 'Resumo executivo',
 };
 
 const SUGGESTIONS = [
-  'As parcelas passadas do cliente já foram pagas',
-  'Enviei cobrança para o cliente da obra',
-  'Qual o saldo projetado para os próximos 15 dias?',
+  'Qual o saldo projetado para os próximos 30 dias?',
+  'E se eu adiar os pagamentos desta semana por 15 dias?',
+  'Qual obra tem maior risco financeiro?',
+  'Faça um resumo executivo da semana',
   'Quais transações estão atrasadas?',
+  'Compare a rentabilidade das obras ativas',
 ];
 
 export default function ChatCommandDrawer() {
