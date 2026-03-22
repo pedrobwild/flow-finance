@@ -397,14 +397,13 @@ O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.
         : 'monitoring';
 
   const severityConfig = {
-    critical: { bg: 'bg-destructive/10', border: 'border-destructive/40', icon: Flame, label: 'CAIXA EM RISCO IMINENTE', color: 'text-destructive' },
-    warning: { bg: 'bg-warning/10', border: 'border-warning/40', icon: AlertTriangle, label: 'CAIXA APERTADO', color: 'text-warning' },
-    caution: { bg: 'bg-accent/10', border: 'border-accent/40', icon: TrendingDown, label: 'MONITORAR CAIXA', color: 'text-accent' },
-    monitoring: { bg: 'bg-muted/20', border: 'border-border', icon: Shield, label: 'CAIXA SOB CONTROLE', color: 'text-success' },
+    critical: { bg: 'bg-destructive/10', border: 'border-destructive/40', color: 'text-destructive' },
+    warning: { bg: 'bg-warning/10', border: 'border-warning/40', color: 'text-warning' },
+    caution: { bg: 'bg-accent/10', border: 'border-accent/40', color: 'text-accent' },
+    monitoring: { bg: 'bg-muted/20', border: 'border-border', color: 'text-foreground' },
   };
 
   const sConfig = severityConfig[severity];
-  const SIcon = sConfig.icon;
 
   return (
     <div className="space-y-6 pb-8">
