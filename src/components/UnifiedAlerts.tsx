@@ -213,11 +213,7 @@ export default function UnifiedAlerts({ period }: Props) {
                   style.bg, style.border, style.hover,
                   alert.linkTo && 'cursor-pointer',
                 )}
-                onClick={() => {
-                  if (alert.linkTo) navigate(alert.linkTo);
-                }
-                  }
-                }}
+                onClick={() => alert.linkTo && navigate(alert.linkTo)}
               >
                 {/* Severity dot */}
                 <div className={cn('w-2 h-2 rounded-full flex-shrink-0', style.dot)} />
