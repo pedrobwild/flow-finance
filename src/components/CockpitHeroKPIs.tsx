@@ -287,24 +287,37 @@ export default function CockpitHeroKPIs({ period }: Props) {
             </p>
           </motion.div>
 
-          {/* Gap → Fluxo */}
+          {/* Concentration Risk → Receber */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            onClick={() => navigate('/fluxo')}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
+            onClick={() => navigate('/receber')}
+            className={cn(
+              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer',
+              !metrics.surviveIfDelays && metrics.biggestClient ? 'border-red-500/30 bg-red-500/[0.08]' : 'border-white/[0.08]'
+            )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <Target className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Gap {period.label}</span>
+              <TrendingDown className="w-3.5 h-3.5 text-white/50" />
+              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Se atrasar</span>
             </div>
-            <p className={cn('text-2xl font-bold font-mono', gapColor)}>
-              {gap >= 0 ? '+' : ''}{formatCurrency(gap)}
-            </p>
-            <p className="text-[10px] text-white/30 mt-0.5">
-              {gap >= 0 ? 'Entradas cobrem saídas' : 'Saídas superam entradas'}
-            </p>
+            {metrics.biggestClient ? (
+              <>
+                <p className={cn('text-lg font-bold font-mono leading-tight', concentrationColor)}>
+                  {metrics.surviveIfDelays ? 'Coberto' : `Falta ${formatCurrency(metrics.next3dPayables - (metrics.bal + metrics.entries - metrics.biggestAmount))}`}
+                </p>
+                <p className="text-[10px] text-white/30 mt-0.5 truncate" title={metrics.biggestClient}>
+                  {metrics.biggestClient}: <span className="text-white/50 font-mono">{formatCurrency(metrics.biggestAmount)}</span>
+                  <span className="text-white/20"> ({Math.round(metrics.concentrationPct)}% das entradas)</span>
+                </p>
+                <p className="text-[9px] text-white/25 mt-0.5">
+                  Próx. 3d a pagar: {formatCurrency(metrics.next3dPayables)}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-white/30 mt-1">Sem recebíveis no período</p>
+            )}
           </motion.div>
         </div>
       </div>
