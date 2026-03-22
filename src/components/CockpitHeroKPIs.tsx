@@ -311,7 +311,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
                     <span className="text-muted-foreground"> ({formatCurrency(metrics.biggestAmount)} · {Math.round(metrics.concentrationPct)}%)</span>
                   </p>
                   <p className="text-[9px] mt-0.5 leading-snug text-muted-foreground">
-                    Saldo {formatCurrency(metrics.bal)} − 3d contas {formatCurrency(metrics.next3dPayables)}
+                    Saldo {formatCurrency(metrics.bal)} − {period.label} contas {formatCurrency(metrics.periodPayables)}
                   </p>
                 </>
               ) : (
