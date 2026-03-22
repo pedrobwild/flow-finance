@@ -1,4 +1,8 @@
 import { useState, useMemo, useCallback } from 'react';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid, ReferenceLine,
+} from 'recharts';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import { formatCurrency, todayISO, daysBetween, getDayMonth } from '@/lib/helpers';
@@ -788,6 +792,90 @@ function SimuladorStep({
               </p>
             </div>
           )}
+
+          {/* Chart: Original vs Adjusted */}
+          <div className="mb-4 rounded-lg border bg-muted/20 p-3" style={{ height: 240 }}>
+            <p className="text-[10px] text-muted-foreground mb-2 font-medium">Projeção de caixa — 30 dias</p>
+            <ResponsiveContainer width="100%" height="90%">
+              <AreaChart data={projection} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(d: number) => d === 0 ? 'Hoje' : `${d}d`}
+                  axisLine={false}
+                  tickLine={false}
+                  interval={4}
+                />
+                <YAxis
+                  tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v: number) => v === 0 ? '0' : `${(v / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  content={({ active, payload, label }: any) => {
+                    if (!active || !payload?.length) return null;
+                    return (
+                      <div className="bg-card border rounded-lg p-2.5 shadow-xl text-xs space-y-1 min-w-[160px]">
+                        <p className="font-semibold">Dia {label}</p>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Original</span>
+                          <span className={cn('font-mono', payload[0]?.value < 0 ? 'text-destructive' : 'text-foreground')}>
+                            {formatCurrency(payload[0]?.value ?? 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Ajustado</span>
+                          <span className={cn('font-mono', payload[1]?.value < 0 ? 'text-destructive' : 'text-success')}>
+                            {formatCurrency(payload[1]?.value ?? 0)}
+                          </span>
+                        </div>
+                        {payload[1]?.value - payload[0]?.value !== 0 && (
+                          <div className="flex justify-between pt-1 border-t">
+                            <span className="text-muted-foreground">Diferença</span>
+                            <span className="font-mono text-success">
+                              +{formatCurrency(payload[1]?.value - payload[0]?.value)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }}
+                />
+                <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeWidth={1.5} strokeOpacity={0.4} />
+                <Area
+                  type="monotone"
+                  dataKey="original"
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 3"
+                  fill="hsl(var(--muted-foreground))"
+                  fillOpacity={0.05}
+                  name="Original"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="adjusted"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill="hsl(var(--primary))"
+                  fillOpacity={0.1}
+                  name="Ajustado"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-4 mb-4 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="w-4 h-0 border-t-2 border-dashed border-muted-foreground" /> Original
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-4 h-0.5 bg-primary rounded" /> Com renegociação
+            </span>
+          </div>
 
           {/* Payable adjuster list */}
           <div className="divide-y max-h-[400px] overflow-y-auto">
