@@ -23,7 +23,11 @@ interface UnifiedAlert {
   badge?: string;
 }
 
-export default function UnifiedAlerts() {
+interface Props {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function UnifiedAlerts({ period }: Props) {
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const { confirmTransaction, currentBalance } = useFinance();
