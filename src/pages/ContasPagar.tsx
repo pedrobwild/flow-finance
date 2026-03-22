@@ -376,6 +376,22 @@ export default function ContasPagar() {
         defaultType="pagar"
       />
 
+      {/* Refund dialog */}
+      <TransactionFormDialog
+        open={!!refundTx}
+        onClose={() => setRefundTx(null)}
+        transaction={null}
+        defaultType="receber"
+        defaultObraId={refundTx?.obraId || undefined}
+        prefill={{
+          description: `Reembolso: ${refundTx?.description || ''}`,
+          counterpart: refundTx?.counterpart || '',
+          amount: refundTx?.amount || 0,
+          category: 'Reembolso',
+          notes: `Reembolso ref. conta a pagar: ${refundTx?.description || ''}`,
+        }}
+      />
+
       {/* Reschedule dialog */}
       <Dialog open={!!rescheduleTx} onOpenChange={(v) => !v && setRescheduleTx(null)}>
         <DialogContent className="max-w-sm">
