@@ -1,15 +1,11 @@
 import { useState } from 'react';
 import { todayISO, addDays } from '@/lib/helpers';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
-import DashboardKPIs from '@/components/DashboardKPIs';
-
-
+import CockpitHeroKPIs from '@/components/CockpitHeroKPIs';
+import CashFlowHeroChart from '@/components/CashFlowHeroChart';
 import UnifiedAlerts from '@/components/UnifiedAlerts';
 import MorningBriefing from '@/components/MorningBriefing';
-import WeeklyCashProjection from '@/components/WeeklyCashProjection';
 import ObraCashBalance from '@/components/ObraCashBalance';
-
-
 
 import { motion } from 'framer-motion';
 
@@ -27,7 +23,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-5 pb-8">
       {/* === HEADER === */}
       <motion.div {...section(0)}>
         <div className="flex items-center justify-between">
@@ -39,29 +35,27 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-
-      {/* === ROW 1: KPIs === */}
+      {/* === HERO: KPIs Preditivos (dark panel) === */}
       <motion.div {...section(0.04)}>
-        <DashboardKPIs period={period} />
+        <CockpitHeroKPIs period={period} />
       </motion.div>
 
-
-      {/* === ROW 3: ALERTAS UNIFICADOS (due + decision) === */}
-      <motion.div {...section(0.12)}>
+      {/* === ALERTAS UNIFICADOS === */}
+      <motion.div {...section(0.1)}>
         <UnifiedAlerts period={period} />
       </motion.div>
 
-      {/* === ROW 4: BRIEFING IA (colapsável) === */}
+      {/* === RADAR DE CAIXA (hero chart) === */}
       <motion.div {...section(0.16)}>
+        <CashFlowHeroChart period={period} />
+      </motion.div>
+
+      {/* === BRIEFING IA === */}
+      <motion.div {...section(0.22)}>
         <MorningBriefing />
       </motion.div>
 
-      {/* === ROW 6: PROJEÇÃO SEMANAL === */}
-      <motion.div {...section(0.24)}>
-        <WeeklyCashProjection period={period} />
-      </motion.div>
-
-      {/* === ROW 7: SALDO POR OBRA === */}
+      {/* === SALDO POR OBRA === */}
       <ObraCashBalance period={period} />
     </div>
   );
