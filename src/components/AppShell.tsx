@@ -26,6 +26,7 @@ const navItems = [
   { label: 'Simulador', icon: Beaker, path: '/simulador' },
   { label: 'Custos', icon: PieChart, path: '/custos' },
   { label: 'Comando de Guerra', icon: Siren, path: '/comando-de-guerra' },
+  { label: 'Negociações', icon: Handshake, path: '/negociacoes' },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
