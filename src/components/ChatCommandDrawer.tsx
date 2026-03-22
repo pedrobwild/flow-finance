@@ -327,9 +327,23 @@ export default function ChatCommandDrawer() {
                     <Bot className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
                   <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Processando...</span>
+                    <div className="flex flex-col gap-1.5">
+                      {searchingWeb && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="flex items-center gap-2"
+                        >
+                          <Globe className="w-3.5 h-3.5 text-primary animate-pulse" />
+                          <span className="text-xs font-medium text-primary">Pesquisando na web...</span>
+                        </motion.div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {searchingWeb ? 'Analisando resultados...' : 'Processando...'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
