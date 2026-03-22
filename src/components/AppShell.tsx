@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings, Siren } from 'lucide-react';
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings, Siren, PieChart } from 'lucide-react';
 import ChatCommandDrawer from '@/components/ChatCommandDrawer';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
