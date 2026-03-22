@@ -54,7 +54,7 @@ export default function CashRunwayChart({ period }: Props) {
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
 
     return { days: points, runwayDays: runway, dangerStart: dangerDate, nextReceivable: nextRec };
-  }, [transactions, currentBalance, projectedBalance, today, bal]);
+  }, [transactions, currentBalance, projectedBalance, today, bal, horizon]);
 
   const minSaldo = Math.min(...days.map(d => d.saldo));
   const maxSaldo = Math.max(...days.map(d => d.saldo));
