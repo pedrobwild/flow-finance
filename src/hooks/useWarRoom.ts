@@ -230,7 +230,15 @@ export function useWarRoom(options: UseWarRoomOptions = {}) {
         body: { financialSummary, crisisContext, marketContext, mode: isProactive ? 'proactive' : 'crisis' },
       });
 
-      if (fnError) throw new Error(fnError.message);
+      if (fnError) {
+        // Try to extract a user-friendly message from the response
+        let msg = fnError.message;
+        try {
+          const parsed = typeof fnError === 'object' && 'context' in fnError ? await (fnError as any).context?.json?.() : null;
+          if (parsed?.error) msg = parsed.error;
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
       if (fnData?.error) throw new Error(fnData.error);
       setAiData(fnData as WarRoomData);
     } catch (e) {
