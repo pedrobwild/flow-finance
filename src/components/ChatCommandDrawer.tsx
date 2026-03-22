@@ -133,12 +133,16 @@ export default function ChatCommandDrawer() {
           try {
             const parsed = JSON.parse(jsonStr);
 
-            if (parsed.type === 'actions') {
+            if (parsed.type === 'tool_status' && parsed.tool === 'web_search') {
+              setSearchingWeb(true);
+            } else if (parsed.type === 'actions') {
               actionsExecuted = parsed.actions;
             } else if (parsed.type === 'delta') {
+              setSearchingWeb(false);
               assistantContent += parsed.content;
               upsertAssistant(assistantContent, actionsExecuted.length > 0 ? actionsExecuted : undefined);
             } else if (parsed.type === 'done') {
+              setSearchingWeb(false);
               // Ensure final state
               if (assistantContent) {
                 upsertAssistant(assistantContent, actionsExecuted.length > 0 ? actionsExecuted : undefined);
