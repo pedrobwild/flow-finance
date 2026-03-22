@@ -246,7 +246,7 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
     });
 
     return list;
-  }, [monthPayables, monthReceivables, totalReceita, totalCusto, maoDeObra, materiais, custoFixo, custoVariavel, benchmarks]);
+  }, [monthPayables, monthReceivables, totalReceita, totalCusto, maoDeObra, materiais, custoFixo, benchmarks]);
 
   const fetchBenchmarks = useCallback(async () => {
     setLoading(true);
