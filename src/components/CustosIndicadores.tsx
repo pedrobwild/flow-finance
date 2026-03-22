@@ -127,7 +127,7 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
     [monthPayables]
   );
 
-  const custoVariavel = totalCusto - custoFixo;
+  
 
   const kpis = useMemo<KPIData[]>(() => {
     const list: KPIData[] = [];
