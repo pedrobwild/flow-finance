@@ -83,12 +83,19 @@ export default function CockpitHeroKPIs({ period }: Props) {
     const next3dPayables = transactions
       .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= next3d)
       .reduce((s, t) => s + t.amount, 0);
-    // If biggest client delays: balance without their money vs upcoming bills
-    const balWithoutBiggest = bal + (entries - biggestAmount) - exits;
+    // If biggest client delays: can current balance alone cover next 3 days of bills?
+    const balAfterBills = bal - next3dPayables;
+    const entriesWithoutBiggest = entries - biggestAmount;
+    const netIfDelays = bal + entriesWithoutBiggest - next3dPayables;
+    const surviveIfDelays = netIfDelays > 0;
+    const shortfall = surviveIfDelays ? 0 : Math.abs(netIfDelays);
+    const surplus = surviveIfDelays ? netIfDelays : 0;
     const concentrationPct = entries > 0 ? (biggestAmount / entries) * 100 : 0;
-    // Can survive without biggest client?
-    const surviveWithout = bal - next3dPayables > 0;
-    const surviveIfDelays = (bal - next3dPayables + (entries - biggestAmount)) > 0;
+
+    // Count pending payables in period
+    const pendingPayCount = transactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
+      .length;
 
     // Sparkline for hero chart
     const sparkData: { d: number; v: number }[] = [];
@@ -100,10 +107,11 @@ export default function CockpitHeroKPIs({ period }: Props) {
       bal, balAge, balDate, runwayDays,
       exits, entries, overdueRecTotal,
       sparkData, overdueCount: overdueRec.length,
+      pendingPayCount,
       // Concentration
       biggestClient, biggestAmount, concentrationPct,
       tomorrowPayables, next3dPayables,
-      balWithoutBiggest, surviveWithout, surviveIfDelays,
+      surviveIfDelays, shortfall, surplus, balAfterBills,
       clientCount: byClient.size,
     };
   }, [transactions, filteredBalance, filteredProjectedBalance, obras, today, period]);
