@@ -96,8 +96,58 @@ export default function CashFlowTable() {
     setExpandedDate(prev => prev === date ? null : date);
   };
 
+  const periodLabel = isCustom && customRange.from && customRange.to
+    ? `${format(customRange.from, 'dd/MM')} – ${format(customRange.to, 'dd/MM')}`
+    : `${PERIOD_PRESETS[selectedPreset].label}`;
+
   return (
     <div className="card-elevated overflow-hidden">
+      {/* Period filter */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-wrap">
+        <span className="text-xs font-medium text-muted-foreground mr-1">Período:</span>
+        <div className="flex items-center gap-1">
+          {PERIOD_PRESETS.map((p, idx) => (
+            <Button
+              key={p.label}
+              variant={!isCustom && selectedPreset === idx ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => { setSelectedPreset(idx); setIsCustom(false); }}
+            >
+              {p.label}
+            </Button>
+          ))}
+        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={isCustom ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 px-2.5 text-xs gap-1.5"
+            >
+              <CalendarIcon className="w-3 h-3" />
+              {isCustom && customRange.from && customRange.to
+                ? `${format(customRange.from, 'dd/MM')} – ${format(customRange.to, 'dd/MM')}`
+                : 'Personalizado'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="range"
+              selected={customRange.from && customRange.to ? { from: customRange.from, to: customRange.to } : undefined}
+              onSelect={(range) => {
+                if (range?.from) {
+                  setCustomRange({ from: range.from, to: range.to });
+                  if (range.from && range.to) setIsCustom(true);
+                }
+              }}
+              locale={ptBR}
+              numberOfMonths={2}
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
