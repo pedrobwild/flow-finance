@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { FileText, Loader2, Download } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 
 export default function ExecutiveReportButton() {
   const [loading, setLoading] = useState(false);
@@ -16,12 +16,16 @@ export default function ExecutiveReportButton() {
       const html = data?.html;
       if (!html) throw new Error('Relatório vazio');
 
-      // Open in new window for print/save as PDF
+      // Open in new window with auto-print
       const printWindow = window.open('', '_blank');
       if (printWindow) {
         printWindow.document.write(html);
         printWindow.document.close();
-        toast.success('Relatório gerado! Use Ctrl+P para salvar como PDF.');
+        // Auto-trigger print after content loads
+        printWindow.onload = () => {
+          setTimeout(() => printWindow.print(), 500);
+        };
+        toast.success('Relatório gerado! Clique "Salvar como PDF" ou use Ctrl+P.');
       } else {
         // Fallback: download as HTML
         const blob = new Blob([html], { type: 'text/html' });
@@ -31,7 +35,7 @@ export default function ExecutiveReportButton() {
         a.download = `relatorio-executivo-${new Date().toISOString().split('T')[0]}.html`;
         a.click();
         URL.revokeObjectURL(url);
-        toast.success('Relatório baixado');
+        toast.success('Relatório baixado como HTML');
       }
     } catch (err: any) {
       toast.error(`Erro ao gerar relatório: ${err.message}`);
