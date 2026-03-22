@@ -387,7 +387,7 @@ export default function ContasPagar() {
           description: `Reembolso: ${refundTx?.description || ''}`,
           counterpart: refundTx?.counterpart || '',
           amount: refundTx?.amount || 0,
-          category: 'Outros',
+          category: 'Reembolso',
           notes: `Reembolso a funcionário ref.: ${refundTx?.description || ''}`,
         }}
       />
