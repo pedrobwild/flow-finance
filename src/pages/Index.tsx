@@ -40,10 +40,6 @@ export default function Dashboard() {
         <CockpitHeroKPIs period={period} />
       </motion.div>
 
-      {/* === ALERTAS UNIFICADOS === */}
-      <motion.div {...section(0.1)}>
-        <UnifiedAlerts period={period} />
-      </motion.div>
 
       {/* === RADAR DE CAIXA (hero chart) === */}
       <motion.div {...section(0.16)}>
