@@ -39,7 +39,11 @@ const section = (delay: number) => ({
   transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
-export default function ObraCashBalance() {
+interface ObraCashBalanceProps {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function ObraCashBalance({ period }: ObraCashBalanceProps) {
   const { obras, getObraFinancials } = useObras();
   const { transactions, currentBalance, projectedBalance } = useFinance();
   const today = todayISO();

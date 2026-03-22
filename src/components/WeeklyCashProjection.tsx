@@ -26,13 +26,32 @@ interface DataPoint {
   zone: 'safe' | 'attention' | 'danger';
 }
 
-export default function WeeklyCashProjection() {
+interface Props {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function WeeklyCashProjection({ period: globalPeriod }: Props) {
   const { currentBalance } = useFinance();
   const { filteredTransactions, filteredProjectedBalance, filteredBalance } = useObraFilter();
   const today = todayISO();
   const [granularity, setGranularity] = useState<Granularity>('dia');
   const [days, setDays] = useState<DayCount>(30);
   const [weeks, setWeeks] = useState<WeekCount>(6);
+
+  // Sync days with global period
+  useEffect(() => {
+    if (!globalPeriod) return;
+    const from = new Date(globalPeriod.from + 'T12:00:00');
+    const to = new Date(globalPeriod.to + 'T12:00:00');
+    const diff = Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+    if (granularity === 'dia') {
+      const closest = ([15, 30, 45] as const).reduce((a, b) => Math.abs(b - diff) < Math.abs(a - diff) ? b : a);
+      setDays(closest);
+    } else {
+      const closest = ([6, 8, 12] as const).reduce((a, b) => Math.abs(b - Math.ceil(diff / 7)) < Math.abs(a - Math.ceil(diff / 7)) ? b : a);
+      setWeeks(closest);
+    }
+  }, [globalPeriod, granularity]);
 
   const baseBalance = filteredBalance?.amount ?? currentBalance?.amount ?? 0;
 
