@@ -141,8 +141,8 @@ export default function CockpitHeroKPIs({ period }: Props) {
           {/* Left: Balance */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <Wallet className="w-4 h-4 text-white/60" />
-              <span className="text-[11px] font-medium text-white/60 uppercase tracking-wider">Saldo em Conta</span>
+              <Wallet className="w-4 h-4 text-white/80" />
+              <span className="text-[11px] font-medium text-white/80 uppercase tracking-wider">Saldo em Conta</span>
               {metrics.balAge !== null && metrics.balAge > 3 && (
                 <span className="text-[10px] text-amber-300 flex items-center gap-0.5">
                   <Clock className="w-3 h-3" /> {metrics.balAge}d atrás
@@ -156,14 +156,14 @@ export default function CockpitHeroKPIs({ period }: Props) {
                   value={balanceInput}
                   onChange={e => setBalanceInput(e.target.value)}
                   placeholder="150000"
-                  className="h-9 text-sm flex-1 max-w-[180px] bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                  className="h-9 text-sm flex-1 max-w-[180px] bg-white/10 border-white/20 text-white placeholder:text-white/50"
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleSaveBalance()}
                 />
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/10" onClick={handleSaveBalance}>
                   <Check className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-white/60 hover:bg-white/10" onClick={() => setEditingBalance(false)}>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-white/80 hover:bg-white/10" onClick={() => setEditingBalance(false)}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
@@ -176,7 +176,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
                   <BalanceHistoryDrawer />
                   <Button
                     size="icon" variant="ghost"
-                    className="h-7 w-7 text-white/40 hover:text-white hover:bg-white/10"
+                    className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10"
                     onClick={() => { setBalanceInput(filteredBalance?.amount?.toString() || ''); setEditingBalance(true); }}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -185,7 +185,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
               </div>
             )}
             {balanceDateLabel && (
-              <p className="text-[10px] text-white/40 mt-0.5">Atualizado em {balanceDateLabel}</p>
+              <p className="text-[10px] text-white/60 mt-0.5">Atualizado em {balanceDateLabel}</p>
             )}
           </div>
 
@@ -223,12 +223,12 @@ export default function CockpitHeroKPIs({ period }: Props) {
                 />
               </AreaChart>
             </ResponsiveContainer>
-            <p className="text-[9px] text-white/30 text-right -mt-1">Projeção 30 dias</p>
+            <p className="text-[9px] text-white/60 text-right -mt-1">Projeção 30 dias</p>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-white/10 my-4 shimmer-line" />
+        <div className="h-px bg-white/15 my-4 shimmer-line" />
 
         {/* Bottom: Actionable R$ KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
@@ -239,19 +239,19 @@ export default function CockpitHeroKPIs({ period }: Props) {
             transition={{ delay: 0.1 }}
             onClick={() => navigate('/fluxo')}
             className={cn(
-              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer',
-              metrics.runwayDays <= 21 ? 'border-red-500/30' : 'border-white/[0.08]'
+              'bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.12] transition-colors cursor-pointer',
+              metrics.runwayDays <= 21 ? 'border-red-400/40' : 'border-white/[0.12]'
             )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Runway</span>
+              <ShieldAlert className="w-3.5 h-3.5 text-white/80" />
+              <span className="text-[10px] text-white/80 uppercase tracking-wider font-medium">Runway</span>
             </div>
             <p className={cn('text-2xl font-bold font-mono', runwayColor)}>
               {metrics.runwayDays >= 180 ? '180+' : metrics.runwayDays}
-              <span className="text-sm font-normal text-white/40 ml-1">dias</span>
+              <span className="text-sm font-normal text-white/60 ml-1">dias</span>
             </p>
-            <p className="text-[10px] text-white/30 mt-0.5">
+            <p className="text-[10px] text-white/60 mt-0.5">
               {metrics.runwayDays >= 60 ? 'Fôlego confortável' : metrics.runwayDays >= 21 ? 'Atenção ao fluxo' : '⚠ Risco de quebra'}
             </p>
           </motion.div>
@@ -262,17 +262,17 @@ export default function CockpitHeroKPIs({ period }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
             onClick={() => navigate('/pagar')}
-            className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors cursor-pointer"
+            className="bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 border border-white/[0.12] hover:bg-white/[0.12] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <ArrowDown className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">A Pagar ({period.label})</span>
+              <ArrowDown className="w-3.5 h-3.5 text-white/80" />
+              <span className="text-[10px] text-white/80 uppercase tracking-wider font-medium">A Pagar ({period.label})</span>
             </div>
-            <p className="text-2xl font-bold font-mono text-red-400">
+            <p className="text-2xl font-bold font-mono text-red-300">
               {formatCurrency(metrics.exits)}
             </p>
-            <p className="text-[10px] text-white/30 mt-0.5">
-              {metrics.pendingPayCount} conta(s) · Receber: <span className="text-emerald-400/70">{formatCurrency(metrics.entries)}</span>
+            <p className="text-[10px] text-white/60 mt-0.5">
+              {metrics.pendingPayCount} conta(s) · Receber: <span className="text-emerald-300 font-medium">{formatCurrency(metrics.entries)}</span>
             </p>
           </motion.div>
 
@@ -283,18 +283,18 @@ export default function CockpitHeroKPIs({ period }: Props) {
             transition={{ delay: 0.2 }}
             onClick={() => navigate('/receber')}
             className={cn(
-              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer',
-              metrics.overdueCount > 0 ? 'border-amber-500/30' : 'border-white/[0.08]'
+              'bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.12] transition-colors cursor-pointer',
+              metrics.overdueCount > 0 ? 'border-amber-400/40' : 'border-white/[0.12]'
             )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Inadimplente</span>
+              <AlertTriangle className="w-3.5 h-3.5 text-white/80" />
+              <span className="text-[10px] text-white/80 uppercase tracking-wider font-medium">Inadimplente</span>
             </div>
             <p className={cn('text-2xl font-bold font-mono', overdueColor)}>
               {formatCurrency(metrics.overdueRecTotal)}
             </p>
-            <p className="text-[10px] text-white/30 mt-0.5">
+            <p className="text-[10px] text-white/60 mt-0.5">
               {metrics.overdueCount > 0
                 ? `${metrics.overdueCount} parcela(s) vencida(s)`
                 : 'Tudo em dia ✓'}
@@ -308,8 +308,8 @@ export default function CockpitHeroKPIs({ period }: Props) {
             transition={{ delay: 0.25 }}
             onClick={() => navigate('/receber')}
             className={cn(
-              'bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.1] transition-colors cursor-pointer relative overflow-hidden',
-              !metrics.surviveIfDelays && metrics.biggestClient ? 'border-red-500/40 bg-red-500/[0.06]' : 'border-white/[0.08]'
+              'bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.12] transition-colors cursor-pointer relative overflow-hidden',
+              !metrics.surviveIfDelays && metrics.biggestClient ? 'border-red-400/50 bg-red-500/[0.08]' : 'border-white/[0.12]'
             )}
           >
             {!metrics.surviveIfDelays && metrics.biggestClient && (
@@ -317,8 +317,8 @@ export default function CockpitHeroKPIs({ period }: Props) {
             )}
             <div className="relative z-10">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <TrendingDown className="w-3.5 h-3.5 text-white/50" />
-                <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">
+                <TrendingDown className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-[10px] text-white/80 uppercase tracking-wider font-medium">
                   Teste de Estresse
                 </span>
               </div>
@@ -330,16 +330,16 @@ export default function CockpitHeroKPIs({ period }: Props) {
                       : `-${formatCurrency(metrics.shortfall)}`
                     }
                   </p>
-                  <p className="text-[10px] text-white/40 mt-1 leading-snug">
-                    Se <span className="text-white/60 font-medium">{metrics.biggestClient}</span> atrasar
-                    <span className="text-white/25"> ({formatCurrency(metrics.biggestAmount)} · {Math.round(metrics.concentrationPct)}%)</span>
+                  <p className="text-[10px] text-white/70 mt-1 leading-snug">
+                    Se <span className="text-white/90 font-medium">{metrics.biggestClient}</span> atrasar
+                    <span className="text-white/55"> ({formatCurrency(metrics.biggestAmount)} · {Math.round(metrics.concentrationPct)}%)</span>
                   </p>
                   <p className="text-[9px] mt-0.5 leading-snug">
-                    <span className="text-white/25">Saldo {formatCurrency(metrics.bal)} − 3d contas {formatCurrency(metrics.next3dPayables)}</span>
+                    <span className="text-white/50">Saldo {formatCurrency(metrics.bal)} − 3d contas {formatCurrency(metrics.next3dPayables)}</span>
                   </p>
                 </>
               ) : (
-                <p className="text-sm text-white/30 mt-1">Sem recebíveis pendentes</p>
+                <p className="text-sm text-white/60 mt-1">Sem recebíveis pendentes</p>
               )}
             </div>
           </motion.div>
