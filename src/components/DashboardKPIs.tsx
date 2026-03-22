@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import BalanceHistoryDrawer from '@/components/BalanceHistoryDrawer';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, daysBetween, addDays, getDayMonth } from '@/lib/helpers';
