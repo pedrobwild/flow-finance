@@ -197,6 +197,10 @@ export default function ContasPagar() {
                 <Pencil className="w-3.5 h-3.5 mr-2" />
                 Editar
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRefundTx(tx)}>
+                <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                Reembolso
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
