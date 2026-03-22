@@ -198,7 +198,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
         {/* Divider */}
         <div className="h-px bg-white/10 my-4 shimmer-line" />
 
-        {/* Bottom: Predictive KPIs */}
+        {/* Bottom: Actionable R$ KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
           {/* Runway */}
           <motion.div
@@ -220,7 +220,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
             </p>
           </motion.div>
 
-          {/* Cobertura 14d */}
+          {/* Saídas 14d */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -228,20 +228,18 @@ export default function CockpitHeroKPIs({ period }: Props) {
             className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <Target className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Cobertura 14d</span>
+              <ArrowDown className="w-3.5 h-3.5 text-white/50" />
+              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Saídas 14 dias</span>
             </div>
-            <p className={cn('text-2xl font-bold font-mono', coverageColor)}>
-              {metrics.coverage14d.toFixed(0)}
-              <span className="text-sm font-normal text-white/40 ml-0.5">%</span>
+            <p className="text-2xl font-bold font-mono text-red-400">
+              {formatCurrency(metrics.exits14d)}
             </p>
-            <div className="text-[10px] text-white/30 mt-0.5 flex items-center gap-2">
-              <span className="flex items-center gap-0.5"><ArrowUp className="w-2.5 h-2.5 text-emerald-400/60" />{formatCurrency(metrics.entries14d)}</span>
-              <span className="flex items-center gap-0.5"><ArrowDown className="w-2.5 h-2.5 text-red-400/60" />{formatCurrency(metrics.exits14d)}</span>
-            </div>
+            <p className="text-[10px] text-white/30 mt-0.5">
+              Entradas previstas: <span className="text-emerald-400/70">{formatCurrency(metrics.entries14d)}</span>
+            </p>
           </motion.div>
 
-          {/* Inadimplência */}
+          {/* A Receber Atrasado */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -250,20 +248,19 @@ export default function CockpitHeroKPIs({ period }: Props) {
           >
             <div className="flex items-center gap-1.5 mb-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Inadimplência</span>
+              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">A Cobrar</span>
             </div>
-            <p className={cn('text-2xl font-bold font-mono', inadColor)}>
-              {metrics.inadRate.toFixed(1)}
-              <span className="text-sm font-normal text-white/40 ml-0.5">%</span>
+            <p className={cn('text-2xl font-bold font-mono', overdueColor)}>
+              {formatCurrency(metrics.overdueRecTotal)}
             </p>
             <p className="text-[10px] text-white/30 mt-0.5">
               {metrics.overdueCount > 0
-                ? `${metrics.overdueCount} parcela(s) · ${formatCurrency(metrics.overdueRecTotal)}`
+                ? `${metrics.overdueCount} parcela(s) em atraso`
                 : 'Nenhum recebível atrasado'}
             </p>
           </motion.div>
 
-          {/* Margem Média */}
+          {/* Gap de Caixa 14d */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -271,15 +268,14 @@ export default function CockpitHeroKPIs({ period }: Props) {
             className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-3 border border-white/[0.08] hover:bg-white/[0.1] transition-colors"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <TrendingDown className="w-3.5 h-3.5 text-white/50" />
-              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Margem Média</span>
+              <Target className="w-3.5 h-3.5 text-white/50" />
+              <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Gap 14 dias</span>
             </div>
-            <p className={cn('text-2xl font-bold font-mono', metrics.avgMargin >= 20 ? 'text-emerald-400' : metrics.avgMargin >= 10 ? 'text-amber-300' : 'text-red-400')}>
-              {metrics.avgMargin.toFixed(1)}
-              <span className="text-sm font-normal text-white/40 ml-0.5">%</span>
+            <p className={cn('text-2xl font-bold font-mono', gapColor)}>
+              {gap14d >= 0 ? '+' : ''}{formatCurrency(gap14d)}
             </p>
             <p className="text-[10px] text-white/30 mt-0.5">
-              {metrics.avgMargin >= 20 ? 'Margem saudável' : metrics.avgMargin >= 10 ? 'Margem apertada' : '⚠ Margem crítica'}
+              {gap14d >= 0 ? 'Entradas cobrem saídas' : 'Saídas superam entradas'}
             </p>
           </motion.div>
         </div>
