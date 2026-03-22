@@ -43,12 +43,12 @@ export default function CockpitHeroKPIs({ period }: Props) {
     }
     if (runwayDays === 0) runwayDays = 180;
 
-    // Next 14d cash gap
-    const exits14d = transactions
-      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 14))
+    // Cash gap within period range
+    const exits = transactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .reduce((s, t) => s + t.amount, 0);
-    const entries14d = transactions
-      .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 14))
+    const entries = transactions
+      .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .reduce((s, t) => s + t.amount, 0);
     const coverage14d = exits14d > 0 ? (entries14d / exits14d) * 100 : 100;
 
