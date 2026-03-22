@@ -41,7 +41,7 @@ export default function CashRunwayChart({ period }: Props) {
 
     // Find runway (first day saldo <= 0)
     const firstNegative = points.findIndex(p => p.saldo <= 0);
-    const runway = firstNegative === -1 ? HORIZON : firstNegative;
+    const runway = firstNegative === -1 ? horizon : firstNegative;
 
     // Find danger zone start (saldo < 20% of current balance)
     const threshold = bal * 0.2;
