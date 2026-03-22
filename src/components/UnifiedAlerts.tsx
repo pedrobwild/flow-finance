@@ -209,8 +209,14 @@ export default function UnifiedAlerts({ period }: Props) {
                 transition={{ duration: 0.3, delay: i * 0.04 }}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all group',
-                  style.bg, style.border, style.hover
+                  style.bg, style.border, style.hover,
+                  alert.linkTo && 'cursor-pointer',
                 )}
+                onClick={() => {
+                  if (alert.linkTo) {
+                    window.location.href = alert.linkTo;
+                  }
+                }}
               >
                 {/* Severity dot */}
                 <div className={cn('w-2 h-2 rounded-full flex-shrink-0', style.dot)} />
