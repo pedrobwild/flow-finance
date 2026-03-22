@@ -1,12 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useObraFilter } from '@/lib/obra-filter-context';
-import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName } from '@/lib/helpers';
+import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName, formatDate } from '@/lib/helpers';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
 } from '@/components/ui/table';
+import { Transaction } from '@/lib/types';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface DayRow {
   date: string;
@@ -19,11 +21,13 @@ interface DayRow {
   isToday: boolean;
   isWeekend: boolean;
   txCount: number;
+  transactions: Transaction[];
 }
 
 export default function CashFlowTable() {
   const { filteredTransactions: transactions, filteredProjectedBalance } = useObraFilter();
   const today = todayISO();
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
 
   const rows = useMemo((): DayRow[] => {
     const data: DayRow[] = [];
@@ -44,6 +48,7 @@ export default function CashFlowTable() {
         isToday: date === today,
         isWeekend: dayDate.getDay() === 0 || dayDate.getDay() === 6,
         txCount: dayTxs.length,
+        transactions: dayTxs,
       });
     }
     return data;
@@ -53,6 +58,10 @@ export default function CashFlowTable() {
     entradas: rows.reduce((s, r) => s + r.entradas, 0),
     saidas: rows.reduce((s, r) => s + r.saidas, 0),
   }), [rows]);
+
+  const toggleRow = (date: string) => {
+    setExpandedDate(prev => prev === date ? null : date);
+  };
 
   return (
     <div className="card-elevated overflow-hidden">
@@ -71,62 +80,123 @@ export default function CashFlowTable() {
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
-              <TableRow
-                key={row.date}
-                className={cn(
-                  'transition-colors',
-                  row.isToday && 'bg-primary/[0.06] font-medium',
-                  row.isWeekend && !row.isToday && 'bg-muted/20',
-                  row.saldo < 0 && 'bg-destructive/[0.04]',
-                )}
-              >
-                <TableCell className="text-xs font-medium py-2">
-                  <div className="flex items-center gap-1.5">
-                    {row.label}
-                    {row.isToday && (
-                      <Badge variant="outline" className="text-[8px] h-4 px-1 border-primary/50 text-primary">Hoje</Badge>
+              <>
+                <TableRow
+                  key={row.date}
+                  className={cn(
+                    'transition-colors',
+                    row.txCount > 0 && 'cursor-pointer hover:bg-accent/50',
+                    row.isToday && 'bg-primary/[0.06] font-medium',
+                    row.isWeekend && !row.isToday && 'bg-muted/20',
+                    row.saldo < 0 && 'bg-destructive/[0.04]',
+                    expandedDate === row.date && 'bg-accent/30',
+                  )}
+                  onClick={() => row.txCount > 0 && toggleRow(row.date)}
+                >
+                  <TableCell className="text-xs font-medium py-2">
+                    <div className="flex items-center gap-1.5">
+                      {row.txCount > 0 && (
+                        expandedDate === row.date
+                          ? <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                          : <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                      )}
+                      {row.label}
+                      {row.isToday && (
+                        <Badge variant="outline" className="text-[8px] h-4 px-1 border-primary/50 text-primary">Hoje</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground py-2 capitalize">{row.weekday}</TableCell>
+                  <TableCell className="text-right py-2">
+                    {row.entradas > 0 ? (
+                      <span className="font-mono text-xs text-success flex items-center justify-end gap-1">
+                        <ArrowUp className="w-3 h-3" />
+                        {formatCurrency(row.entradas)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/40">—</span>
                     )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground py-2 capitalize">{row.weekday}</TableCell>
-                <TableCell className="text-right py-2">
-                  {row.entradas > 0 ? (
-                    <span className="font-mono text-xs text-success flex items-center justify-end gap-1">
-                      <ArrowUp className="w-3 h-3" />
-                      {formatCurrency(row.entradas)}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground/40">—</span>
+                  </TableCell>
+                  <TableCell className="text-right py-2">
+                    {row.saidas > 0 ? (
+                      <span className="font-mono text-xs text-destructive flex items-center justify-end gap-1">
+                        <ArrowDown className="w-3 h-3" />
+                        {formatCurrency(row.saidas)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/40">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className={cn(
+                    'text-right font-mono text-xs font-semibold py-2',
+                    row.netFlow > 0 ? 'text-success' : row.netFlow < 0 ? 'text-destructive' : 'text-muted-foreground'
+                  )}>
+                    {row.netFlow !== 0 ? (
+                      <>{row.netFlow > 0 ? '+' : ''}{formatCurrency(row.netFlow)}</>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell className={cn(
+                    'text-right font-mono text-xs font-bold py-2',
+                    row.saldo >= 0 ? 'text-foreground' : 'text-destructive'
+                  )}>
+                    {formatCurrency(row.saldo)}
+                  </TableCell>
+                  <TableCell className="text-center text-xs text-muted-foreground py-2">
+                    {row.txCount > 0 ? row.txCount : '—'}
+                  </TableCell>
+                </TableRow>
+                {/* Expanded transaction details */}
+                <AnimatePresence>
+                  {expandedDate === row.date && row.transactions.length > 0 && (
+                    <motion.tr
+                      key={`${row.date}-details`}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="bg-muted/10"
+                    >
+                      <TableCell colSpan={7} className="p-0">
+                        <div className="px-4 py-2 space-y-1">
+                          {row.transactions.map(tx => (
+                            <div
+                              key={tx.id}
+                              className="flex items-center justify-between py-1.5 px-3 rounded-md bg-background/60 border border-border/40"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {tx.type === 'receber' ? (
+                                  <ArrowUp className="w-3 h-3 text-success shrink-0" />
+                                ) : (
+                                  <ArrowDown className="w-3 h-3 text-destructive shrink-0" />
+                                )}
+                                <span className="text-xs font-medium truncate">{tx.description}</span>
+                                <span className="text-[10px] text-muted-foreground truncate hidden sm:inline">
+                                  {tx.counterpart}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <Badge variant="outline" className={cn(
+                                  'text-[9px] h-4 px-1.5',
+                                  tx.status === 'atrasado' && 'border-destructive/50 text-destructive',
+                                  tx.status === 'pendente' && 'border-warning/50 text-warning',
+                                  tx.status === 'previsto' && 'border-muted-foreground/50 text-muted-foreground',
+                                )}>
+                                  {tx.status}
+                                </Badge>
+                                <span className={cn(
+                                  'font-mono text-xs font-semibold',
+                                  tx.type === 'receber' ? 'text-success' : 'text-destructive'
+                                )}>
+                                  {tx.type === 'receber' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </TableCell>
+                    </motion.tr>
                   )}
-                </TableCell>
-                <TableCell className="text-right py-2">
-                  {row.saidas > 0 ? (
-                    <span className="font-mono text-xs text-destructive flex items-center justify-end gap-1">
-                      <ArrowDown className="w-3 h-3" />
-                      {formatCurrency(row.saidas)}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground/40">—</span>
-                  )}
-                </TableCell>
-                <TableCell className={cn(
-                  'text-right font-mono text-xs font-semibold py-2',
-                  row.netFlow > 0 ? 'text-success' : row.netFlow < 0 ? 'text-destructive' : 'text-muted-foreground'
-                )}>
-                  {row.netFlow !== 0 ? (
-                    <>{row.netFlow > 0 ? '+' : ''}{formatCurrency(row.netFlow)}</>
-                  ) : '—'}
-                </TableCell>
-                <TableCell className={cn(
-                  'text-right font-mono text-xs font-bold py-2',
-                  row.saldo >= 0 ? 'text-foreground' : 'text-destructive'
-                )}>
-                  {formatCurrency(row.saldo)}
-                </TableCell>
-                <TableCell className="text-center text-xs text-muted-foreground py-2">
-                  {row.txCount > 0 ? row.txCount : '—'}
-                </TableCell>
-              </TableRow>
+                </AnimatePresence>
+              </>
             ))}
             {/* Totals row */}
             <TableRow className="bg-muted/40 border-t-2">
