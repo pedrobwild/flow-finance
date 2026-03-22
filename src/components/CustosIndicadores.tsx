@@ -532,6 +532,8 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
                 const previous = values[values.length - 2];
                 const variation = previous > 0 ? ((current - previous) / previous) * 100 : 0;
                 const isUp = variation > 0;
+                const upIsGood = kpiDirection[cfg.id] ?? true;
+                const isPositive = upIsGood ? isUp : !isUp;
 
                 return (
                   <Card key={cfg.id} className="border shadow-sm">
@@ -539,7 +541,7 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-medium text-muted-foreground truncate">{cfg.name}</span>
                         <span className={`text-[10px] font-mono font-medium flex items-center gap-0.5 ${
-                          Math.abs(variation) < 1 ? 'text-muted-foreground' : isUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                          Math.abs(variation) < 1 ? 'text-muted-foreground' : isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                         }`}>
                           {isUp ? <TrendingUp className="w-3 h-3" /> : variation < -1 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
                           {Math.abs(variation).toFixed(0)}%
