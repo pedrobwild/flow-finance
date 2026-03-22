@@ -246,7 +246,7 @@ REGRAS DE OUTPUT:
                         },
                         linkTo: {
                           type: "string",
-                          enum: ["/contas-receber", "/contas-pagar", "/obras", "/fluxo", "/simulador"],
+                          enum: ["/receber", "/pagar", "/obras", "/fluxo", "/simulador"],
                           description: "Page to navigate for this action",
                         },
                         prefill: {
