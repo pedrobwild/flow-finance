@@ -690,6 +690,18 @@ export default function ComandoDeGuerra() {
                           </div>
                           <div className="bg-success/5 rounded-lg p-3 text-xs leading-relaxed border border-success/10">{scenario.whatsappMessage}</div>
                         </div>
+
+                        {scenario.formalEmail && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-medium flex items-center gap-1"><Mail className="w-3 h-3" /> Email Formal</span>
+                              <Button variant="ghost" size="sm" className="h-5 px-2 text-[9px] gap-1" onClick={() => copyToClipboard(scenario.formalEmail!)}>
+                                <Copy className="w-3 h-3" /> Copiar
+                              </Button>
+                            </div>
+                            <div className="bg-primary/5 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap border border-primary/10">{scenario.formalEmail}</div>
+                          </div>
+                        )}
                       </div>
                     ))}
 
