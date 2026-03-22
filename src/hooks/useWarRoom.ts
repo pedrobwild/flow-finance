@@ -267,20 +267,8 @@ export function useWarRoom(options: UseWarRoomOptions = {}) {
     }
   }, [error, retried, loading, fetchWarPlan]);
 
-  // === ACTION PREFILL HELPER ===
   const resolveActionPrefill = useCallback((action: WarAction) => {
-    if (!action.prefill) return null;
-    const p = action.prefill;
-    const obraId = p.obraCode ? obras.find(o => o.code === p.obraCode)?.id : undefined;
-    return {
-      type: p.type || ('pagar' as TransactionType),
-      description: p.description,
-      counterpart: p.counterpart,
-      amount: p.amount,
-      category: p.category,
-      notes: p.notes,
-      obraId,
-    };
+    return resolveActionPrefillPure(action, obras);
   }, [obras]);
 
   return {
