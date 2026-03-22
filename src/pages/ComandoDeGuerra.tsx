@@ -571,17 +571,23 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
       )}
 
       {/* === COVERAGE BAR === */}
-      {aiData && !loading && crisis.deficit > 0 && (
+      {aiData && !loading && (crisis.deficit > 0 || isProactive) && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
-              Potencial de recuperação: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span>
+              {isProactive ? (
+                <>Ganho potencial: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span></>
+              ) : (
+                <>Potencial de recuperação: <span className="font-semibold text-foreground">{formatCurrency(aiData.totalRecoverable)}</span></>
+              )}
             </span>
-            <span className={cn('font-bold', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
-              {aiData.coveragePercentage.toFixed(0)}% do gap
-            </span>
+            {!isProactive && (
+              <span className={cn('font-bold', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
+                {aiData.coveragePercentage.toFixed(0)}% do gap
+              </span>
+            )}
           </div>
-          <Progress value={Math.min(100, aiData.coveragePercentage)} className="h-2.5" />
+          {!isProactive && <Progress value={Math.min(100, aiData.coveragePercentage)} className="h-2.5" />}
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
             <span>{completedActions.size}/{aiData.actions.length} ações concluídas</span>
             <span>
