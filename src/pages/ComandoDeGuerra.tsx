@@ -313,7 +313,7 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
     } finally {
       setLoading(false);
     }
-  }, [financialSummary, crisisContext]);
+  }, [financialSummary, crisisContext, isProactive]);
 
   // Auto-fetch on mount
   useEffect(() => {
