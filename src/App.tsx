@@ -45,6 +45,7 @@ const App = () => (
                             <Route path="/receber" element={<ContasReceber />} />
                             <Route path="/fluxo" element={<FluxoCaixa />} />
                             <Route path="/simulador" element={<Simulador />} />
+                            <Route path="/comando-de-guerra" element={<ComandoDeGuerra />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </AppShell>
