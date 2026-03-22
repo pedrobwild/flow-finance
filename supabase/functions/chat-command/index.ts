@@ -423,6 +423,22 @@ ESTILO
           },
         },
       },
+      {
+        type: "function",
+        function: {
+          name: "web_search",
+          description: "Pesquisa na internet para responder perguntas que vão além dos dados financeiros internos. Use para: fontes de crédito alternativas, fintechs, regulamentações, melhores práticas de mercado, estratégias de negócio, fornecedores, e qualquer conhecimento externo. SEMPRE use quando a pergunta não puder ser respondida apenas com os dados do sistema.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "Termo de busca otimizado para a pergunta do usuário. Inclua contexto relevante como 'Brasil', 'construção civil', 'pequena empresa' quando aplicável." },
+              context: { type: "string", description: "Contexto breve da situação financeira da empresa para personalizar a pesquisa" },
+            },
+            required: ["query"],
+            additionalProperties: false,
+          },
+        },
+      },
     ];
 
     // Helper to execute tool calls
