@@ -64,8 +64,8 @@ export default function CashFlowTable() {
 
   const rows = useMemo((): DayRow[] => {
     const data: DayRow[] = [];
-    for (let i = 0; i < 30; i++) {
-      const date = addDays(today, i);
+    for (let i = 0; i < numDays; i++) {
+      const date = addDays(startDate, i);
       const dayDate = new Date(date + 'T12:00:00');
       const dayTxs = transactions.filter(t => t.dueDate === date && t.status !== 'confirmado');
       const entradas = dayTxs.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
@@ -85,7 +85,7 @@ export default function CashFlowTable() {
       });
     }
     return data;
-  }, [transactions, filteredProjectedBalance, today]);
+  }, [transactions, filteredProjectedBalance, today, numDays, startDate]);
 
   const totals = useMemo(() => ({
     entradas: rows.reduce((s, r) => s + r.entradas, 0),
