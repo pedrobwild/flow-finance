@@ -1,14 +1,28 @@
 import { useMemo, useState } from 'react';
 import { useObraFilter } from '@/lib/obra-filter-context';
-import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName, formatDate } from '@/lib/helpers';
+import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName, daysBetween } from '@/lib/helpers';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUp, ArrowDown, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowUp, ArrowDown, ChevronDown, ChevronRight, CalendarIcon } from 'lucide-react';
 import {
   Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
 } from '@/components/ui/table';
 import { Transaction } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+const PERIOD_PRESETS = [
+  { label: '7d', days: 7 },
+  { label: '15d', days: 15 },
+  { label: '30d', days: 30 },
+  { label: '45d', days: 45 },
+  { label: '60d', days: 60 },
+  { label: '90d', days: 90 },
+] as const;
 
 interface DayRow {
   date: string;
@@ -28,6 +42,25 @@ export default function CashFlowTable() {
   const { filteredTransactions: transactions, filteredProjectedBalance } = useObraFilter();
   const today = todayISO();
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState(2); // 30d default
+  const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [isCustom, setIsCustom] = useState(false);
+
+  const numDays = useMemo(() => {
+    if (isCustom && customRange.from && customRange.to) {
+      const fromStr = format(customRange.from, 'yyyy-MM-dd');
+      const toStr = format(customRange.to, 'yyyy-MM-dd');
+      return Math.max(1, daysBetween(fromStr, toStr) + 1);
+    }
+    return PERIOD_PRESETS[selectedPreset].days;
+  }, [isCustom, customRange, selectedPreset]);
+
+  const startDate = useMemo(() => {
+    if (isCustom && customRange.from) {
+      return format(customRange.from, 'yyyy-MM-dd');
+    }
+    return today;
+  }, [isCustom, customRange, today]);
 
   const rows = useMemo((): DayRow[] => {
     const data: DayRow[] = [];
