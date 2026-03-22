@@ -426,7 +426,76 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
         </motion.div>
       ))}
 
-      {/* Summary bar */}
+      {/* 6-Month Trend Charts */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <BarChart3 className="w-3.5 h-3.5" />
+            Evolução 6 Meses
+          </h3>
+          <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => setShowTrends(v => !v)}>
+            {showTrends ? 'Ocultar' : 'Mostrar'}
+          </Button>
+        </div>
+        <AnimatePresence>
+          {showTrends && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 overflow-hidden"
+            >
+              {kpiTrendConfig.map(cfg => {
+                const values = trendData.map(d => d[cfg.id as keyof typeof d] as number);
+                const current = values[values.length - 1];
+                const previous = values[values.length - 2];
+                const variation = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+                const isUp = variation > 0;
+
+                return (
+                  <Card key={cfg.id} className="border shadow-sm">
+                    <CardContent className="p-3 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-medium text-muted-foreground truncate">{cfg.name}</span>
+                        <span className={`text-[10px] font-mono font-medium flex items-center gap-0.5 ${
+                          Math.abs(variation) < 1 ? 'text-muted-foreground' : isUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {isUp ? <TrendingUp className="w-3 h-3" /> : variation < -1 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                          {Math.abs(variation).toFixed(0)}%
+                        </span>
+                      </div>
+                      <p className="text-lg font-bold font-mono">
+                        {cfg.id === 'custo_medio' ? formatCurrency(current) : `${current.toFixed(cfg.decimals)}${cfg.suffix}`}
+                      </p>
+                      <div className="h-[80px] -mx-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={trendData} margin={{ top: 5, right: 5, bottom: 0, left: 5 }}>
+                            <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                            <YAxis hide domain={['auto', 'auto']} />
+                            <RechartsTooltip
+                              contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--background))' }}
+                              formatter={(val: number) => [cfg.id === 'custo_medio' ? formatCurrency(val) : `${val.toFixed(cfg.decimals)}${cfg.suffix}`, cfg.name]}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey={cfg.id}
+                              stroke={cfg.color}
+                              strokeWidth={2}
+                              dot={{ r: 3, fill: cfg.color }}
+                              activeDot={{ r: 5 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       <Card className="border-none shadow-sm bg-muted/30">
         <CardContent className="p-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
