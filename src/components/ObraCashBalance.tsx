@@ -112,40 +112,6 @@ export default function ObraCashBalance({ period }: ObraCashBalanceProps) {
       });
     }
 
-    // Corporativo
-    const corpTxs = transactions.filter(t => !t.obraId);
-    const corpReceived = corpTxs
-      .filter(t => t.type === 'receber' && t.status === 'confirmado')
-      .reduce((s, t) => s + t.amount, 0);
-    const corpPaid = corpTxs
-      .filter(t => t.type === 'pagar' && t.status === 'confirmado')
-      .reduce((s, t) => s + t.amount, 0);
-    const corpNextEntry = corpTxs
-      .filter(t => t.type === 'receber' && t.status !== 'confirmado')
-      .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
-    const corpNextExit = corpTxs
-      .filter(t => t.type === 'pagar' && t.status !== 'confirmado')
-      .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
-
-    result.push({
-      id: null,
-      code: 'CORP',
-      clientName: 'Corporativo (sem obra)',
-      status: 'corporativo',
-      contractValue: 0,
-      totalReceived: corpReceived,
-      totalPaid: corpPaid,
-      balance: corpReceived - corpPaid,
-      receivedPct: 0,
-      pendingPct: 0,
-      overduePct: 0,
-      overdueReceivable: 0,
-      nextEntry: corpNextEntry,
-      nextExit: corpNextExit,
-      obra: null,
-      semaphore: (corpReceived - corpPaid) < 0 ? 'atencao' : 'pode-seguir',
-    });
-
     // Sort: negative balance first, then ascending
     return result.sort((a, b) => a.balance - b.balance);
   }, [obras, transactions]);
