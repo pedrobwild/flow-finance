@@ -283,6 +283,16 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
               </div>
             )}
 
+            {/* S-Curve: Planned vs Actual */}
+            <ObraSCurveChart
+              obraId={obra.id}
+              contractValue={obra.contractValue}
+              budgetTarget={obra.budgetTarget}
+              transactions={obraTxs}
+              expectedStartDate={obra.expectedStartDate}
+              expectedEndDate={obra.expectedEndDate}
+            />
+
             {/* Additional info */}
             {(obra.address || obra.expectedStartDate || obra.notes) && (
               <div className="space-y-2 text-xs border-t pt-4">
