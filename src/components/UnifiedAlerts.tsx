@@ -87,20 +87,7 @@ export default function UnifiedAlerts({ period }: Props) {
       });
     }
 
-    // 3. UPCOMING 3 DAYS
-    const upcoming3 = transactions.filter(t => t.status !== 'confirmado' && t.dueDate > today && t.dueDate <= (period?.to ?? addDays(today, 3)));
-    if (upcoming3.length > 0) {
-      const totalOut = upcoming3.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
-      const totalIn = upcoming3.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
-      result.push({
-        id: 'upcoming-3d',
-        severity: 'info',
-        title: `${upcoming3.length} vencimento(s) em 3 dias`,
-        detail: `Saídas: ${formatCurrency(totalOut)} · Entradas: ${formatCurrency(totalIn)}`,
-        linkTo: '/fluxo',
-        linkLabel: 'Ver fluxo',
-      });
-    }
+
 
     // 4. CASH DRAIN per obra (red)
     activeObras.forEach(obra => {
