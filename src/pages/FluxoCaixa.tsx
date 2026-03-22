@@ -79,15 +79,50 @@ export default function FluxoCaixa() {
   );
   const overduePayablesTotal = overduePayables.reduce((s, t) => s + t.amount, 0);
 
+  // Find earliest confirmed transaction date to show history
+  const historyStartDate = useMemo(() => {
+    const confirmedDates = transactions
+      .filter(t => t.status === 'confirmado' && t.paidAt)
+      .map(t => t.paidAt as string)
+      .sort();
+    const dueDates = transactions
+      .filter(t => t.status === 'confirmado')
+      .map(t => t.dueDate)
+      .sort();
+    const allDates = [...confirmedDates, ...dueDates].filter(Boolean).sort();
+    if (allDates.length === 0) return today;
+    // Show up to 30 days of history max
+    const earliest = allDates[0];
+    const thirtyAgo = addDays(today, -30);
+    return earliest > thirtyAgo ? earliest : thirtyAgo;
+  }, [transactions, today]);
+
   const days: DayRow[] = useMemo(() => {
     const result: DayRow[] = [];
-    for (let i = 0; i < period; i++) {
-      const date = addDays(today, i);
-      const dayTxs = transactions.filter(t => t.status !== 'confirmado' && t.dueDate === date);
-      const entradas = dayTxs.filter(t => t.type === 'receber' && t.status !== 'atrasado').reduce((s, t) => s + t.amount, 0);
+    const startDate = historyStartDate < today ? historyStartDate : today;
+    const endDate = addDays(today, period);
+    let currentDate = startDate;
+
+    while (currentDate < endDate) {
+      const date = currentDate;
+      const isPast = date < today;
+
+      // Past days: show confirmed transactions (history)
+      // Today+future: show pending transactions (projection)
+      const dayTxs = isPast
+        ? transactions.filter(t => t.status === 'confirmado' && (t.paidAt === date || (!t.paidAt && t.dueDate === date)))
+        : transactions.filter(t => {
+            if (t.status === 'confirmado' && (t.paidAt === date || (!t.paidAt && t.dueDate === date))) return true;
+            if (t.status !== 'confirmado' && t.dueDate === date) return true;
+            return false;
+          });
+
+      const entradas = dayTxs.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
       const saidas = dayTxs.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
       const saldoDia = entradas - saidas;
-      const accumulated = filteredProjectedBalance(date);
+      const accumulated = isPast
+        ? 0 // Will be computed below
+        : filteredProjectedBalance(date);
       const dayDate = new Date(date + 'T12:00:00');
       const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
 
@@ -97,9 +132,32 @@ export default function FluxoCaixa() {
         transactions: dayTxs, isToday: date === today, isWeekend,
         txCount: dayTxs.length,
       });
+
+      currentDate = addDays(currentDate, 1);
     }
+
+    // Compute accumulated for past days (backward from current balance)
+    const currentBal = filteredBalance?.amount ?? 0;
+    // Sum all confirmed transactions from today backward to compute past balances
+    const todayIndex = result.findIndex(d => d.date === today);
+    if (todayIndex > 0) {
+      // Walk backward from today
+      let runningBalance = currentBal;
+      for (let i = todayIndex - 1; i >= 0; i--) {
+        // Undo this day's effect to get the balance at end of previous day
+        runningBalance = runningBalance - result[i].entradas + result[i].saidas;
+        result[i].accumulated = runningBalance;
+      }
+      // Now re-walk forward to show end-of-day balances
+      runningBalance = result[0].accumulated;
+      for (let i = 0; i < todayIndex; i++) {
+        runningBalance = runningBalance + result[i].entradas - result[i].saidas;
+        result[i].accumulated = runningBalance;
+      }
+    }
+
     return result;
-  }, [transactions, filteredProjectedBalance, period, today]);
+  }, [transactions, filteredProjectedBalance, filteredBalance, period, today, historyStartDate]);
 
   const finalBalance = days.length > 0 ? days[days.length - 1].accumulated : effectiveInitialBalance;
   const minDay = days.length > 0 ? days.reduce((min, d) => d.accumulated < min.accumulated ? d : min, days[0]) : null;
