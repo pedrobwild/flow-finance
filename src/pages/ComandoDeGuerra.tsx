@@ -1,4 +1,8 @@
 import { useState, useMemo, useCallback } from 'react';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid, ReferenceLine,
+} from 'recharts';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import { formatCurrency, todayISO, daysBetween, getDayMonth } from '@/lib/helpers';
