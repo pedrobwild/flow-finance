@@ -402,6 +402,11 @@ export default function CustosAnalise() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Comparativo Tab */}
+        <TabsContent value="comparativo">
+          <CustosComparativo allTransactions={filteredTransactions} year={year} month={month} />
+        </TabsContent>
       </Tabs>
     </div>
   );
