@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import BalanceHistoryDrawer from '@/components/BalanceHistoryDrawer';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, daysBetween, addDays, getDayMonth } from '@/lib/helpers';
@@ -240,12 +241,15 @@ export default function DashboardKPIs({ period }: Props) {
                     {balanceDateLabel || 'Informar saldo'}
                     {stats.balAge !== null && stats.balAge > 0 && ` (${stats.balAge}d atrás)`}
                   </p>
-                  <Button
-                    size="icon" variant="ghost" className="h-6 w-6 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                    onClick={() => { setBalanceInput(currentBalance?.amount?.toString() || ''); setEditingBalance(true); }}
-                  >
-                    <Edit3 className="w-3 h-3" />
-                  </Button>
+                  <div className="flex items-center gap-0.5">
+                    <BalanceHistoryDrawer />
+                    <Button
+                      size="icon" variant="ghost" className="h-6 w-6 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                      onClick={() => { setBalanceInput(currentBalance?.amount?.toString() || ''); setEditingBalance(true); }}
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="mt-1 space-y-0.5">
