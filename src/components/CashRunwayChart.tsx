@@ -6,14 +6,27 @@ import { motion } from 'framer-motion';
 import { Fuel, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function CashRunwayChart() {
+interface Props {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function CashRunwayChart({ period }: Props) {
   const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
 
+  // Compute horizon from period
+  const horizon = useMemo(() => {
+    if (!period) return 60;
+    const from = new Date(period.from + 'T12:00:00');
+    const to = new Date(period.to + 'T12:00:00');
+    return Math.max(Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)), 7);
+  }, [period]);
+
   const { days, runwayDays, dangerStart, nextReceivable } = useMemo(() => {
-    const HORIZON = 60;
     const points: { date: string; label: string; saldo: number; isToday: boolean }[] = [];
+
+    for (let d = 0; d <= horizon; d++) {
 
     for (let d = 0; d <= HORIZON; d++) {
       const date = addDays(today, d);
