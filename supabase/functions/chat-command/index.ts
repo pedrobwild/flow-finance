@@ -753,6 +753,53 @@ ESTILO
               };
               break;
             }
+            case "web_search": {
+              const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
+              if (!PERPLEXITY_API_KEY) {
+                result = { error: "Pesquisa web não disponível (API key não configurada)" };
+                break;
+              }
+
+              const searchQuery = args.context
+                ? `${args.query} (contexto: empresa de reformas de alto padrão no Brasil, ${args.context})`
+                : args.query;
+
+              const searchResponse = await fetch("https://api.perplexity.ai/chat/completions", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "sonar",
+                  messages: [
+                    {
+                      role: "system",
+                      content: "Você é um assistente de pesquisa financeira especializado em pequenas e médias empresas do setor de construção civil e reformas de alto padrão no Brasil. Responda em português brasileiro com informações práticas, atualizadas e acionáveis. Inclua nomes de instituições, links quando possível, e requisitos específicos.",
+                    },
+                    { role: "user", content: searchQuery },
+                  ],
+                  search_recency_filter: "month",
+                }),
+              });
+
+              if (!searchResponse.ok) {
+                console.error("Perplexity error:", searchResponse.status);
+                result = { error: "Erro na pesquisa web" };
+                break;
+              }
+
+              const searchData = await searchResponse.json();
+              const searchContent = searchData.choices?.[0]?.message?.content || "Sem resultados";
+              const citations = searchData.citations || [];
+
+              result = {
+                search_results: searchContent,
+                sources: citations,
+                query: args.query,
+              };
+              break;
+            }
             default:
               result = { error: `Unknown function: ${fn.name}` };
           }
