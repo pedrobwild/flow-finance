@@ -163,7 +163,7 @@ export default function ObraCashBalance({ period }: ObraCashBalanceProps) {
 
   const bal = currentBalance?.amount ?? 0;
   const balDate = currentBalance?.balanceDate ?? today;
-  const proj30 = projectedBalance(todayISO().replace(/\d{2}$/, '') + '30');
+  const projEnd = projectedBalance(period?.to ?? addDays(today, 30));
 
   function renderNextTx(tx: Transaction | null, type: 'entry' | 'exit') {
     if (!tx) return <span className="text-muted-foreground">—</span>;
