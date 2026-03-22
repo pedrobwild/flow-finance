@@ -48,7 +48,7 @@ REGRA CRÍTICA — ANTECIPAÇÃO vs COBRANÇA:
 - Exemplo CORRETO para antecipação: "Antecipe parcela de 15/06 para antes de 10/05 oferecendo 2% de desconto" (categoria: antecipacao)
 
 REGRAS:
-- 4-8 ações, cada uma com título claro (verbo + nome + valor)
+- Gere TODAS as ações relevantes que identificar nos dados — sem limite de quantidade. Quanto mais ações concretas e com valor real, melhor.
 - Descrição: UMA frase curta explicando por que essa ação importa
 - Steps: quebre cada ação em 2-4 micro-passos concretos que o CEO segue sem pensar. Cada passo começa com verbo imperativo. Ex: "Ligue para Maria", "Diga: se pagar hoje via PIX...", "Se recusar, ofereça parcelamento em 2x"
 - Ordene por impacto real (maior primeiro)
@@ -85,7 +85,7 @@ PRINCÍPIOS:
 - Seja específico com nomes e valores reais dos dados
 
 REGRAS:
-- 4-8 ações proativas, priorizadas por impacto financeiro
+- Gere TODAS as ações proativas que identificar nos dados — sem limite de quantidade. Priorize por impacto financeiro.
 - Descrição: UMA frase curta explicando por que essa ação importa
 - Steps: quebre cada ação em 2-4 micro-passos concretos. Ex: "Ligue para fornecedor X", "Peça extensão de prazo de 30 para 45 dias", "Confirme por email"
 - Use prioridade "preventiva" ou "importante" (não "imediata" a menos que haja atrasados)
