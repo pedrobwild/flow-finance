@@ -446,62 +446,45 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
         </div>
       </div>
 
-      {/* === STATUS BANNER === */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={cn('rounded-xl border-2 p-5', sConfig.bg, sConfig.border)}
-      >
-        <div className="flex-1 min-w-0">
-          {/* Metrics row */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {[
-              { label: 'Saldo Atual', value: formatCurrency(bal), color: bal >= 0 ? 'text-success' : 'text-destructive' },
-              { label: 'Runway', value: crisis.runwayDays !== null ? `${crisis.runwayDays} dias` : '∞', color: crisis.runwayDays !== null && crisis.runwayDays <= 14 ? 'text-destructive' : 'text-foreground' },
-              { label: 'Queima/dia', value: crisis.avgDailyBurn > 0 ? formatCurrency(crisis.avgDailyBurn) : '—', color: 'text-destructive' },
-              { label: 'Recebíveis Atrasados', value: `${formatCurrency(crisis.totalOverdue)} (${crisis.overdueRecCount})`, color: crisis.overdueRecCount > 0 ? 'text-warning' : 'text-muted-foreground' },
-              { label: 'Saídas 30d', value: formatCurrency(crisis.next30Out), color: 'text-destructive' },
-              { label: 'Entradas 30d', value: formatCurrency(crisis.next30In), color: 'text-success' },
-            ].map(m => (
-              <div key={m.label} className="bg-background/60 rounded-lg p-2.5 border border-border/40">
-                <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{m.label}</p>
-                <p className={cn('text-sm font-bold font-mono mt-0.5', m.color)}>{m.value}</p>
-              </div>
-            ))}
+      {/* === CRISIS ALERT (only when relevant) === */}
+      {crisis.negDate && crisis.negDays !== null && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 p-3 rounded-xl bg-destructive/5 border border-destructive/20"
+        >
+          <Flame className="w-4 h-4 text-destructive flex-shrink-0" />
+          <div className="flex-1">
+            <span className="text-sm font-semibold text-destructive">
+              Caixa negativo em {crisis.negDays}d — {formatDateFull(crisis.negDate)}
+            </span>
+            <span className="text-xs text-muted-foreground ml-2">
+              Déficit: {formatCurrency(crisis.deficit)} · Pior ponto: {formatCurrency(crisis.minBal)} em {getDayMonth(crisis.minDate)}
+            </span>
           </div>
-
-          {crisis.negDate && crisis.negDays !== null && (
-            <div className="mt-3 flex items-center gap-3 p-2.5 rounded-lg bg-destructive/5 border border-destructive/15">
-              <Flame className="w-4 h-4 text-destructive flex-shrink-0" />
-              <div className="flex-1">
-                <span className="text-xs font-semibold text-destructive">
-                  Caixa negativo em {crisis.negDays}d — {formatDateFull(crisis.negDate)}
-                </span>
-                <span className="text-[10px] text-muted-foreground ml-2">
-                  Déficit: {formatCurrency(crisis.deficit)} · Pior ponto: {formatCurrency(crisis.minBal)} em {getDayMonth(crisis.minDate)}
-                </span>
-              </div>
-              {aiData && (
-                <div className="text-right flex-shrink-0">
-                  <span className={cn('text-sm font-bold font-mono', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
-                    {aiData.coveragePercentage.toFixed(0)}%
-                  </span>
-                  <p className="text-[8px] text-muted-foreground">cobertura</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {!crisis.negDate && crisis.minBal < bal * 0.3 && (
-            <div className="mt-3 flex items-center gap-3 p-2.5 rounded-lg bg-warning/5 border border-warning/15">
-              <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0" />
-              <span className="text-xs text-muted-foreground">
-                Ponto mais apertado: <span className="font-semibold text-foreground">{formatCurrency(crisis.minBal)}</span> em {getDayMonth(crisis.minDate)} — margem baixa
+          {aiData && (
+            <div className="text-right flex-shrink-0">
+              <span className={cn('text-sm font-bold font-mono', aiData.coveragePercentage >= 100 ? 'text-success' : 'text-warning')}>
+                {aiData.coveragePercentage.toFixed(0)}%
               </span>
+              <p className="text-[9px] text-muted-foreground">cobertura</p>
             </div>
           )}
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
+
+      {!crisis.negDate && crisis.minBal < bal * 0.3 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 p-3 rounded-xl bg-warning/5 border border-warning/20"
+        >
+          <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0" />
+          <span className="text-sm text-muted-foreground">
+            Ponto mais apertado: <span className="font-semibold text-foreground">{formatCurrency(crisis.minBal)}</span> em {getDayMonth(crisis.minDate)} — margem baixa
+          </span>
+        </motion.div>
+      )}
 
       {/* === PROJECTION CHART === */}
       <Card className="card-elevated">
