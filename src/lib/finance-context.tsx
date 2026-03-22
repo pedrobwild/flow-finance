@@ -231,7 +231,15 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       if (actualAmount !== undefined && txType) {
-        const currentAmt = currentBalance?.amount ?? 0;
+        // Fetch the LATEST balance from DB to avoid stale state issues
+        const { data: latestBal } = await supabase
+          .from('cash_balance')
+          .select('amount')
+          .order('balance_date', { ascending: false })
+          .limit(1)
+          .single();
+
+        const currentAmt = latestBal?.amount ?? 0;
         const newBalance = txType === 'receber'
           ? currentAmt + actualAmount
           : currentAmt - actualAmount;
