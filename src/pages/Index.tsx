@@ -61,7 +61,7 @@ export default function Dashboard() {
 
       {/* === ROW 3: ALERTAS UNIFICADOS (due + decision) === */}
       <motion.div {...section(0.12)}>
-        <UnifiedAlerts />
+        <UnifiedAlerts period={period} />
       </motion.div>
 
       {/* === ROW 4: BRIEFING IA (colapsável) === */}
