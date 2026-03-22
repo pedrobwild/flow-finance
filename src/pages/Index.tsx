@@ -52,10 +52,6 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* === ROW 2: AÇÕES IMEDIATAS === */}
-      <motion.div {...section(0.08)}>
-        <TodayTomorrowActions period={period} />
-      </motion.div>
 
       {/* === ROW 3: ALERTAS UNIFICADOS (due + decision) === */}
       <motion.div {...section(0.12)}>
