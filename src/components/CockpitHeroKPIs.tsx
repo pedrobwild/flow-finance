@@ -21,6 +21,7 @@ interface Props {
 }
 
 export default function CockpitHeroKPIs({ period }: Props) {
+  const navigate = useNavigate();
   const { updateCashBalance, currentBalance } = useFinance();
   const { filteredTransactions: transactions, filteredBalance, filteredProjectedBalance } = useObraFilter();
   const { obras } = useObras();
