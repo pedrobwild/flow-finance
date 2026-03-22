@@ -33,7 +33,10 @@ export default function Dashboard() {
             <h1 className="text-lg font-bold tracking-tight">Cockpit Financeiro</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Visão executiva em tempo real</p>
           </div>
-          <DashboardPeriodFilter value={period} onChange={setPeriod} />
+          <div className="flex items-center gap-2">
+            <ExecutiveReportButton />
+            <DashboardPeriodFilter value={period} onChange={setPeriod} />
+          </div>
         </div>
       </motion.div>
 
