@@ -323,6 +323,37 @@ export default function CustosIndicadores({ allTransactions, year, month }: Prop
     { id: 'custo_medio', name: 'Ticket Médio', suffix: '', color: '#64748b', decimals: 0 },
   ];
 
+  // KPIs where "up is good" (true) vs "down is good" (false)
+  const kpiDirection: Record<string, boolean> = {
+    receita_folha: true, margem_operacional: true, cobertura: true,
+    material_receita: false, fixo_total: false, overhead: false,
+    concentracao: false, custo_medio: false,
+  };
+
+  // Detect consecutive decline (2+ months worsening)
+  const declineAlerts = useMemo(() => {
+    if (trendData.length < 3) return [];
+    const alerts: { id: string; name: string; months: number; color: string; suffix: string; decimals: number; values: number[] }[] = [];
+
+    kpiTrendConfig.forEach(cfg => {
+      const vals = trendData.map(d => d[cfg.id as keyof typeof d] as number);
+      const upIsGood = kpiDirection[cfg.id] ?? true;
+      let consecutive = 0;
+
+      for (let i = vals.length - 1; i >= 1; i--) {
+        const worsened = upIsGood ? vals[i] < vals[i - 1] : vals[i] > vals[i - 1];
+        if (worsened && vals[i - 1] !== 0) consecutive++;
+        else break;
+      }
+
+      if (consecutive >= 2) {
+        alerts.push({ id: cfg.id, name: cfg.name, months: consecutive, color: cfg.color, suffix: cfg.suffix, decimals: cfg.decimals, values: vals.slice(-(consecutive + 1)) });
+      }
+    });
+
+    return alerts;
+  }, [trendData]);
+
   return (
     <div className="space-y-6">
       {/* Header + Fetch Button */}
