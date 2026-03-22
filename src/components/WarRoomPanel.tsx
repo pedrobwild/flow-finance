@@ -8,7 +8,7 @@ import {
   Siren, ShieldAlert, ChevronDown, ChevronUp, RefreshCw,
   Phone, Receipt, Pause, ArrowRightLeft, CalendarClock,
   TrendingDown, AlertTriangle, Landmark, HandCoins, Ban,
-  Scissors, Clock, Zap, Sparkles, Plus, ExternalLink,
+  Scissors, Clock, Zap, Sparkles, Plus, ExternalLink, CheckCircle2, Circle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
