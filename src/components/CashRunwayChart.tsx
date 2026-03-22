@@ -95,7 +95,7 @@ export default function CashRunwayChart({ period }: Props) {
           <div className={cn('text-right px-3 py-1.5 rounded-lg', runwayBg)}>
             <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Runway</p>
             <p className={cn('text-lg font-bold leading-tight', runwayColor)}>
-              {runwayDays >= 60 ? '60+' : runwayDays}
+              {runwayDays >= horizon ? `${horizon}+` : runwayDays}
               <span className="text-xs font-medium ml-0.5">dias</span>
             </p>
           </div>

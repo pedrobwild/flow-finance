@@ -8,7 +8,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
-export default function TodayTomorrowActions() {
+interface Props {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function TodayTomorrowActions({ period }: Props) {
   const { confirmTransaction } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
   const today = todayISO();
