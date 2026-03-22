@@ -1,6 +1,7 @@
 import { useState, useMemo, Fragment } from 'react';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import ExportDropdown from '@/components/ExportDropdown';
+import RecurrenceGenerator from '@/components/RecurrenceGenerator';
 import { exportToCSV, exportToExcel, exportToPDF, cashFlowToExportRows } from '@/lib/export-utils';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
