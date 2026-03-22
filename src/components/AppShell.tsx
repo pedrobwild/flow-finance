@@ -24,6 +24,7 @@ const navItems = [
   { label: 'A Receber', icon: ArrowUpCircle, path: '/receber' },
   { label: 'Fluxo', icon: TrendingUp, path: '/fluxo' },
   { label: 'Simulador', icon: Beaker, path: '/simulador' },
+  { label: 'Comando de Guerra', icon: Siren, path: '/comando-de-guerra' },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
