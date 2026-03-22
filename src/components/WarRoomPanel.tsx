@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { formatCurrency, getDayMonth } from '@/lib/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -271,7 +272,15 @@ export default function WarRoomPanel({ period }: WarRoomProps = {}) {
                             )}
                           >
                             <button
-                              onClick={() => toggleCompleted(i)}
+                              onClick={() => {
+                                const wasCompleted = isDone;
+                                toggleCompleted(i);
+                                if (!wasCompleted) {
+                                  toast.success(`Ação concluída: ${action.title}`, {
+                                    description: `Impacto recuperado: ${action.impactLabel}`,
+                                  });
+                                }
+                              }}
                               className="mt-1 flex-shrink-0 transition-colors"
                               title={isDone ? 'Desmarcar' : 'Marcar como concluída'}
                             >
