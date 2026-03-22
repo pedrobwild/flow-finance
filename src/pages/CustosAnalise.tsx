@@ -411,6 +411,11 @@ export default function CustosAnalise() {
         <TabsContent value="comparativo">
           <CustosComparativo allTransactions={filteredTransactions} year={year} month={month} />
         </TabsContent>
+
+        {/* Indicadores Tab */}
+        <TabsContent value="indicadores">
+          <CustosIndicadores allTransactions={filteredTransactions} year={year} month={month} />
+        </TabsContent>
       </Tabs>
     </div>
   );
