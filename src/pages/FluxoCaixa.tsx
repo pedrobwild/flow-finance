@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, ComposedChart, Line } from 'recharts';
+import CashFlowTable from '@/components/CashFlowTable';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 14, filter: 'blur(6px)' },
