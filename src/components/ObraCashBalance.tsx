@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
-import { formatCurrency, todayISO, daysBetween, getDayMonth } from '@/lib/helpers';
+import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth } from '@/lib/helpers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
