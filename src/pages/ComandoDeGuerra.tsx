@@ -487,7 +487,15 @@ export default function ComandoDeGuerra() {
                   isDone ? 'border-border/20' : cn(styles.bg, styles.border),
                 )}>
                   <button
-                    onClick={() => toggleCompleted(i)}
+                    onClick={() => {
+                      const wasCompleted = isDone;
+                      toggleCompleted(i);
+                      if (!wasCompleted) {
+                        toast.success(`Ação concluída: ${action.title}`, {
+                          description: `Impacto recuperado: ${action.impactLabel}`,
+                        });
+                      }
+                    }}
                     className="flex-shrink-0 transition-colors"
                     title={isDone ? 'Desmarcar' : 'Marcar como concluída'}
                   >
