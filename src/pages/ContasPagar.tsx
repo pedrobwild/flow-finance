@@ -362,6 +362,93 @@ export default function ContasPagar() {
       <motion.div {...sect(0.1)}>
         <TransactionTable type="pagar" />
       </motion.div>
+
+      {/* Edit dialog */}
+      <TransactionFormDialog
+        open={showForm}
+        onClose={() => { setShowForm(false); setEditingTx(null); }}
+        transaction={editingTx}
+        defaultType="pagar"
+      />
+
+      {/* Reschedule dialog */}
+      <Dialog open={!!rescheduleTx} onOpenChange={(v) => !v && setRescheduleTx(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reagendar pagamento</DialogTitle>
+            <DialogDescription>
+              Altere a data de vencimento de <strong>{rescheduleTx?.description}</strong>.
+              <span className="block mt-1 text-xs">
+                Vencimento atual: <span className="font-mono font-semibold text-foreground">{rescheduleTx && formatDateFull(rescheduleTx.dueDate)}</span>
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+              Nova data de vencimento
+            </label>
+            <Input
+              type="date"
+              value={rescheduleDate}
+              onChange={(e) => setRescheduleDate(e.target.value)}
+              className="text-sm"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setRescheduleTx(null)}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={!rescheduleDate || rescheduleDate === rescheduleTx?.dueDate}
+              onClick={() => {
+                if (rescheduleTx && rescheduleDate) {
+                  updateTransaction(rescheduleTx.id, { dueDate: rescheduleDate });
+                  setRescheduleTx(null);
+                }
+              }}
+            >
+              <CalendarClock className="w-3.5 h-3.5 mr-1.5" />
+              Reagendar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteConfirm} onOpenChange={(v) => !v && setDeleteConfirm(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Excluir conta a pagar</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir <strong>{deleteConfirm?.description}</strong>?
+              {deleteConfirm && (
+                <span className="block mt-1 text-xs font-mono">
+                  Valor: {formatCurrency(deleteConfirm.amount)} · Venc.: {formatDateFull(deleteConfirm.dueDate)}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (deleteConfirm) {
+                  deleteTransaction(deleteConfirm.id);
+                  setDeleteConfirm(null);
+                }
+              }}
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
