@@ -106,6 +106,11 @@ export default function ContasPagar() {
 
           {/* Row 2: Supplier + metadata */}
           <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1 font-medium">
+              <CalendarDays className="w-3 h-3 shrink-0" />
+              {formatDateFull(tx.dueDate)}
+            </span>
+            <span className="text-muted-foreground/30">·</span>
             {tx.counterpart && (
               <span className="flex items-center gap-1">
                 <Building2 className="w-3 h-3 shrink-0" />
