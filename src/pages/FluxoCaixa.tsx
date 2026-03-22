@@ -34,6 +34,11 @@ export default function FluxoCaixa() {
   const { filteredTransactions: transactions, isFiltered, selectedObraId, filteredBalance, filteredProjectedBalance } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const today = todayISO();
+  const [period, setPeriod] = useState<PeriodRange>({
+    from: todayISO(),
+    to: addDays(todayISO(), 30),
+    label: '30d',
+  });
 
   const selectedObra = useMemo(() => {
     if (!selectedObraId) return null;
