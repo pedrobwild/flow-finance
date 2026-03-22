@@ -78,7 +78,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* === ROW 7: SALDO POR OBRA === */}
-      <ObraCashBalance />
+      <ObraCashBalance period={period} />
     </div>
   );
 }
