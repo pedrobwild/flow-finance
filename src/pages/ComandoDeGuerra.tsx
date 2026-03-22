@@ -301,7 +301,7 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
       } catch { /* optional */ }
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke('war-room', {
-        body: { financialSummary, crisisContext, marketContext },
+        body: { financialSummary, crisisContext, marketContext, mode: isProactive ? 'proactive' : 'crisis' },
       });
 
       if (fnError) throw new Error(fnError.message);
