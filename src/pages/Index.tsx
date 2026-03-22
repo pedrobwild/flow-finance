@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { todayISO, addDays } from '@/lib/helpers';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import DashboardKPIs from '@/components/DashboardKPIs';
-import HealthScoreCompact from '@/components/HealthScoreCompact';
+
 
 import UnifiedAlerts from '@/components/UnifiedAlerts';
 import MorningBriefing from '@/components/MorningBriefing';
