@@ -638,9 +638,15 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
       {aiData && !loading && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-foreground" />
+            {isProactive ? (
+              <Sparkles className="w-4 h-4 text-accent" />
+            ) : (
+              <ShieldAlert className="w-4 h-4 text-foreground" />
+            )}
             <h2 className="text-sm font-bold uppercase tracking-wider">
-              Plano de Ação — {aiData.actions.length} Recomendações
+              {isProactive
+                ? `Oportunidades — ${aiData.actions.length} Sugestões Proativas`
+                : `Plano de Ação — ${aiData.actions.length} Recomendações`}
             </h2>
           </div>
 
