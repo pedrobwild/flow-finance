@@ -3,9 +3,11 @@ import { todayISO, addDays } from '@/lib/helpers';
 import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import CockpitHeroKPIs from '@/components/CockpitHeroKPIs';
 import CashFlowHeroChart from '@/components/CashFlowHeroChart';
+import ExecutiveReportButton from '@/components/ExecutiveReportButton';
 
 import MorningBriefing from '@/components/MorningBriefing';
 import ObraCashBalance from '@/components/ObraCashBalance';
+import CounterpartRiskScore from '@/components/CounterpartRiskScore';
 
 import { motion } from 'framer-motion';
 
@@ -31,7 +33,10 @@ export default function Dashboard() {
             <h1 className="text-lg font-bold tracking-tight">Cockpit Financeiro</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Visão executiva em tempo real</p>
           </div>
-          <DashboardPeriodFilter value={period} onChange={setPeriod} />
+          <div className="flex items-center gap-2">
+            <ExecutiveReportButton />
+            <DashboardPeriodFilter value={period} onChange={setPeriod} />
+          </div>
         </div>
       </motion.div>
 
@@ -53,6 +58,9 @@ export default function Dashboard() {
 
       {/* === SALDO POR OBRA === */}
       <ObraCashBalance period={period} />
+
+      {/* === SCORE DE RISCO === */}
+      <CounterpartRiskScore />
     </div>
   );
 }
