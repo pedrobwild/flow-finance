@@ -1,4 +1,5 @@
 import { useState, useMemo, Fragment } from 'react';
+import DashboardPeriodFilter, { type PeriodRange } from '@/components/DashboardPeriodFilter';
 import ExportDropdown from '@/components/ExportDropdown';
 import { exportToCSV, exportToExcel, exportToPDF, cashFlowToExportRows } from '@/lib/export-utils';
 import { useFinance } from '@/lib/finance-context';
@@ -33,6 +34,11 @@ export default function FluxoCaixa() {
   const { filteredTransactions: transactions, isFiltered, selectedObraId, filteredBalance, filteredProjectedBalance } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const today = todayISO();
+  const [period, setPeriod] = useState<PeriodRange>({
+    from: todayISO(),
+    to: addDays(todayISO(), 30),
+    label: '30d',
+  });
 
   const selectedObra = useMemo(() => {
     if (!selectedObraId) return null;
@@ -254,15 +260,18 @@ export default function FluxoCaixa() {
             )}
           </p>
         </div>
-        <ExportDropdown
-          onCSV={() => exportToCSV(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
-          onExcel={() => exportToExcel(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
-          onPDF={() => {
-            const rows = cashFlowToExportRows(exportDays);
-            const headers = Object.keys(rows[0] || {});
-            exportToPDF('Fluxo de Caixa', headers, rows.map(r => headers.map(h => String(r[h] ?? ''))));
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <DashboardPeriodFilter value={period} onChange={setPeriod} />
+          <ExportDropdown
+            onCSV={() => exportToCSV(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
+            onExcel={() => exportToExcel(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
+            onPDF={() => {
+              const rows = cashFlowToExportRows(exportDays);
+              const headers = Object.keys(rows[0] || {});
+              exportToPDF('Fluxo de Caixa', headers, rows.map(r => headers.map(h => String(r[h] ?? ''))));
+            }}
+          />
+        </div>
       </motion.div>
 
       {/* Quick Status Strip */}
@@ -643,7 +652,7 @@ export default function FluxoCaixa() {
 
           {/* === TABLE TAB === */}
           <TabsContent value="tabela" className="mt-0">
-            <CashFlowTable />
+            <CashFlowTable period={period} />
           </TabsContent>
         </Tabs>
       </motion.div>
