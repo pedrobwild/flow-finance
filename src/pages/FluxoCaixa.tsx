@@ -310,6 +310,9 @@ export default function FluxoCaixa() {
             <TabsTrigger value="analise" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
               <BarChart3 className="w-3.5 h-3.5" /> Análise Mensal
             </TabsTrigger>
+            <TabsTrigger value="tabela" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
+              <List className="w-3.5 h-3.5" /> Tabela 30d
+            </TabsTrigger>
           </TabsList>
 
           {/* === OPERATIONAL TAB === */}
