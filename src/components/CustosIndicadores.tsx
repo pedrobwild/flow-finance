@@ -60,10 +60,38 @@ const CATEGORY_LABELS = {
   'operacional': 'Operacional',
 };
 
+// Helper to compute KPI values for a given month's transactions
+function computeKPIValues(payables: Transaction[], receivables: Transaction[]) {
+  const totalReceita = receivables.reduce((s, t) => s + t.amount, 0);
+  const totalCusto = payables.reduce((s, t) => s + t.amount, 0);
+  const maoDeObra = payables.filter(t => ['Mão de Obra', 'Mão de Obra Terceirizada', 'Salários'].some(c => t.category.includes(c))).reduce((s, t) => s + t.amount, 0);
+  const materiais = payables.filter(t => ['Material', 'Materiais'].some(c => t.category.includes(c))).reduce((s, t) => s + t.amount, 0);
+  const custoFixo = payables.filter(t => ['Aluguel', 'Administrativo', 'Contabilidade', 'Seguros', 'Software'].some(c => t.category.includes(c) || t.costCenter === 'Administrativo')).reduce((s, t) => s + t.amount, 0);
+  const adminCosts = payables.filter(t => ['Administrativo', 'Diretoria', 'Jurídico', 'RH'].includes(t.costCenter)).reduce((s, t) => s + t.amount, 0);
+  const byCounterpart = new Map<string, number>();
+  payables.forEach(t => byCounterpart.set(t.counterpart, (byCounterpart.get(t.counterpart) || 0) + t.amount));
+  const sorted = [...byCounterpart.entries()].sort((a, b) => b[1] - a[1]);
+  const top3Total = sorted.slice(0, 3).reduce((s, [, v]) => s + v, 0);
+
+  return {
+    receita_folha: maoDeObra > 0 ? totalReceita / maoDeObra : 0,
+    margem_operacional: totalReceita > 0 ? ((totalReceita - totalCusto) / totalReceita) * 100 : 0,
+    material_receita: totalReceita > 0 ? (materiais / totalReceita) * 100 : 0,
+    fixo_total: totalCusto > 0 ? (custoFixo / totalCusto) * 100 : 0,
+    overhead: totalReceita > 0 ? (adminCosts / totalReceita) * 100 : 0,
+    custo_medio: payables.length > 0 ? totalCusto / payables.length : 0,
+    cobertura: totalCusto > 0 ? totalReceita / totalCusto : 0,
+    concentracao: totalCusto > 0 ? (top3Total / totalCusto) * 100 : 0,
+  };
+}
+
+const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
 export default function CustosIndicadores({ allTransactions, year, month }: Props) {
   const [benchmarks, setBenchmarks] = useState<Record<string, KPIData['benchmark']>>({});
   const [loading, setLoading] = useState(false);
   const [lastFetch, setLastFetch] = useState<string | null>(null);
+  const [showTrends, setShowTrends] = useState(true);
 
   const { from, to } = getMonthRange(year, month);
 
