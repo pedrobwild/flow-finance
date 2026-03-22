@@ -123,7 +123,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
     : null;
 
   const runwayColor = metrics.runwayDays > 60 ? 'text-success' : metrics.runwayDays > 21 ? 'text-warning' : 'text-destructive';
-  const overdueColor = metrics.overdueRecTotal === 0 ? 'text-success' : metrics.overdueRecTotal < 50000 ? 'text-warning' : 'text-destructive';
+  const entriesColor = metrics.entries === 0 ? 'text-muted-foreground' : metrics.overdueRecTotal > 0 ? 'text-warning' : 'text-success';
   const concentrationColor = !metrics.biggestClient ? 'text-muted-foreground'
     : metrics.surviveIfDelays ? 'text-success' : 'text-destructive';
 
