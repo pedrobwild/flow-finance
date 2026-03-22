@@ -92,6 +92,68 @@ export type Database = {
         }
         Relationships: []
       }
+      negotiations: {
+        Row: {
+          contact_method: string
+          contacted_at: string | null
+          counterpart: string
+          created_at: string
+          id: string
+          notes: string | null
+          original_amount: number
+          original_due_date: string | null
+          proposed_amount: number | null
+          proposed_due_date: string | null
+          resolved_at: string | null
+          result: string
+          strategy: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          contact_method?: string
+          contacted_at?: string | null
+          counterpart?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          original_amount?: number
+          original_due_date?: string | null
+          proposed_amount?: number | null
+          proposed_due_date?: string | null
+          resolved_at?: string | null
+          result?: string
+          strategy?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contact_method?: string
+          contacted_at?: string | null
+          counterpart?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          original_amount?: number
+          original_due_date?: string | null
+          proposed_amount?: number | null
+          proposed_due_date?: string | null
+          resolved_at?: string | null
+          result?: string
+          strategy?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiations_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obra_stages: {
         Row: {
           actual_end_date: string | null

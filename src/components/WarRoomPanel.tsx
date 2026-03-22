@@ -338,7 +338,12 @@ Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.`;
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Link to="/comando-de-guerra" onClick={e => e.stopPropagation()}>
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10">
+                  <ExternalLink className="w-3 h-3" /> Abrir Painel Completo
+                </Button>
+              </Link>
               <Button
                 size="sm" variant="ghost"
                 className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
