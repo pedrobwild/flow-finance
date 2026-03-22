@@ -716,6 +716,21 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
                       {action.description}
                     </p>
 
+                    {/* Timeline indicator for antecipacao actions */}
+                    {action.category === 'antecipacao' && crisis.negDate && !isDone && (
+                      <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-accent/5 border border-accent/15">
+                        <CalendarClock className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 text-[10px] flex-wrap">
+                          <span className="text-muted-foreground">Vencimento original:</span>
+                          <span className="font-semibold text-foreground">{action.deadline.includes('/') ? action.deadline : 'após crise'}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-destructive font-semibold">Crise: {getDayMonth(crisis.negDate)}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-success font-semibold">Antecipar para antes de {getDayMonth(crisis.negDate)}</span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-4 mt-2 flex-wrap">
                       <span className={cn('text-xs font-bold', isDone ? 'text-muted-foreground line-through' : action.impactAmount > 0 ? 'text-success' : 'text-destructive')}>
                         ⚡ {action.impactLabel}
