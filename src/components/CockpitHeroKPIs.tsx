@@ -128,23 +128,21 @@ export default function CockpitHeroKPIs({ period }: Props) {
     ? new Date(filteredBalance.balanceDate + 'T12:00:00').toLocaleDateString('pt-BR')
     : null;
 
-  const runwayColor = metrics.runwayDays > 60 ? 'text-emerald-400' : metrics.runwayDays > 21 ? 'text-amber-300' : 'text-red-400';
-  const overdueColor = metrics.overdueRecTotal === 0 ? 'text-emerald-400' : metrics.overdueRecTotal < 50000 ? 'text-amber-300' : 'text-red-400';
-  const concentrationColor = !metrics.biggestClient ? 'text-white/40'
-    : metrics.surviveIfDelays ? 'text-emerald-400' : 'text-red-400';
+  const runwayColor = metrics.runwayDays > 60 ? 'text-success' : metrics.runwayDays > 21 ? 'text-warning' : 'text-destructive';
+  const overdueColor = metrics.overdueRecTotal === 0 ? 'text-success' : metrics.overdueRecTotal < 50000 ? 'text-warning' : 'text-destructive';
+  const concentrationColor = !metrics.biggestClient ? 'text-muted-foreground'
+    : metrics.surviveIfDelays ? 'text-success' : 'text-destructive';
 
   return (
     <div className="hero-panel p-0">
       <div className="relative z-10 p-5 lg:p-6">
-        {/* Top row: Balance + Mini Chart */}
         <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
-          {/* Left: Balance */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <Wallet className="w-4 h-4 text-white/80" />
-              <span className="text-[11px] font-medium text-white/80 uppercase tracking-wider">Saldo em Conta</span>
+              <Wallet className="w-4 h-4 text-muted-foreground" />
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Saldo em Conta</span>
               {metrics.balAge !== null && metrics.balAge > 3 && (
-                <span className="text-[10px] text-amber-300 flex items-center gap-0.5">
+                <span className="text-[10px] text-warning flex items-center gap-0.5">
                   <Clock className="w-3 h-3" /> {metrics.balAge}d atrás
                 </span>
               )}
@@ -156,27 +154,28 @@ export default function CockpitHeroKPIs({ period }: Props) {
                   value={balanceInput}
                   onChange={e => setBalanceInput(e.target.value)}
                   placeholder="150000"
-                  className="h-9 text-sm flex-1 max-w-[180px] bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  className="h-9 text-sm flex-1 max-w-[180px] bg-background border-border text-foreground placeholder:text-muted-foreground"
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleSaveBalance()}
                 />
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/10" onClick={handleSaveBalance}>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-foreground hover:bg-muted" onClick={handleSaveBalance}>
                   <Check className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-white/80 hover:bg-white/10" onClick={() => setEditingBalance(false)}>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:bg-muted" onClick={() => setEditingBalance(false)}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
             ) : (
               <div className="flex items-baseline gap-3">
-                <p className="text-3xl lg:text-4xl font-bold font-mono tracking-tight text-white">
+                <p className="text-3xl lg:text-4xl font-bold font-mono tracking-tight text-foreground">
                   {!filteredBalance ? '—' : formatCurrency(metrics.bal)}
                 </p>
                 <div className="flex items-center gap-1">
                   <BalanceHistoryDrawer />
                   <Button
-                    size="icon" variant="ghost"
-                    className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10"
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={() => { setBalanceInput(filteredBalance?.amount?.toString() || ''); setEditingBalance(true); }}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -185,25 +184,24 @@ export default function CockpitHeroKPIs({ period }: Props) {
               </div>
             )}
             {balanceDateLabel && (
-              <p className="text-[10px] text-white/60 mt-0.5">Atualizado em {balanceDateLabel}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Atualizado em {balanceDateLabel}</p>
             )}
           </div>
 
-          {/* Right: Mini projection chart */}
           <div className="lg:w-[280px] h-[80px] lg:h-[90px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={metrics.sparkData} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
                 <defs>
                   <linearGradient id="heroGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(160, 84%, 50%)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="hsl(160, 84%, 50%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.24} />
+                    <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <ReferenceLine y={0} stroke="hsl(0, 72%, 60%)" strokeDasharray="3 3" strokeOpacity={0.4} />
+                <ReferenceLine y={0} stroke="hsl(var(--destructive) / 0.45)" strokeDasharray="3 3" />
                 <Area
                   type="monotone"
                   dataKey="v"
-                  stroke="hsl(160, 84%, 60%)"
+                  stroke="hsl(var(--accent))"
                   strokeWidth={2}
                   fill="url(#heroGrad)"
                   dot={false}
@@ -223,123 +221,107 @@ export default function CockpitHeroKPIs({ period }: Props) {
                 />
               </AreaChart>
             </ResponsiveContainer>
-            <p className="text-[9px] text-white/60 text-right -mt-1">Projeção 30 dias</p>
+            <p className="text-[9px] text-muted-foreground text-right -mt-1">Projeção 30 dias</p>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-white/15 my-4 shimmer-line" />
+        <div className="h-px bg-border my-4" />
 
-        {/* Bottom: Actionable R$ KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
-          {/* Runway → Fluxo */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             onClick={() => navigate('/fluxo')}
             className={cn(
-              'bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.12] transition-colors cursor-pointer',
-              metrics.runwayDays <= 21 ? 'border-red-400/40' : 'border-white/[0.12]'
+              'rounded-xl p-3 border bg-muted/40 hover:bg-muted/70 transition-colors cursor-pointer',
+              metrics.runwayDays <= 21 ? 'border-destructive/30' : 'border-border'
             )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-white/80" />
-              <span className="text-[10px] text-white/80 uppercase tracking-wider font-medium">Runway</span>
+              <ShieldAlert className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Runway</span>
             </div>
             <p className={cn('text-2xl font-bold font-mono', runwayColor)}>
               {metrics.runwayDays >= 180 ? '180+' : metrics.runwayDays}
-              <span className="text-sm font-normal text-white/60 ml-1">dias</span>
+              <span className="text-sm font-normal text-muted-foreground ml-1">dias</span>
             </p>
-            <p className="text-[10px] text-white/60 mt-0.5">
-              {metrics.runwayDays >= 60 ? 'Fôlego confortável' : metrics.runwayDays >= 21 ? 'Atenção ao fluxo' : '⚠ Risco de quebra'}
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {metrics.runwayDays >= 60 ? 'Fôlego confortável' : metrics.runwayDays >= 21 ? 'Atenção ao fluxo' : 'Risco de quebra'}
             </p>
           </motion.div>
 
-          {/* Saídas → Contas a Pagar */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
             onClick={() => navigate('/pagar')}
-            className="bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 border border-white/[0.12] hover:bg-white/[0.12] transition-colors cursor-pointer"
+            className="rounded-xl p-3 border border-border bg-muted/40 hover:bg-muted/70 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <ArrowDown className="w-3.5 h-3.5 text-white/80" />
-              <span className="text-[10px] text-white/80 uppercase tracking-wider font-medium">A Pagar ({period.label})</span>
+              <ArrowDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">A Pagar ({period.label})</span>
             </div>
-            <p className="text-2xl font-bold font-mono text-red-300">
+            <p className="text-2xl font-bold font-mono text-destructive">
               {formatCurrency(metrics.exits)}
             </p>
-            <p className="text-[10px] text-white/60 mt-0.5">
-              {metrics.pendingPayCount} conta(s) · Receber: <span className="text-emerald-300 font-medium">{formatCurrency(metrics.entries)}</span>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {metrics.pendingPayCount} conta(s) · Receber: <span className="text-success font-medium">{formatCurrency(metrics.entries)}</span>
             </p>
           </motion.div>
 
-          {/* A Cobrar → Contas a Receber */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             onClick={() => navigate('/receber')}
             className={cn(
-              'bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.12] transition-colors cursor-pointer',
-              metrics.overdueCount > 0 ? 'border-amber-400/40' : 'border-white/[0.12]'
+              'rounded-xl p-3 border bg-muted/40 hover:bg-muted/70 transition-colors cursor-pointer',
+              metrics.overdueCount > 0 ? 'border-warning/30' : 'border-border'
             )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-white/80" />
-              <span className="text-[10px] text-white/80 uppercase tracking-wider font-medium">Inadimplente</span>
+              <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Inadimplente</span>
             </div>
             <p className={cn('text-2xl font-bold font-mono', overdueColor)}>
               {formatCurrency(metrics.overdueRecTotal)}
             </p>
-            <p className="text-[10px] text-white/60 mt-0.5">
-              {metrics.overdueCount > 0
-                ? `${metrics.overdueCount} parcela(s) vencida(s)`
-                : 'Tudo em dia ✓'}
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {metrics.overdueCount > 0 ? `${metrics.overdueCount} parcela(s) vencida(s)` : 'Tudo em dia'}
             </p>
           </motion.div>
 
-          {/* Concentration Risk → Receber */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
             onClick={() => navigate('/receber')}
             className={cn(
-              'bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 border hover:bg-white/[0.12] transition-colors cursor-pointer relative overflow-hidden',
-              !metrics.surviveIfDelays && metrics.biggestClient ? 'border-red-400/50 bg-red-500/[0.08]' : 'border-white/[0.12]'
+              'rounded-xl p-3 border bg-muted/40 hover:bg-muted/70 transition-colors cursor-pointer relative overflow-hidden',
+              !metrics.surviveIfDelays && metrics.biggestClient ? 'border-destructive/30 bg-destructive/5' : 'border-border'
             )}
           >
-            {!metrics.surviveIfDelays && metrics.biggestClient && (
-              <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none" />
-            )}
             <div className="relative z-10">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <TrendingDown className="w-3.5 h-3.5 text-white/80" />
-                <span className="text-[10px] text-white/80 uppercase tracking-wider font-medium">
-                  Teste de Estresse
-                </span>
+                <TrendingDown className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Teste de Estresse</span>
               </div>
               {metrics.biggestClient ? (
                 <>
                   <p className={cn('text-xl font-bold font-mono leading-tight', concentrationColor)}>
-                    {metrics.surviveIfDelays
-                      ? `+${formatCurrency(metrics.surplus)}`
-                      : `-${formatCurrency(metrics.shortfall)}`
-                    }
+                    {metrics.surviveIfDelays ? `+${formatCurrency(metrics.surplus)}` : `-${formatCurrency(metrics.shortfall)}`}
                   </p>
-                  <p className="text-[10px] text-white/70 mt-1 leading-snug">
-                    Se <span className="text-white/90 font-medium">{metrics.biggestClient}</span> atrasar
-                    <span className="text-white/55"> ({formatCurrency(metrics.biggestAmount)} · {Math.round(metrics.concentrationPct)}%)</span>
+                  <p className="text-[10px] text-foreground mt-1 leading-snug">
+                    Se <span className="font-medium">{metrics.biggestClient}</span> atrasar
+                    <span className="text-muted-foreground"> ({formatCurrency(metrics.biggestAmount)} · {Math.round(metrics.concentrationPct)}%)</span>
                   </p>
-                  <p className="text-[9px] mt-0.5 leading-snug">
-                    <span className="text-white/50">Saldo {formatCurrency(metrics.bal)} − 3d contas {formatCurrency(metrics.next3dPayables)}</span>
+                  <p className="text-[9px] mt-0.5 leading-snug text-muted-foreground">
+                    Saldo {formatCurrency(metrics.bal)} − 3d contas {formatCurrency(metrics.next3dPayables)}
                   </p>
                 </>
               ) : (
-                <p className="text-sm text-white/60 mt-1">Sem recebíveis pendentes</p>
+                <p className="text-sm text-muted-foreground mt-1">Sem recebíveis pendentes</p>
               )}
             </div>
           </motion.div>
