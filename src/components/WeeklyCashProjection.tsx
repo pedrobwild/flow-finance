@@ -7,12 +7,9 @@ import {
   CartesianGrid, ReferenceLine, Cell,
 } from 'recharts';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { TrendingDown, TrendingUp, ShieldAlert } from 'lucide-react';
 
 type Granularity = 'dia' | 'semana';
-type DayCount = 15 | 30 | 45;
-type WeekCount = 6 | 8 | 12;
 
 interface DataPoint {
   label: string;
