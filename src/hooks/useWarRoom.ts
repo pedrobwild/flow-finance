@@ -5,6 +5,7 @@ import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, daysBetween, formatDateFull } from '@/lib/helpers';
 import { supabase } from '@/integrations/supabase/client';
 import type { TransactionType } from '@/lib/types';
+import { detectCrisis, buildCrisisContext, resolveActionPrefillPure } from './useWarRoom.logic';
 
 // === TYPES ===
 export interface WarAction {
