@@ -9,7 +9,8 @@ import {
   AlertTriangle, ChevronRight, Calendar, TrendingUp, TrendingDown,
   ArrowDownRight, ArrowUpRight, Wallet, ShieldAlert, CheckCircle2,
   BarChart3, Clock, Building2, LineChart, Table2, ArrowRight,
-  Users, FileText, Phone, Receipt, Target, Flame, ArrowDown, ArrowUp
+  Users, FileText, Phone, Receipt, Target, Flame, ArrowDown, ArrowUp, List
+
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -19,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, ComposedChart, Line } from 'recharts';
+import CashFlowTable from '@/components/CashFlowTable';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 14, filter: 'blur(6px)' },
@@ -307,6 +309,9 @@ export default function FluxoCaixa() {
             </TabsTrigger>
             <TabsTrigger value="analise" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
               <BarChart3 className="w-3.5 h-3.5" /> Análise Mensal
+            </TabsTrigger>
+            <TabsTrigger value="tabela" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
+              <List className="w-3.5 h-3.5" /> Tabela 30d
             </TabsTrigger>
           </TabsList>
 
@@ -634,6 +639,11 @@ export default function FluxoCaixa() {
                 </tbody>
               </table>
             </div>
+          </TabsContent>
+
+          {/* === TABLE TAB === */}
+          <TabsContent value="tabela" className="mt-0">
+            <CashFlowTable />
           </TabsContent>
         </Tabs>
       </motion.div>
