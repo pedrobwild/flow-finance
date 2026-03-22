@@ -226,6 +226,15 @@ REGRAS OPERACIONAIS
 13. Se houver incerteza, declare claramente o que assumiu e como validar
 14. Quando o contexto for ambíguo, pergunte para esclarecer
 15. Após executar ações, resuma o que foi feito
+16. Quando a pergunta for sobre conhecimento externo (fontes de crédito, regulamentações, melhores práticas de mercado, fintechs, fornecedores, estratégias que NÃO estão nos dados internos), USE A FERRAMENTA web_search para pesquisar na internet e fornecer informações atualizadas e precisas
+17. SEMPRE use web_search quando o usuário perguntar sobre:
+    - Fontes alternativas de empréstimo/crédito
+    - Regulamentações, leis, impostos
+    - Fintechs, bancos digitais, linhas de crédito específicas
+    - Melhores práticas do mercado de construção/reformas
+    - Estratégias financeiras genéricas
+    - Qualquer assunto que vá ALÉM dos dados financeiros internos do sistema
+18. Ao usar web_search, COMBINE os resultados da pesquisa com o contexto financeiro da empresa para dar recomendações personalizadas
 
 ═══════════════════════════════════════════
 CENÁRIO: HISTÓRICO RETROATIVO
@@ -410,6 +419,22 @@ ESTILO
               focus: { type: "string", enum: ["geral", "riscos", "oportunidades", "cobranças"], description: "Foco do resumo" },
             },
             required: ["period"],
+            additionalProperties: false,
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: "web_search",
+          description: "Pesquisa na internet para responder perguntas que vão além dos dados financeiros internos. Use para: fontes de crédito alternativas, fintechs, regulamentações, melhores práticas de mercado, estratégias de negócio, fornecedores, e qualquer conhecimento externo. SEMPRE use quando a pergunta não puder ser respondida apenas com os dados do sistema.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "Termo de busca otimizado para a pergunta do usuário. Inclua contexto relevante como 'Brasil', 'construção civil', 'pequena empresa' quando aplicável." },
+              context: { type: "string", description: "Contexto breve da situação financeira da empresa para personalizar a pesquisa" },
+            },
+            required: ["query"],
             additionalProperties: false,
           },
         },
@@ -725,6 +750,53 @@ ESTILO
                 },
                 active_obras: (obras || []).filter((o: any) => o.status === "ativa").length,
                 total_overdue: overdueTx.length,
+              };
+              break;
+            }
+            case "web_search": {
+              const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY");
+              if (!PERPLEXITY_API_KEY) {
+                result = { error: "Pesquisa web não disponível (API key não configurada)" };
+                break;
+              }
+
+              const searchQuery = args.context
+                ? `${args.query} (contexto: empresa de reformas de alto padrão no Brasil, ${args.context})`
+                : args.query;
+
+              const searchResponse = await fetch("https://api.perplexity.ai/chat/completions", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "sonar",
+                  messages: [
+                    {
+                      role: "system",
+                      content: "Você é um assistente de pesquisa financeira especializado em pequenas e médias empresas do setor de construção civil e reformas de alto padrão no Brasil. Responda em português brasileiro com informações práticas, atualizadas e acionáveis. Inclua nomes de instituições, links quando possível, e requisitos específicos.",
+                    },
+                    { role: "user", content: searchQuery },
+                  ],
+                  search_recency_filter: "month",
+                }),
+              });
+
+              if (!searchResponse.ok) {
+                console.error("Perplexity error:", searchResponse.status);
+                result = { error: "Erro na pesquisa web" };
+                break;
+              }
+
+              const searchData = await searchResponse.json();
+              const searchContent = searchData.choices?.[0]?.message?.content || "Sem resultados";
+              const citations = searchData.citations || [];
+
+              result = {
+                search_results: searchContent,
+                sources: citations,
+                query: args.query,
               };
               break;
             }
