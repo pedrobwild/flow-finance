@@ -96,18 +96,9 @@
   }
 
   .hero-panel {
-    background: var(--gradient-hero);
-    box-shadow: var(--shadow-hero);
+    background: hsl(var(--primary));
+    box-shadow: 0 4px 24px -4px hsl(197 70% 16% / 0.15);
     @apply rounded-2xl text-white overflow-hidden relative;
-  }
-
-  .hero-panel::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 20% 50%, hsl(197 68% 40% / 0.3) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, hsl(160 84% 30% / 0.15) 0%, transparent 50%);
-    pointer-events: none;
   }
 
   .stat-value {
