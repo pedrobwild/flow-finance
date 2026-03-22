@@ -37,6 +37,7 @@ interface NegotiationScript {
     savings: number;
     script: string;
     whatsappMessage: string;
+    formalEmail?: string;
   }>;
   objections: Array<{ objection: string; response: string }>;
   tips: string[];
