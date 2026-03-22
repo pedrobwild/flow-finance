@@ -6,6 +6,7 @@ import CashFlowHeroChart from '@/components/CashFlowHeroChart';
 
 import MorningBriefing from '@/components/MorningBriefing';
 import ObraCashBalance from '@/components/ObraCashBalance';
+import CounterpartRiskScore from '@/components/CounterpartRiskScore';
 
 import { motion } from 'framer-motion';
 
