@@ -174,6 +174,7 @@ export default function ChatCommandDrawer() {
       }]);
     } finally {
       setLoading(false);
+      setSearchingWeb(false);
     }
   }, [messages, loading, queryClient]);
 
