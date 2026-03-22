@@ -3,15 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
+import { Transaction } from '@/lib/types';
 import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth, formatDateFull } from '@/lib/helpers';
 import {
   ArrowDownRight, AlertTriangle, Clock, Check, CheckCheck, CalendarDays, Wallet,
-  CreditCard, Tag, Building2, ChevronDown, ChevronUp, FileText
+  CreditCard, Tag, Building2, ChevronDown, ChevronUp, FileText, MoreHorizontal,
+  Pencil, Trash2, CalendarClock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { PRIORITY_LABELS, PRIORITY_CLASSES } from '@/lib/types';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from '@/components/ui/dialog';
+import TransactionFormDialog from '@/components/TransactionFormDialog';
 import TransactionTable from '@/components/TransactionTable';
 
 const sect = (delay: number) => ({
