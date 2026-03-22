@@ -67,21 +67,20 @@ export default function CashFlowTable({ period }: CashFlowTableProps = {}) {
   );
 
   // Sync when external period changes
-  const lastPeriodRef = useMemo(() => period, [period?.from, period?.to, period?.label]);
-  useMemo(() => {
-    if (!lastPeriodRef) return;
-    const idx = PERIOD_PRESETS.findIndex(p => p.label === lastPeriodRef.label);
+  useEffect(() => {
+    if (!period) return;
+    const idx = PERIOD_PRESETS.findIndex(p => p.label === period.label);
     if (idx >= 0) {
       setSelectedPreset(idx);
       setIsCustom(false);
     } else {
       setCustomRange({
-        from: new Date(lastPeriodRef.from + 'T12:00:00'),
-        to: new Date(lastPeriodRef.to + 'T12:00:00'),
+        from: new Date(period.from + 'T12:00:00'),
+        to: new Date(period.to + 'T12:00:00'),
       });
       setIsCustom(true);
     }
-  }, [lastPeriodRef]);
+  }, [period?.from, period?.to, period?.label]);
 
   const numDays = useMemo(() => {
     if (isCustom && customRange.from && customRange.to) {
