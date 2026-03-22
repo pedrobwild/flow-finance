@@ -79,6 +79,13 @@ export default function FluxoCaixa() {
     'Comissão de Vendas', 'Aluguel', 'Contador', 'Seguros',
   ]);
 
+  const isRetroactive = (t: Transaction) => {
+    const desc = (t.description || '').toLowerCase();
+    const notes = (t.notes || '').toLowerCase();
+    return desc.includes('parcelas anteriores') || desc.includes('histórico retroativo') ||
+           notes.includes('retroativ') || notes.includes('parcelas anteriores');
+  };
+
   const monthAnalysis = useMemo(() => {
     interface MonthData {
       label: string; month: string;
@@ -97,7 +104,8 @@ export default function FluxoCaixa() {
       const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
       const label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
 
-      const monthTxs = transactions.filter(t => t.dueDate.startsWith(monthStr));
+      // Exclude retroactive/initialization entries from analysis
+      const monthTxs = transactions.filter(t => t.dueDate.startsWith(monthStr) && !isRetroactive(t));
       const entradas = monthTxs.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
       const saidas = monthTxs.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
       const confirmadas = monthTxs.filter(t => t.status === 'confirmado').reduce((s, t) => s + t.amount, 0);
