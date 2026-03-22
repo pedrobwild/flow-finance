@@ -54,6 +54,9 @@ export default function Dashboard() {
 
       {/* === SALDO POR OBRA === */}
       <ObraCashBalance period={period} />
+
+      {/* === SCORE DE RISCO === */}
+      <CounterpartRiskScore />
     </div>
   );
 }

@@ -262,6 +262,7 @@ export default function FluxoCaixa() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <RecurrenceGenerator />
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
           <ExportDropdown
             onCSV={() => exportToCSV(cashFlowToExportRows(exportDays), 'fluxo-caixa')}
