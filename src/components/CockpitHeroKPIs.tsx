@@ -275,14 +275,16 @@ export default function CockpitHeroKPIs({ period }: Props) {
             )}
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Inadimplente</span>
+              <ArrowDown className="w-3.5 h-3.5 text-muted-foreground rotate-180" />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">A Receber ({period.label})</span>
             </div>
-            <p className={cn('text-2xl font-bold font-mono', overdueColor)}>
-              {formatCurrency(metrics.overdueRecTotal)}
+            <p className={cn('text-2xl font-bold font-mono', entriesColor)}>
+              {formatCurrency(metrics.entries)}
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {metrics.overdueCount > 0 ? `${metrics.overdueCount} parcela(s) vencida(s)` : 'Tudo em dia'}
+              {metrics.overdueCount > 0
+                ? <span className="text-warning font-medium">{metrics.overdueCount} atrasada(s) · {formatCurrency(metrics.overdueRecTotal)}</span>
+                : 'Tudo em dia'}
             </p>
           </motion.div>
 
