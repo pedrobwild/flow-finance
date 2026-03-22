@@ -28,16 +28,16 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <FinanceProvider>
-          <ObrasProvider>
-            <ObraFilterProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route
-                    path="/*"
-                    element={
-                      <ProtectedRoute>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <FinanceProvider>
+                    <ObrasProvider>
+                      <ObraFilterProvider>
                         <AppShell>
                           <Routes>
                             <Route path="/" element={<Index />} />
@@ -51,14 +51,14 @@ const App = () => (
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </AppShell>
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
-              </BrowserRouter>
-            </ObraFilterProvider>
-          </ObrasProvider>
-        </FinanceProvider>
+                      </ObraFilterProvider>
+                    </ObrasProvider>
+                  </FinanceProvider>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
