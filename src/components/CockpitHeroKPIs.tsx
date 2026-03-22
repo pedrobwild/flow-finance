@@ -104,7 +104,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
       pendingPayCount,
       // Concentration
       biggestClient, biggestAmount, concentrationPct,
-      tomorrowPayables, next3dPayables,
+      periodPayables,
       surviveIfDelays, shortfall, surplus, balAfterBills,
       clientCount: byClient.size,
     };
