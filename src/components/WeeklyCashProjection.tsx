@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, getWeekdayName } from '@/lib/helpers';
@@ -7,12 +7,9 @@ import {
   CartesianGrid, ReferenceLine, Cell,
 } from 'recharts';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { TrendingDown, TrendingUp, ShieldAlert } from 'lucide-react';
 
 type Granularity = 'dia' | 'semana';
-type DayCount = 15 | 30 | 45;
-type WeekCount = 6 | 8 | 12;
 
 interface DataPoint {
   label: string;
@@ -34,24 +31,18 @@ export default function WeeklyCashProjection({ period: globalPeriod }: Props) {
   const { currentBalance } = useFinance();
   const { filteredTransactions, filteredProjectedBalance, filteredBalance } = useObraFilter();
   const today = todayISO();
-  const [granularity, setGranularity] = useState<Granularity>('dia');
-  const [days, setDays] = useState<DayCount>(30);
-  const [weeks, setWeeks] = useState<WeekCount>(6);
 
-  // Sync days with global period
-  useEffect(() => {
-    if (!globalPeriod) return;
+  // Derive granularity and count directly from global period
+  const periodDays = useMemo(() => {
+    if (!globalPeriod) return 30;
     const from = new Date(globalPeriod.from + 'T12:00:00');
     const to = new Date(globalPeriod.to + 'T12:00:00');
-    const diff = Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
-    if (granularity === 'dia') {
-      const closest = ([15, 30, 45] as const).reduce((a, b) => Math.abs(b - diff) < Math.abs(a - diff) ? b : a);
-      setDays(closest);
-    } else {
-      const closest = ([6, 8, 12] as const).reduce((a, b) => Math.abs(b - Math.ceil(diff / 7)) < Math.abs(a - Math.ceil(diff / 7)) ? b : a);
-      setWeeks(closest);
-    }
-  }, [globalPeriod, granularity]);
+    return Math.max(1, Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)));
+  }, [globalPeriod]);
+
+  const granularity: Granularity = periodDays > 30 ? 'semana' : 'dia';
+  const days = periodDays;
+  const weeks = Math.ceil(periodDays / 7);
 
   const baseBalance = filteredBalance?.amount ?? currentBalance?.amount ?? 0;
 
@@ -190,40 +181,9 @@ export default function WeeklyCashProjection({ period: globalPeriod }: Props) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Granularity toggle */}
-            <div className="flex items-center bg-muted rounded-md p-0.5">
-              <Button
-                size="sm"
-                variant={granularity === 'dia' ? 'default' : 'ghost'}
-                className="h-6 px-2 text-[10px]"
-                onClick={() => setGranularity('dia')}
-              >
-                Dia
-              </Button>
-              <Button
-                size="sm"
-                variant={granularity === 'semana' ? 'default' : 'ghost'}
-                className="h-6 px-2 text-[10px]"
-                onClick={() => setGranularity('semana')}
-              >
-                Semana
-              </Button>
-            </div>
-            {/* Period selector */}
-            <div className="flex items-center gap-1">
-              {granularity === 'dia'
-                ? ([15, 30, 45] as const).map(d => (
-                    <Button key={d} size="sm" variant={days === d ? 'default' : 'ghost'} className="h-7 px-2.5 text-xs" onClick={() => setDays(d)}>
-                      {d}d
-                    </Button>
-                  ))
-                : ([6, 8, 12] as const).map(w => (
-                    <Button key={w} size="sm" variant={weeks === w ? 'default' : 'ghost'} className="h-7 px-2.5 text-xs" onClick={() => setWeeks(w)}>
-                      {w}s
-                    </Button>
-                  ))
-              }
-            </div>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium">
+              {granularity === 'dia' ? `${days}d` : `${weeks}sem`} · {granularity === 'dia' ? 'Diário' : 'Semanal'}
+            </span>
           </div>
         </div>
 
