@@ -416,11 +416,19 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <Siren className={cn('w-5 h-5', sConfig.color)} />
-            <h1 className="text-lg font-bold tracking-tight">Comando de Guerra</h1>
+            {isProactive ? (
+              <Shield className={cn('w-5 h-5', 'text-success')} />
+            ) : (
+              <Siren className={cn('w-5 h-5', sConfig.color)} />
+            )}
+            <h1 className="text-lg font-bold tracking-tight">
+              {isProactive ? 'Comando Estratégico' : 'Comando de Guerra'}
+            </h1>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Análise completa da IA — tudo que você pode fazer para proteger o caixa
+            {isProactive
+              ? 'Caixa saudável — oportunidades de otimização e proteção identificadas pela IA'
+              : 'Análise completa da IA — tudo que você pode fazer para proteger o caixa'}
           </p>
         </div>
         <div className="flex items-center gap-2">
