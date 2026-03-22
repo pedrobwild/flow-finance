@@ -184,40 +184,9 @@ export default function WeeklyCashProjection({ period: globalPeriod }: Props) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Granularity toggle */}
-            <div className="flex items-center bg-muted rounded-md p-0.5">
-              <Button
-                size="sm"
-                variant={granularity === 'dia' ? 'default' : 'ghost'}
-                className="h-6 px-2 text-[10px]"
-                onClick={() => setGranularity('dia')}
-              >
-                Dia
-              </Button>
-              <Button
-                size="sm"
-                variant={granularity === 'semana' ? 'default' : 'ghost'}
-                className="h-6 px-2 text-[10px]"
-                onClick={() => setGranularity('semana')}
-              >
-                Semana
-              </Button>
-            </div>
-            {/* Period selector */}
-            <div className="flex items-center gap-1">
-              {granularity === 'dia'
-                ? ([15, 30, 45] as const).map(d => (
-                    <Button key={d} size="sm" variant={days === d ? 'default' : 'ghost'} className="h-7 px-2.5 text-xs" onClick={() => setDays(d)}>
-                      {d}d
-                    </Button>
-                  ))
-                : ([6, 8, 12] as const).map(w => (
-                    <Button key={w} size="sm" variant={weeks === w ? 'default' : 'ghost'} className="h-7 px-2.5 text-xs" onClick={() => setWeeks(w)}>
-                      {w}s
-                    </Button>
-                  ))
-              }
-            </div>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium">
+              {granularity === 'dia' ? `${days}d` : `${weeks}sem`} · {granularity === 'dia' ? 'Diário' : 'Semanal'}
+            </span>
           </div>
         </div>
 
