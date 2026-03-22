@@ -70,7 +70,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* === ROW 5: RUNWAY === */}
-      <CashRunwayChart />
+      <CashRunwayChart period={period} />
 
       {/* === ROW 6: PROJEÇÃO SEMANAL === */}
       <motion.div {...section(0.24)}>
