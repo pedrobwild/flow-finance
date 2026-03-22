@@ -8,7 +8,7 @@ import { formatCurrency, todayISO, daysBetween, addDays } from '@/lib/helpers';
 import { motion } from 'framer-motion';
 import {
   Wallet, ShieldAlert, TrendingDown, Clock, Edit3, Check, X,
-  AlertTriangle, ArrowDown, ArrowUp, Target,
+  AlertTriangle, ArrowDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
