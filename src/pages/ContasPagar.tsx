@@ -76,7 +76,7 @@ export default function ContasPagar() {
   };
 
   const confirmAll = (txs: typeof transactions) => {
-    txs.forEach(t => confirmTransaction(t.id));
+    txs.forEach(t => confirmTransaction(t.id, t.amount, t.type));
   };
 
   const renderTxCard = (tx: typeof transactions[0], showDate = false) => {
@@ -173,7 +173,7 @@ export default function ContasPagar() {
             size="icon"
             variant="ghost"
             className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90 hover:bg-success/10"
-            onClick={() => confirmTransaction(tx.id)}
+            onClick={() => confirmTransaction(tx.id, tx.amount, tx.type)}
             title="Confirmar pagamento"
           >
             <Check className="w-4 h-4 text-success" />
