@@ -40,7 +40,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* === WAR ROOM (when negative cash projected) === */}
-      <WarRoomPanel />
+      <WarRoomPanel period={period} />
 
       {/* === ROW 1: KPIs + HEALTH (números primeiro) === */}
       <motion.div {...section(0.04)}>
@@ -56,12 +56,12 @@ export default function Dashboard() {
 
       {/* === ROW 2: AÇÕES IMEDIATAS === */}
       <motion.div {...section(0.08)}>
-        <TodayTomorrowActions />
+        <TodayTomorrowActions period={period} />
       </motion.div>
 
       {/* === ROW 3: ALERTAS UNIFICADOS (due + decision) === */}
       <motion.div {...section(0.12)}>
-        <UnifiedAlerts />
+        <UnifiedAlerts period={period} />
       </motion.div>
 
       {/* === ROW 4: BRIEFING IA (colapsável) === */}
@@ -70,15 +70,15 @@ export default function Dashboard() {
       </motion.div>
 
       {/* === ROW 5: RUNWAY === */}
-      <CashRunwayChart />
+      <CashRunwayChart period={period} />
 
       {/* === ROW 6: PROJEÇÃO SEMANAL === */}
       <motion.div {...section(0.24)}>
-        <WeeklyCashProjection />
+        <WeeklyCashProjection period={period} />
       </motion.div>
 
       {/* === ROW 7: SALDO POR OBRA === */}
-      <ObraCashBalance />
+      <ObraCashBalance period={period} />
     </div>
   );
 }

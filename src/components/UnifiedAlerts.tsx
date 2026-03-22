@@ -23,7 +23,11 @@ interface UnifiedAlert {
   badge?: string;
 }
 
-export default function UnifiedAlerts() {
+interface Props {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function UnifiedAlerts({ period }: Props) {
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const { confirmTransaction, currentBalance } = useFinance();
@@ -83,7 +87,7 @@ export default function UnifiedAlerts() {
     }
 
     // 3. UPCOMING 3 DAYS
-    const upcoming3 = transactions.filter(t => t.status !== 'confirmado' && t.dueDate > today && t.dueDate <= addDays(today, 3));
+    const upcoming3 = transactions.filter(t => t.status !== 'confirmado' && t.dueDate > today && t.dueDate <= (period?.to ?? addDays(today, 3)));
     if (upcoming3.length > 0) {
       const totalOut = upcoming3.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
       const totalIn = upcoming3.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);

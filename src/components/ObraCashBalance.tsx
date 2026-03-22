@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
-import { formatCurrency, todayISO, daysBetween, getDayMonth } from '@/lib/helpers';
+import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth } from '@/lib/helpers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -39,7 +39,11 @@ const section = (delay: number) => ({
   transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
-export default function ObraCashBalance() {
+interface ObraCashBalanceProps {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function ObraCashBalance({ period }: ObraCashBalanceProps) {
   const { obras, getObraFinancials } = useObras();
   const { transactions, currentBalance, projectedBalance } = useFinance();
   const today = todayISO();
@@ -159,7 +163,7 @@ export default function ObraCashBalance() {
 
   const bal = currentBalance?.amount ?? 0;
   const balDate = currentBalance?.balanceDate ?? today;
-  const proj30 = projectedBalance(todayISO().replace(/\d{2}$/, '') + '30');
+  const projEnd = projectedBalance(period?.to ?? addDays(today, 30));
 
   function renderNextTx(tx: Transaction | null, type: 'entry' | 'exit') {
     if (!tx) return <span className="text-muted-foreground">—</span>;
@@ -365,7 +369,7 @@ export default function ObraCashBalance() {
               </span>
               <span>·</span>
               <span>
-                Saldo projetado 30d: <span className="font-medium text-foreground">{formatCurrency(proj30)}</span>
+                Saldo projetado ({period?.label ?? '30d'}): <span className="font-medium text-foreground">{formatCurrency(projEnd)}</span>
               </span>
             </div>
           </CardContent>

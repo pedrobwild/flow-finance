@@ -69,7 +69,11 @@ const effortLabels = {
   alto: { text: '🔧 Complexo', className: 'text-destructive' },
 };
 
-export default function WarRoomPanel() {
+interface WarRoomProps {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function WarRoomPanel({ period }: WarRoomProps = {}) {
   const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const { transactions: allTransactions, currentBalance: globalBalance, projectedBalance: globalProjected } = useFinance();

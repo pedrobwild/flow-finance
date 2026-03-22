@@ -6,16 +6,27 @@ import { motion } from 'framer-motion';
 import { Fuel, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function CashRunwayChart() {
+interface Props {
+  period?: { from: string; to: string; label: string };
+}
+
+export default function CashRunwayChart({ period }: Props) {
   const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
 
+  // Compute horizon from period
+  const horizon = useMemo(() => {
+    if (!period) return 60;
+    const from = new Date(period.from + 'T12:00:00');
+    const to = new Date(period.to + 'T12:00:00');
+    return Math.max(Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)), 7);
+  }, [period]);
+
   const { days, runwayDays, dangerStart, nextReceivable } = useMemo(() => {
-    const HORIZON = 60;
     const points: { date: string; label: string; saldo: number; isToday: boolean }[] = [];
 
-    for (let d = 0; d <= HORIZON; d++) {
+    for (let d = 0; d <= horizon; d++) {
       const date = addDays(today, d);
       const saldo = projectedBalance(date);
       points.push({
@@ -28,7 +39,7 @@ export default function CashRunwayChart() {
 
     // Find runway (first day saldo <= 0)
     const firstNegative = points.findIndex(p => p.saldo <= 0);
-    const runway = firstNegative === -1 ? HORIZON : firstNegative;
+    const runway = firstNegative === -1 ? horizon : firstNegative;
 
     // Find danger zone start (saldo < 20% of current balance)
     const threshold = bal * 0.2;
@@ -41,7 +52,7 @@ export default function CashRunwayChart() {
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
 
     return { days: points, runwayDays: runway, dangerStart: dangerDate, nextReceivable: nextRec };
-  }, [transactions, currentBalance, projectedBalance, today, bal]);
+  }, [transactions, currentBalance, projectedBalance, today, bal, horizon]);
 
   const minSaldo = Math.min(...days.map(d => d.saldo));
   const maxSaldo = Math.max(...days.map(d => d.saldo));
@@ -66,7 +77,7 @@ export default function CashRunwayChart() {
           </div>
           <div>
             <h3 className="text-sm font-bold tracking-tight">Runway de Caixa</h3>
-            <p className="text-[10px] text-muted-foreground">Projeção dos próximos 60 dias</p>
+            <p className="text-[10px] text-muted-foreground">Projeção dos próximos {horizon} dias</p>
           </div>
         </div>
 
@@ -82,7 +93,7 @@ export default function CashRunwayChart() {
           <div className={cn('text-right px-3 py-1.5 rounded-lg', runwayBg)}>
             <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Runway</p>
             <p className={cn('text-lg font-bold leading-tight', runwayColor)}>
-              {runwayDays >= 60 ? '60+' : runwayDays}
+              {runwayDays >= horizon ? `${horizon}+` : runwayDays}
               <span className="text-xs font-medium ml-0.5">dias</span>
             </p>
           </div>
