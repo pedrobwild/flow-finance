@@ -78,6 +78,18 @@ ESTRUTURA DOS SCRIPTS
 - Incluir valor e data exatos
 - Terminar com pergunta que convida resposta
 
+**Email formal** deve seguir:
+1. **Assunto**: Claro e profissional (ex: "Proposta de renegociação - [Empresa] / NF [número]")
+2. **Saudação**: Formal ("Prezado(a) Sr(a). [Nome],")
+3. **Contexto**: 1-2 parágrafos explicando a situação com dados concretos
+4. **Proposta**: Parágrafo dedicado com valor, data e condições específicas
+5. **Contrapartida**: O que oferece em troca (fidelização, volume, antecipação futura)
+6. **Fechamento**: Solicite confirmação formal e disponibilize-se para reunião
+7. **Assinatura**: Nome completo, cargo, empresa, telefone
+- Tom: corporativo, respeitoso, sem informalidade
+- Extensão: 3-5 parágrafos (nem curto demais nem prolixo)
+- Deve poder ser enviado como está, sem edições
+
 ═══════════════════════════════════════════
 REGRAS
 ═══════════════════════════════════════════
