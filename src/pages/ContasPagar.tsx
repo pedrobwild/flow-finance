@@ -8,7 +8,7 @@ import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth, formatDate
 import {
   ArrowDownRight, AlertTriangle, Clock, Check, CheckCheck, CalendarDays, Wallet,
   CreditCard, Tag, Building2, ChevronDown, ChevronUp, FileText, MoreHorizontal,
-  Pencil, Trash2, CalendarClock
+  Pencil, Trash2, CalendarClock, RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,7 @@ export default function ContasPagar() {
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [rescheduleTx, setRescheduleTx] = useState<Transaction | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
+  const [refundTx, setRefundTx] = useState<Transaction | null>(null);
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -195,6 +196,10 @@ export default function ContasPagar() {
               <DropdownMenuItem onClick={() => { setEditingTx(tx); setShowForm(true); }}>
                 <Pencil className="w-3.5 h-3.5 mr-2" />
                 Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRefundTx(tx)}>
+                <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                Reembolso
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -369,6 +374,22 @@ export default function ContasPagar() {
         onClose={() => { setShowForm(false); setEditingTx(null); }}
         transaction={editingTx}
         defaultType="pagar"
+      />
+
+      {/* Refund dialog */}
+      <TransactionFormDialog
+        open={!!refundTx}
+        onClose={() => setRefundTx(null)}
+        transaction={null}
+        defaultType="receber"
+        defaultObraId={refundTx?.obraId || undefined}
+        prefill={{
+          description: `Reembolso: ${refundTx?.description || ''}`,
+          counterpart: refundTx?.counterpart || '',
+          amount: refundTx?.amount || 0,
+          category: 'Reembolso',
+          notes: `Reembolso ref. conta a pagar: ${refundTx?.description || ''}`,
+        }}
       />
 
       {/* Reschedule dialog */}
