@@ -640,6 +640,11 @@ export default function FluxoCaixa() {
               </table>
             </div>
           </TabsContent>
+
+          {/* === TABLE TAB === */}
+          <TabsContent value="tabela" className="mt-0">
+            <CashFlowTable />
+          </TabsContent>
         </Tabs>
       </motion.div>
     </div>
