@@ -148,7 +148,12 @@ REGRAS:
                         },
                         description: {
                           type: "string",
-                          description: "Detailed explanation with specific names, values, dates and reasoning (2-3 sentences) in Portuguese",
+                          description: "ONE sentence explaining why this action matters. Keep it short and direct. In Portuguese.",
+                        },
+                        steps: {
+                          type: "array",
+                          description: "Break complex actions into 2-4 concrete micro-steps the CEO can follow. Each step starts with a verb. E.g. 'Ligue para Maria', 'Diga: se pagar hoje...', 'Se recusar, ofereça...'",
+                          items: { type: "string" },
                         },
                         impactAmount: {
                           type: "number",
