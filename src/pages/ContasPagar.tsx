@@ -76,7 +76,7 @@ export default function ContasPagar() {
   };
 
   const confirmAll = (txs: typeof transactions) => {
-    txs.forEach(t => confirmTransaction(t.id));
+    txs.forEach(t => confirmTransaction(t.id, t.amount, t.type));
   };
 
   const renderTxCard = (tx: typeof transactions[0], showDate = false) => {
