@@ -38,6 +38,7 @@ function rowToStage(row: any): ObraStage {
   return {
     id: row.id,
     name: row.name,
+    supplier: row.supplier || '',
     estimatedValue: Number(row.estimated_value),
     estimatedStartDate: row.estimated_start_date,
     estimatedEndDate: row.estimated_end_date,
