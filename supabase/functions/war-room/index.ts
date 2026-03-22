@@ -86,6 +86,8 @@ PRINCÍPIOS:
 
 REGRAS:
 - 4-8 ações proativas, priorizadas por impacto financeiro
+- Descrição: UMA frase curta explicando por que essa ação importa
+- Steps: quebre cada ação em 2-4 micro-passos concretos. Ex: "Ligue para fornecedor X", "Peça extensão de prazo de 30 para 45 dias", "Confirme por email"
 - Use prioridade "preventiva" ou "importante" (não "imediata" a menos que haja atrasados)
 - Inclua prefill para ações que envolvam criar transações
 - Calcule o ganho total se todas forem executadas`;
