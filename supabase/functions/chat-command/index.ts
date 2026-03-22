@@ -853,8 +853,15 @@ ESTILO
     // Build the messages for the streaming call
     let streamMessages: any[];
     let actionsExecuted: string[] = [];
+    let toolStatusEvents: string[] = [];
 
     if (choice?.tool_calls?.length) {
+      // Detect which tools will be called and prepare status events
+      const toolNames = choice.tool_calls.map((tc: any) => tc.function.name);
+      if (toolNames.includes("web_search")) {
+        toolStatusEvents.push("web_search");
+      }
+
       const { results, actionsExecuted: actions } = await executeToolCalls(choice.tool_calls);
       actionsExecuted = actions;
       streamMessages = [
@@ -909,6 +916,10 @@ ESTILO
 
     const body = new ReadableStream({
       async start(controller) {
+        // Send tool status events (e.g. web_search indicator)
+        for (const toolStatus of toolStatusEvents) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "tool_status", tool: toolStatus })}\n\n`));
+        }
         if (actionsExecuted.length > 0) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "actions", actions: actionsExecuted })}\n\n`));
         }

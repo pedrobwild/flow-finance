@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Bot, User, Loader2, Zap, RotateCcw } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Loader2, Zap, RotateCcw, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
@@ -39,6 +39,7 @@ export default function ChatCommandDrawer() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchingWeb, setSearchingWeb] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -62,6 +63,7 @@ export default function ChatCommandDrawer() {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    setSearchingWeb(false);
 
     try {
       const chatHistory = [...messages, userMsg].map(m => ({
@@ -131,12 +133,16 @@ export default function ChatCommandDrawer() {
           try {
             const parsed = JSON.parse(jsonStr);
 
-            if (parsed.type === 'actions') {
+            if (parsed.type === 'tool_status' && parsed.tool === 'web_search') {
+              setSearchingWeb(true);
+            } else if (parsed.type === 'actions') {
               actionsExecuted = parsed.actions;
             } else if (parsed.type === 'delta') {
+              setSearchingWeb(false);
               assistantContent += parsed.content;
               upsertAssistant(assistantContent, actionsExecuted.length > 0 ? actionsExecuted : undefined);
             } else if (parsed.type === 'done') {
+              setSearchingWeb(false);
               // Ensure final state
               if (assistantContent) {
                 upsertAssistant(assistantContent, actionsExecuted.length > 0 ? actionsExecuted : undefined);
@@ -168,6 +174,7 @@ export default function ChatCommandDrawer() {
       }]);
     } finally {
       setLoading(false);
+      setSearchingWeb(false);
     }
   }, [messages, loading, queryClient]);
 
@@ -320,9 +327,23 @@ export default function ChatCommandDrawer() {
                     <Bot className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
                   <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Processando...</span>
+                    <div className="flex flex-col gap-1.5">
+                      {searchingWeb && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="flex items-center gap-2"
+                        >
+                          <Globe className="w-3.5 h-3.5 text-primary animate-pulse" />
+                          <span className="text-xs font-medium text-primary">Pesquisando na web...</span>
+                        </motion.div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {searchingWeb ? 'Analisando resultados...' : 'Processando...'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
