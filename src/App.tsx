@@ -47,6 +47,7 @@ const App = () => (
                             <Route path="/fluxo" element={<FluxoCaixa />} />
                             <Route path="/simulador" element={<Simulador />} />
                             <Route path="/comando-de-guerra" element={<ComandoDeGuerra />} />
+                            <Route path="/custos" element={<CustosAnalise />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </AppShell>
