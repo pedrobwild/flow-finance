@@ -96,9 +96,10 @@
   }
 
   .hero-panel {
-    background: hsl(var(--primary));
-    box-shadow: 0 4px 24px -4px hsl(197 70% 16% / 0.15);
-    @apply rounded-2xl text-white overflow-hidden relative;
+    background: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    box-shadow: 0 8px 30px -8px hsl(var(--primary) / 0.08);
+    @apply rounded-2xl border border-border overflow-hidden relative;
   }
 
   .stat-value {
