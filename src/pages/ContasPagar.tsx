@@ -3,15 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
+import { Transaction } from '@/lib/types';
 import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth, formatDateFull } from '@/lib/helpers';
 import {
   ArrowDownRight, AlertTriangle, Clock, Check, CheckCheck, CalendarDays, Wallet,
-  CreditCard, Tag, Building2, ChevronDown, ChevronUp, FileText
+  CreditCard, Tag, Building2, ChevronDown, ChevronUp, FileText, MoreHorizontal,
+  Pencil, Trash2, CalendarClock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { PRIORITY_LABELS, PRIORITY_CLASSES } from '@/lib/types';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from '@/components/ui/dialog';
+import TransactionFormDialog from '@/components/TransactionFormDialog';
 import TransactionTable from '@/components/TransactionTable';
 
 const sect = (delay: number) => ({
@@ -21,11 +31,16 @@ const sect = (delay: number) => ({
 });
 
 export default function ContasPagar() {
-  const { currentBalance, confirmTransaction } = useFinance();
+  const { currentBalance, confirmTransaction, updateTransaction, deleteTransaction } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras } = useObras();
   const today = todayISO();
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
+  const [rescheduleTx, setRescheduleTx] = useState<Transaction | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -143,8 +158,8 @@ export default function ContasPagar() {
           </div>
         </div>
 
-        {/* Right side: date + amount + action */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Right side: amount + actions */}
+        <div className="flex items-center gap-2 shrink-0">
           {showDate && (
             <span className="text-[11px] text-muted-foreground hidden sm:block font-medium">
               {getDayMonth(tx.dueDate)}
@@ -162,6 +177,35 @@ export default function ContasPagar() {
           >
             <Check className="w-4 h-4 text-success" />
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90"
+              >
+                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => { setRescheduleTx(tx); setRescheduleDate(tx.dueDate); }}>
+                <CalendarClock className="w-3.5 h-3.5 mr-2" />
+                Reagendar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { setEditingTx(tx); setShowForm(true); }}>
+                <Pencil className="w-3.5 h-3.5 mr-2" />
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setDeleteConfirm(tx)}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </motion.div>
     );
@@ -318,6 +362,93 @@ export default function ContasPagar() {
       <motion.div {...sect(0.1)}>
         <TransactionTable type="pagar" />
       </motion.div>
+
+      {/* Edit dialog */}
+      <TransactionFormDialog
+        open={showForm}
+        onClose={() => { setShowForm(false); setEditingTx(null); }}
+        transaction={editingTx}
+        defaultType="pagar"
+      />
+
+      {/* Reschedule dialog */}
+      <Dialog open={!!rescheduleTx} onOpenChange={(v) => !v && setRescheduleTx(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reagendar pagamento</DialogTitle>
+            <DialogDescription>
+              Altere a data de vencimento de <strong>{rescheduleTx?.description}</strong>.
+              <span className="block mt-1 text-xs">
+                Vencimento atual: <span className="font-mono font-semibold text-foreground">{rescheduleTx && formatDateFull(rescheduleTx.dueDate)}</span>
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+              Nova data de vencimento
+            </label>
+            <Input
+              type="date"
+              value={rescheduleDate}
+              onChange={(e) => setRescheduleDate(e.target.value)}
+              className="text-sm"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setRescheduleTx(null)}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={!rescheduleDate || rescheduleDate === rescheduleTx?.dueDate}
+              onClick={() => {
+                if (rescheduleTx && rescheduleDate) {
+                  updateTransaction(rescheduleTx.id, { dueDate: rescheduleDate });
+                  setRescheduleTx(null);
+                }
+              }}
+            >
+              <CalendarClock className="w-3.5 h-3.5 mr-1.5" />
+              Reagendar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteConfirm} onOpenChange={(v) => !v && setDeleteConfirm(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Excluir conta a pagar</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir <strong>{deleteConfirm?.description}</strong>?
+              {deleteConfirm && (
+                <span className="block mt-1 text-xs font-mono">
+                  Valor: {formatCurrency(deleteConfirm.amount)} · Venc.: {formatDateFull(deleteConfirm.dueDate)}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (deleteConfirm) {
+                  deleteTransaction(deleteConfirm.id);
+                  setDeleteConfirm(null);
+                }
+              }}
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
