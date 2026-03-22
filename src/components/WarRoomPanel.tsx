@@ -79,11 +79,32 @@ export default function WarRoomPanel() {
   const [aiData, setAiData] = useState<WarRoomData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completedActions, setCompletedActions] = useState<Set<number>>(() => {
+    try {
+      const saved = localStorage.getItem('war-room-completed');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
   const [txFormOpen, setTxFormOpen] = useState(false);
   const [txFormDefaults, setTxFormDefaults] = useState<{
     type: TransactionType; description?: string; counterpart?: string;
     amount?: number; category?: string; notes?: string; obraId?: string;
   } | null>(null);
+
+  const toggleCompleted = (index: number) => {
+    setCompletedActions(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      localStorage.setItem('war-room-completed', JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  // Reset completed when new AI data loads
+  const clearCompleted = useCallback(() => {
+    setCompletedActions(new Set());
+    localStorage.removeItem('war-room-completed');
+  }, []);
 
   // Crisis detection
   const crisis = useMemo(() => {
