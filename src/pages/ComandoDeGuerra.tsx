@@ -262,6 +262,8 @@ export default function ComandoDeGuerra() {
     return lines.join('\n');
   }, [crisis, obras, allTransactions, bal, globalProjected, today, getObraFinancials]);
 
+  const isProactive = !crisis.negDate && crisis.minBal >= bal * 0.1;
+
   const crisisContext = useMemo(() => {
     if (crisis.negDate) {
       return `O caixa da empresa ficará NEGATIVO em ${crisis.negDays} dias (${formatDateFull(crisis.negDate)}).
@@ -273,13 +275,16 @@ Saídas pendentes até D-Day: ${formatCurrency(crisis.upcomingPayables)}.
 Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.
 Runway estimado: ${crisis.runwayDays ?? '∞'} dias.`;
     }
-    return `O caixa NÃO ficará negativo nos próximos 90 dias, mas o ponto mais apertado será ${formatCurrency(crisis.minBal)} em ${getDayMonth(crisis.minDate)}.
+    return `O caixa NÃO ficará negativo nos próximos 90 dias.
 Saldo atual: ${formatCurrency(crisis.currentBalance)}.
+Ponto mais apertado: ${formatCurrency(crisis.minBal)} em ${getDayMonth(crisis.minDate)}.
 Recebíveis atrasados: ${formatCurrency(crisis.totalOverdue)} (${crisis.overdueRecCount} transações).
 Pagáveis atrasados: ${formatCurrency(crisis.totalOverduePay)} (${crisis.overduePayCount} transações).
 Runway estimado: ${crisis.runwayDays ?? '∞'} dias.
 Queima líquida 30d: ${formatCurrency(crisis.netBurn)}.
-O CEO quer saber o que pode fazer para MELHORAR a situação e PROTEGER o caixa.`;
+Saídas próximos 30d: ${formatCurrency(crisis.next30Out)}.
+Entradas próximos 30d: ${formatCurrency(crisis.next30In)}.
+O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e PROTEGER o caixa.`;
   }, [crisis]);
 
   // === FETCH AI PLAN ===
