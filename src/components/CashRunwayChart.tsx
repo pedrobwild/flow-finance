@@ -79,7 +79,7 @@ export default function CashRunwayChart({ period }: Props) {
           </div>
           <div>
             <h3 className="text-sm font-bold tracking-tight">Runway de Caixa</h3>
-            <p className="text-[10px] text-muted-foreground">Projeção dos próximos 60 dias</p>
+            <p className="text-[10px] text-muted-foreground">Projeção dos próximos {horizon} dias</p>
           </div>
         </div>
 
