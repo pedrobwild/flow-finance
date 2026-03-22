@@ -1,11 +1,9 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { useFinance } from '@/lib/finance-context';
-import { useObras } from '@/lib/obras-context';
-import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth, formatDateFull } from '@/lib/helpers';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,48 +13,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import TransactionFormDialog from '@/components/TransactionFormDialog';
 import type { Transaction, TransactionType } from '@/lib/types';
 import {
   Siren, CheckCircle2, Circle, Phone, MessageSquare, Copy,
-  AlertTriangle, TrendingDown, ArrowRight, ShieldAlert, Clock,
-  Sparkles, Loader2, FileText, BookOpen, Plus, ExternalLink,
+  AlertTriangle, ArrowRight, ShieldAlert, Clock,
+  Sparkles, Loader2, Plus, ExternalLink,
   RefreshCw, Zap, CalendarClock, HandCoins, ArrowLeftRight,
   Scissors, Landmark, ChevronDown, ChevronUp, Shield, Flame,
 } from 'lucide-react';
+import { useWarRoom, priorityStyles, effortLabels, type WarAction } from '@/hooks/useWarRoom';
 
-// === TYPES ===
-interface WarAction {
-  priority: 'imediata' | 'urgente' | 'importante' | 'preventiva';
-  category: 'cobranca' | 'antecipacao' | 'renegociacao' | 'corte' | 'credito' | 'cronograma';
-  title: string;
-  description: string;
-  steps?: string[];
-  impactAmount: number;
-  impactLabel: string;
-  effort: 'baixo' | 'medio' | 'alto';
-  deadline: string;
-  linkTo: string;
-  prefill?: {
-    type?: TransactionType;
-    description?: string;
-    counterpart?: string;
-    amount?: number;
-    category?: string;
-    notes?: string;
-    obraCode?: string;
-  };
-}
-
-interface WarRoomData {
-  summary: string;
-  totalRecoverable: number;
-  coveragePercentage: number;
-  actions: WarAction[];
-}
-
+// === LOCAL TYPES ===
 interface NegotiationScript {
   supplierProfile: string;
   recommendedApproach: string;
@@ -82,36 +51,15 @@ const categoryIcons: Record<string, React.ElementType> = {
   cronograma: CalendarClock,
 };
 
-const priorityStyles = {
-  imediata: { bg: 'bg-destructive/10', border: 'border-destructive/30', text: 'text-destructive', badge: 'bg-destructive text-destructive-foreground' },
-  urgente: { bg: 'bg-warning/10', border: 'border-warning/30', text: 'text-warning', badge: 'bg-warning text-warning-foreground' },
-  importante: { bg: 'bg-accent/10', border: 'border-accent/30', text: 'text-accent', badge: 'bg-accent text-accent-foreground' },
-  preventiva: { bg: 'bg-muted/30', border: 'border-border', text: 'text-muted-foreground', badge: 'bg-muted text-muted-foreground' },
-};
-
-const effortLabels = {
-  baixo: { text: '⚡ Rápido', className: 'text-success' },
-  medio: { text: '⏱ Médio', className: 'text-warning' },
-  alto: { text: '🔧 Complexo', className: 'text-destructive' },
-};
-
 export default function ComandoDeGuerra() {
-  const { transactions: allTransactions, currentBalance: globalBalance, projectedBalance: globalProjected, confirmTransaction } = useFinance();
-  const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
-  const { obras, getObraFinancials } = useObras();
-  const today = todayISO();
+  const { confirmTransaction } = useFinance();
+  const {
+    crisis, isProactive, aiData, loading, error, completedActions,
+    toggleCompleted, fetchWarPlan, resolveActionPrefill, setRetried,
+    today, allTransactions, obras, bal, globalProjected,
+  } = useWarRoom({ mode: 'page' });
 
-  const [aiData, setAiData] = useState<WarRoomData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [completedActions, setCompletedActions] = useState<Set<number>>(() => {
-    try {
-      const saved = localStorage.getItem('war-room-completed');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch { return new Set(); }
-  });
-
-  // Negotiation script
+  // Negotiation script (page-only feature)
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [negotiationScript, setNegotiationScript] = useState<NegotiationScript | null>(null);
   const [loadingScript, setLoadingScript] = useState(false);
@@ -124,258 +72,10 @@ export default function ComandoDeGuerra() {
     amount?: number; category?: string; notes?: string; obraId?: string;
   } | null>(null);
 
-  const bal = globalBalance?.amount ?? 0;
-
-  const toggleCompleted = (index: number) => {
-    setCompletedActions(prev => {
-      const next = new Set(prev);
-      if (next.has(index)) next.delete(index); else next.add(index);
-      localStorage.setItem('war-room-completed', JSON.stringify([...next]));
-      return next;
-    });
-  };
-
-  // === CRISIS DETECTION ===
-  const crisis = useMemo(() => {
-    let negDate: string | null = null;
-    let negDays: number | null = null;
-    let minBal = bal;
-    let minDate = today;
-
-    for (let i = 0; i <= 90; i++) {
-      const date = addDays(today, i);
-      const projected = globalProjected(date);
-      if (projected < minBal) { minBal = projected; minDate = date; }
-      if (projected < 0 && negDate === null) { negDate = date; negDays = i; }
-    }
-
-    const deficit = minBal < 0 ? Math.abs(minBal) : 0;
-    const overdueRec = allTransactions.filter(t => t.type === 'receber' && t.status === 'atrasado');
-    const totalOverdue = overdueRec.reduce((s, t) => s + t.amount, 0);
-    const overduePayables = allTransactions.filter(t => t.type === 'pagar' && t.status === 'atrasado');
-    const totalOverduePay = overduePayables.reduce((s, t) => s + t.amount, 0);
-
-    const upcomingPayables = allTransactions
-      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && (negDate ? t.dueDate <= negDate : t.dueDate <= addDays(today, 30)))
-      .reduce((s, t) => s + t.amount, 0);
-    const pendingReceivables = allTransactions
-      .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && (negDate ? t.dueDate <= negDate : t.dueDate <= addDays(today, 30)))
-      .reduce((s, t) => s + t.amount, 0);
-
-    // Runway
-    const next30Out = allTransactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 30)).reduce((s, t) => s + t.amount, 0);
-    const next30In = allTransactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= addDays(today, 30)).reduce((s, t) => s + t.amount, 0);
-    const netBurn = next30Out - next30In;
-    const avgDaily = netBurn / 30;
-    const runwayDays = avgDaily > 0 && bal > 0 ? Math.floor(bal / avgDaily) : null;
-
-    return {
-      negDate, negDays, minBal, minDate, deficit, currentBalance: bal,
-      totalOverdue, totalOverduePay, upcomingPayables, pendingReceivables,
-      overdueRecCount: overdueRec.length, overduePayCount: overduePayables.length,
-      runwayDays, avgDailyBurn: avgDaily, netBurn, next30Out, next30In,
-      hasCrisis: negDate !== null || minBal < bal * 0.1,
-    };
-  }, [allTransactions, bal, globalProjected, today]);
-
-  // === FINANCIAL SUMMARY FOR AI ===
-  const financialSummary = useMemo(() => {
-    const activeObras = obras.filter(o => o.status === 'ativa');
-    const lines: string[] = [];
-
-    lines.push(`Data: ${today}`);
-    lines.push(`Saldo atual: ${formatCurrency(bal)}`);
-    if (crisis.negDate) {
-      lines.push(`CAIXA NEGATIVO PREVISTO PARA: ${formatDateFull(crisis.negDate)} (${crisis.negDays} dias)`);
-      lines.push(`Déficit projetado: ${formatCurrency(crisis.deficit)}`);
-    } else {
-      lines.push(`Caixa sem previsão de negativo nos próximos 90 dias`);
-      lines.push(`Ponto mínimo: ${formatCurrency(crisis.minBal)} em ${getDayMonth(crisis.minDate)}`);
-    }
-    lines.push(`Runway: ${crisis.runwayDays !== null ? `${crisis.runwayDays} dias` : 'Entradas superam saídas'}`);
-    lines.push('');
-
-    lines.push('=== OBRAS ATIVAS ===');
-    activeObras.forEach(obra => {
-      const fin = getObraFinancials(obra.id);
-      lines.push(`${obra.code} (${obra.clientName}):`);
-      lines.push(`  Contrato: ${formatCurrency(obra.contractValue)} | Recebido: ${formatCurrency(fin.totalReceived)} | Custos: ${formatCurrency(fin.totalPaidCost)}`);
-      lines.push(`  Margem: ${fin.grossMarginPercentage.toFixed(0)}% | Saldo obra: ${formatCurrency(fin.obraNetCashFlow)}`);
-      if (fin.totalOverdueReceivable > 0) lines.push(`  ⚠ Atrasado: ${formatCurrency(fin.totalOverdueReceivable)}`);
-      if (fin.nextReceivable) lines.push(`  Próx entrada: ${formatCurrency(fin.nextReceivable.amount)} em ${getDayMonth(fin.nextReceivable.dueDate)} (${fin.nextReceivable.status})`);
-      if (fin.nextPayable) lines.push(`  Próx saída: ${formatCurrency(fin.nextPayable.amount)} em ${getDayMonth(fin.nextPayable.dueDate)} — ${fin.nextPayable.counterpart || fin.nextPayable.category}`);
-
-      const obraRec = allTransactions.filter(t => t.obraId === obra.id && t.type === 'receber');
-      const withBilling = obraRec.filter(t => t.billingCount > 0);
-      if (withBilling.length > 0) {
-        lines.push(`  📧 Cobranças:`);
-        withBilling.forEach(t => {
-          const dl = daysBetween(today, t.dueDate);
-          lines.push(`    ${formatCurrency(t.amount)} (${t.status}, ${dl > 0 ? `${dl}d` : `${Math.abs(dl)}d atraso`}): ${t.billingCount}x cobrança${t.billingSentAt ? ` (última ${getDayMonth(t.billingSentAt)})` : ''}`);
-        });
-      }
-
-      const futureRec = obraRec.filter(t => t.status !== 'confirmado' && t.dueDate > today).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-      if (futureRec.length > 0) {
-        lines.push(`  📅 Parcelas futuras:`);
-        futureRec.slice(0, 5).forEach(t => {
-          lines.push(`    ${formatCurrency(t.amount)} em ${getDayMonth(t.dueDate)} (${daysBetween(today, t.dueDate)}d)`);
-        });
-      }
-    });
-
-    lines.push('');
-    lines.push('=== FLUXO SEMANAL (6 semanas) ===');
-    for (let w = 0; w < 6; w++) {
-      const ws = addDays(today, w * 7);
-      const we = addDays(today, w * 7 + 6);
-      const out = allTransactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we).reduce((s, t) => s + t.amount, 0);
-      const inc = allTransactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we).reduce((s, t) => s + t.amount, 0);
-      const projEnd = globalProjected(we);
-      lines.push(`S${w + 1} (${getDayMonth(ws)}–${getDayMonth(we)}): -${formatCurrency(out)} / +${formatCurrency(inc)} | Saldo fim: ${formatCurrency(projEnd)}${projEnd < 0 ? ' ⚠ NEGATIVO' : ''}`);
-    }
-
-    const overdue = allTransactions.filter(t => t.status === 'atrasado');
-    if (overdue.length > 0) {
-      lines.push('');
-      lines.push(`=== ATRASADOS (${overdue.length}) ===`);
-      overdue.forEach(t => {
-        const dl = daysBetween(t.dueDate, today);
-        const oRef = t.obraId ? obras.find(o => o.id === t.obraId) : null;
-        lines.push(`${t.type === 'receber' ? '📥' : '📤'} ${formatCurrency(t.amount)} — ${t.description} (${dl}d) ${t.billingCount > 0 ? `[${t.billingCount}x cobrado]` : ''} ${oRef ? `[${oRef.code}]` : ''}`);
-      });
-    }
-
-    if (crisis.negDate) {
-      const payablesBeforeDDay = allTransactions
-        .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= crisis.negDate)
-        .sort((a, b) => b.amount - a.amount);
-      if (payablesBeforeDDay.length > 0) {
-        lines.push('');
-        lines.push(`=== SAÍDAS ATÉ D-DAY (${payablesBeforeDDay.length}, total ${formatCurrency(payablesBeforeDDay.reduce((s, t) => s + t.amount, 0))}) ===`);
-        payablesBeforeDDay.slice(0, 10).forEach(t => {
-          const oRef = t.obraId ? obras.find(o => o.id === t.obraId) : null;
-          lines.push(`${formatCurrency(t.amount)} em ${getDayMonth(t.dueDate)} — ${t.description} (${t.priority}) ${t.counterpart ? `[${t.counterpart}]` : ''} ${oRef ? `[${oRef.code}]` : ''}`);
-        });
-      }
-    }
-
-    return lines.join('\n');
-  }, [crisis, obras, allTransactions, bal, globalProjected, today, getObraFinancials]);
-
-  const isProactive = !crisis.negDate && crisis.minBal >= bal * 0.1;
-
-  const crisisContext = useMemo(() => {
-    if (crisis.negDate) {
-      return `O caixa da empresa ficará NEGATIVO em ${crisis.negDays} dias (${formatDateFull(crisis.negDate)}).
-Déficit projetado: ${formatCurrency(crisis.deficit)}.
-Saldo atual: ${formatCurrency(crisis.currentBalance)}.
-Recebíveis atrasados: ${formatCurrency(crisis.totalOverdue)} (${crisis.overdueRecCount} transações).
-Pagáveis atrasados: ${formatCurrency(crisis.totalOverduePay)} (${crisis.overduePayCount} transações).
-Saídas pendentes até D-Day: ${formatCurrency(crisis.upcomingPayables)}.
-Entradas previstas até D-Day: ${formatCurrency(crisis.pendingReceivables)}.
-Runway estimado: ${crisis.runwayDays ?? '∞'} dias.`;
-    }
-    return `O caixa NÃO ficará negativo nos próximos 90 dias.
-Saldo atual: ${formatCurrency(crisis.currentBalance)}.
-Ponto mais apertado: ${formatCurrency(crisis.minBal)} em ${getDayMonth(crisis.minDate)}.
-Recebíveis atrasados: ${formatCurrency(crisis.totalOverdue)} (${crisis.overdueRecCount} transações).
-Pagáveis atrasados: ${formatCurrency(crisis.totalOverduePay)} (${crisis.overduePayCount} transações).
-Runway estimado: ${crisis.runwayDays ?? '∞'} dias.
-Queima líquida 30d: ${formatCurrency(crisis.netBurn)}.
-Saídas próximos 30d: ${formatCurrency(crisis.next30Out)}.
-Entradas próximos 30d: ${formatCurrency(crisis.next30In)}.
-O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e PROTEGER o caixa.`;
-  }, [crisis]);
-
-  // === FETCH AI PLAN ===
-  const fetchWarPlan = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setCompletedActions(new Set());
-    localStorage.removeItem('war-room-completed');
-    try {
-      let marketContext: string | null = null;
-      try {
-        const { data: marketData } = await supabase.functions.invoke('market-data');
-        if (marketData?.marketContext) marketContext = marketData.marketContext;
-      } catch { /* optional */ }
-
-      const { data: fnData, error: fnError } = await supabase.functions.invoke('war-room', {
-        body: { financialSummary, crisisContext, marketContext, mode: isProactive ? 'proactive' : 'crisis' },
-      });
-
-      if (fnError) throw new Error(fnError.message);
-      if (fnData?.error) throw new Error(fnData.error);
-      setAiData(fnData as WarRoomData);
-    } catch (e) {
-      console.error('War room error:', e);
-      setError(e instanceof Error ? e.message : 'Erro ao gerar plano');
-    } finally {
-      setLoading(false);
-    }
-  }, [financialSummary, crisisContext, isProactive]);
-
-  // Auto-fetch on mount
-  useEffect(() => {
-    if (!aiData && !loading && !error) fetchWarPlan();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-retry once
-  const [retried, setRetried] = useState(false);
-  useEffect(() => {
-    if (error && !retried && !loading) {
-      setRetried(true);
-      const timer = setTimeout(() => fetchWarPlan(), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, retried, loading, fetchWarPlan]);
-
-  // === NEGOTIATION SCRIPT ===
-  const generateScript = useCallback(async (tx: Transaction) => {
-    setSelectedTx(tx);
-    setShowNegotiation(true);
-    setLoadingScript(true);
-    setNegotiationScript(null);
-    try {
-      const { data, error } = await supabase.functions.invoke('negotiation-script', {
-        body: {
-          counterpart: tx.counterpart,
-          amount: tx.amount,
-          dueDate: tx.dueDate,
-          daysOverdue: tx.status === 'atrasado' ? daysBetween(tx.dueDate, today) : 0,
-          category: tx.category,
-          companyContext: `Saldo atual: R$ ${bal.toFixed(2)}. Empresa de reformas de alto padrão.`,
-        },
-      });
-      if (error) throw error;
-      setNegotiationScript(data as NegotiationScript);
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao gerar script de negociação');
-    } finally {
-      setLoadingScript(false);
-    }
-  }, [today, bal]);
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copiado!');
-  };
-
   const handleActionPrefill = (action: WarAction) => {
-    if (!action.prefill) return;
-    const p = action.prefill;
-    const obraId = p.obraCode ? obras.find(o => o.code === p.obraCode)?.id : undefined;
-    setTxFormDefaults({
-      type: p.type || 'pagar',
-      description: p.description,
-      counterpart: p.counterpart,
-      amount: p.amount,
-      category: p.category,
-      notes: p.notes,
-      obraId,
-    });
+    const prefill = resolveActionPrefill(action);
+    if (!prefill) return;
+    setTxFormDefaults(prefill);
     setTxFormOpen(true);
   };
 
@@ -410,6 +110,38 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
   };
 
   const sConfig = severityConfig[severity];
+
+  // === NEGOTIATION SCRIPT ===
+  const generateScript = useCallback(async (tx: Transaction) => {
+    setSelectedTx(tx);
+    setShowNegotiation(true);
+    setLoadingScript(true);
+    setNegotiationScript(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('negotiation-script', {
+        body: {
+          counterpart: tx.counterpart,
+          amount: tx.amount,
+          dueDate: tx.dueDate,
+          daysOverdue: tx.status === 'atrasado' ? daysBetween(tx.dueDate, today) : 0,
+          category: tx.category,
+          companyContext: `Saldo atual: R$ ${bal.toFixed(2)}. Empresa de reformas de alto padrão.`,
+        },
+      });
+      if (error) throw error;
+      setNegotiationScript(data as NegotiationScript);
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao gerar script de negociação');
+    } finally {
+      setLoadingScript(false);
+    }
+  }, [today, bal]);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copiado!');
+  };
 
   return (
     <div className="space-y-6 pb-8">
@@ -446,7 +178,7 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
         </div>
       </div>
 
-      {/* === CRISIS ALERT (only when relevant) === */}
+      {/* === CRISIS ALERT === */}
       {crisis.negDate && crisis.negDays !== null && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -649,7 +381,6 @@ O CEO quer saber o que pode fazer para MELHORAR a situação, OTIMIZAR prazos e 
             const hasPrefill = !!action.prefill;
             const isDone = completedActions.has(i);
 
-            // Find matching transaction for negotiation
             const matchingTx = action.category === 'cobranca' || action.category === 'renegociacao'
               ? allTransactions.find(t =>
                   (action.prefill?.counterpart && t.counterpart?.toLowerCase().includes(action.prefill.counterpart.toLowerCase())) ||
