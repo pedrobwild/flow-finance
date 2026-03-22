@@ -369,7 +369,7 @@ export default function ObraCashBalance({ period }: ObraCashBalanceProps) {
               </span>
               <span>·</span>
               <span>
-                Saldo projetado 30d: <span className="font-medium text-foreground">{formatCurrency(proj30)}</span>
+                Saldo projetado ({period?.label ?? '30d'}): <span className="font-medium text-foreground">{formatCurrency(projEnd)}</span>
               </span>
             </div>
           </CardContent>
