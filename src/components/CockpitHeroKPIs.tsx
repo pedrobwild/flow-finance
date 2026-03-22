@@ -50,28 +50,45 @@ export default function CockpitHeroKPIs({ period }: Props) {
     const entries = transactions
       .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .reduce((s, t) => s + t.amount, 0);
-    const coverage = exits > 0 ? (entries / exits) * 100 : 100;
 
-    // Overdue receivables (inadimplência)
+    // Overdue receivables
     const overdueRec = transactions.filter(t => t.type === 'receber' && t.status === 'atrasado');
     const overdueRecTotal = overdueRec.reduce((s, t) => s + t.amount, 0);
-    const totalRecPeriod = transactions
-      .filter(t => t.type === 'receber')
-      .reduce((s, t) => s + t.amount, 0);
-    const inadRate = totalRecPeriod > 0 ? (overdueRecTotal / totalRecPeriod) * 100 : 0;
 
-    // Average margin across active obras
-    const activeObras = obras.filter(o => o.status === 'ativa');
-    let avgMargin = 0;
-    if (activeObras.length > 0) {
-      const margins = activeObras.map(o => {
-        const obraTxs = transactions.filter(t => t.obraId === o.id);
-        const received = obraTxs.filter(t => t.type === 'receber' && t.status === 'confirmado').reduce((s, t) => s + t.amount, 0);
-        const paid = obraTxs.filter(t => t.type === 'pagar' && t.status === 'confirmado').reduce((s, t) => s + t.amount, 0);
-        return received > 0 ? ((received - paid) / received) * 100 : 0;
-      });
-      avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length;
+    // --- CONCENTRATION RISK ---
+    // Pending receivables in period, grouped by counterpart (client)
+    const pendingRec = transactions.filter(
+      t => t.type === 'receber' && t.status !== 'confirmado' && t.status !== 'atrasado'
+        && t.dueDate >= period.from && t.dueDate <= period.to
+    );
+    // Group by counterpart
+    const byClient = new Map<string, number>();
+    for (const t of pendingRec) {
+      byClient.set(t.counterpart || 'Sem cliente', (byClient.get(t.counterpart || 'Sem cliente') ?? 0) + t.amount);
     }
+    // Find biggest single client
+    let biggestClient = '';
+    let biggestAmount = 0;
+    for (const [client, amount] of byClient) {
+      if (amount > biggestAmount) { biggestClient = client; biggestAmount = amount; }
+    }
+    // If that client delays: what's the balance situation?
+    // Tomorrow's payables
+    const tomorrow = addDays(today, 1);
+    const tomorrowPayables = transactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate === tomorrow)
+      .reduce((s, t) => s + t.amount, 0);
+    // Next 3 days payables (more realistic)
+    const next3d = addDays(today, 3);
+    const next3dPayables = transactions
+      .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= today && t.dueDate <= next3d)
+      .reduce((s, t) => s + t.amount, 0);
+    // If biggest client delays: balance without their money vs upcoming bills
+    const balWithoutBiggest = bal + (entries - biggestAmount) - exits;
+    const concentrationPct = entries > 0 ? (biggestAmount / entries) * 100 : 0;
+    // Can survive without biggest client?
+    const surviveWithout = bal - next3dPayables > 0;
+    const surviveIfDelays = (bal - next3dPayables + (entries - biggestAmount)) > 0;
 
     // Sparkline for hero chart
     const sparkData: { d: number; v: number }[] = [];
@@ -80,9 +97,14 @@ export default function CockpitHeroKPIs({ period }: Props) {
     }
 
     return {
-      bal, balAge, balDate, runwayDays, coverage,
-      exits, entries, inadRate, overdueRecTotal,
-      avgMargin, sparkData, overdueCount: overdueRec.length,
+      bal, balAge, balDate, runwayDays,
+      exits, entries, overdueRecTotal,
+      sparkData, overdueCount: overdueRec.length,
+      // Concentration
+      biggestClient, biggestAmount, concentrationPct,
+      tomorrowPayables, next3dPayables,
+      balWithoutBiggest, surviveWithout, surviveIfDelays,
+      clientCount: byClient.size,
     };
   }, [transactions, filteredBalance, filteredProjectedBalance, obras, today, period]);
 
