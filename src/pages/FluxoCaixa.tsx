@@ -69,11 +69,26 @@ export default function FluxoCaixa() {
     };
   }, [transactions, today]);
 
-  // === MONTH OVER MONTH ANALYSIS ===
-  const monthAnalysis = useMemo(() => {
-    const months: { label: string; month: string; entradas: number; saidas: number; confirmadas: number; pendentes: number; txCount: number }[] = [];
+  // === MONTH OVER MONTH ANALYSIS + DRE ===
+  const DIRECT_COST_CATEGORIES = new Set([
+    'Materiais de Obra', 'Mão de Obra Terceirizada', 'Mão de Obra',
+    'Materiais', 'Empreiteiro', 'Subempreitada', 'Frete',
+  ]);
+  const ADMIN_CATEGORIES = new Set([
+    'Software/SaaS', 'Salários', 'Impostos', 'Juros', 'Empréstimo',
+    'Comissão de Vendas', 'Aluguel', 'Contador', 'Seguros',
+  ]);
 
-    // Get last 3 months + current
+  const monthAnalysis = useMemo(() => {
+    interface MonthData {
+      label: string; month: string;
+      entradas: number; saidas: number; confirmadas: number; pendentes: number; txCount: number;
+      receitas: number; custoDireto: number; despAdmin: number; outrasDesp: number;
+      margemBruta: number; resultadoOp: number; margemBrutaPct: number; margemOpPct: number;
+    }
+
+    const months: MonthData[] = [];
+
     for (let m = -3; m <= 0; m++) {
       const d = new Date();
       d.setMonth(d.getMonth() + m);
@@ -88,10 +103,35 @@ export default function FluxoCaixa() {
       const confirmadas = monthTxs.filter(t => t.status === 'confirmado').reduce((s, t) => s + t.amount, 0);
       const pendentes = monthTxs.filter(t => t.status !== 'confirmado').reduce((s, t) => s + t.amount, 0);
 
-      months.push({ label, month: monthStr, entradas, saidas, confirmadas, pendentes, txCount: monthTxs.length });
+      // DRE classification
+      const receitas = entradas;
+      const pagamentos = monthTxs.filter(t => t.type === 'pagar');
+
+      // Direct costs: has obra OR is in direct cost categories
+      const custoDireto = pagamentos
+        .filter(t => t.obraId || DIRECT_COST_CATEGORIES.has(t.category))
+        .reduce((s, t) => s + t.amount, 0);
+
+      // Admin expenses: admin cost center or admin categories (excluding what's already direct)
+      const despAdmin = pagamentos
+        .filter(t => !t.obraId && !DIRECT_COST_CATEGORIES.has(t.category) && (t.costCenter === 'Administrativo' || ADMIN_CATEGORIES.has(t.category)))
+        .reduce((s, t) => s + t.amount, 0);
+
+      // Other expenses (not classified as direct or admin)
+      const outrasDesp = saidas - custoDireto - despAdmin;
+
+      const margemBruta = receitas - custoDireto;
+      const resultadoOp = margemBruta - despAdmin - (outrasDesp > 0 ? outrasDesp : 0);
+      const margemBrutaPct = receitas > 0 ? (margemBruta / receitas) * 100 : 0;
+      const margemOpPct = receitas > 0 ? (resultadoOp / receitas) * 100 : 0;
+
+      months.push({
+        label, month: monthStr, entradas, saidas, confirmadas, pendentes, txCount: monthTxs.length,
+        receitas, custoDireto, despAdmin, outrasDesp: Math.max(outrasDesp, 0),
+        margemBruta, resultadoOp, margemBrutaPct, margemOpPct,
+      });
     }
 
-    // MoM changes
     const current = months[months.length - 1];
     const previous = months[months.length - 2];
     const entradaMoM = previous.entradas > 0 ? ((current.entradas - previous.entradas) / previous.entradas) * 100 : 0;
@@ -553,6 +593,46 @@ export default function FluxoCaixa() {
                 </tbody>
               </table>
             </div>
+
+
+            {/* DRE Simplificado */}
+            <div className="card-elevated overflow-hidden">
+              <div className="px-4 py-3 border-b flex items-center gap-2.5">
+                <TrendingUp className="w-4 h-4 text-accent" />
+                <div>
+                  <h3 className="font-semibold text-sm">DRE Simplificado</h3>
+                  <p className="text-[10px] text-muted-foreground">Receitas − Custos Diretos = Margem Bruta − Despesas Administrativas = Resultado Operacional</p>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/30">
+                      <th className="text-left px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase w-[200px]">Linha</th>
+                      {monthAnalysis.months.map((m, i) => (
+                        <th key={m.month} className="text-right px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase capitalize">
+                          {m.label} {i === monthAnalysis.months.length - 1 && <Badge variant="outline" className="text-[8px] ml-0.5">Atual</Badge>}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Receitas */}
+                    <DRERow label="Receitas (Entradas)" values={monthAnalysis.months.map(m => m.receitas)} bold color="text-success" />
+                    {/* Custos Diretos */}
+                    <DRERow label="(−) Custos Diretos" values={monthAnalysis.months.map(m => -m.custoDireto)} sub color="text-destructive" />
+                    {/* Margem Bruta */}
+                    <DRERow label="= Margem Bruta" values={monthAnalysis.months.map(m => m.margemBruta)} bold highlight pctValues={monthAnalysis.months.map(m => m.margemBrutaPct)} />
+                    {/* Despesas Admin */}
+                    <DRERow label="(−) Despesas Administrativas" values={monthAnalysis.months.map(m => -m.despAdmin)} sub color="text-destructive" />
+                    {/* Outras Despesas */}
+                    <DRERow label="(−) Outras Despesas" values={monthAnalysis.months.map(m => -m.outrasDesp)} sub color="text-muted-foreground" />
+                    {/* Resultado Operacional */}
+                    <DRERow label="= Resultado Operacional" values={monthAnalysis.months.map(m => m.resultadoOp)} bold highlight pctValues={monthAnalysis.months.map(m => m.margemOpPct)} />
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </motion.div>
@@ -581,5 +661,37 @@ function StatusCard({ icon: Icon, label, value, sub, iconBg, iconColor, valueCol
       <p className={cn('text-base font-bold font-mono tracking-tight', valueColor)}>{value}</p>
       {sub && <p className="text-[10px] font-mono mt-0.5 text-muted-foreground">{sub}</p>}
     </motion.div>
+  );
+}
+
+function DRERow({ label, values, bold, sub, highlight, color, pctValues }: {
+  label: string; values: number[]; bold?: boolean; sub?: boolean; highlight?: boolean;
+  color?: string; pctValues?: number[];
+}) {
+  return (
+    <tr className={cn(
+      'border-b transition-colors',
+      highlight && 'bg-accent/[0.04]',
+      sub && 'text-muted-foreground',
+    )}>
+      <td className={cn('px-4 py-2.5 text-xs', bold && 'font-semibold', sub && 'pl-6')}>
+        {label}
+      </td>
+      {values.map((v, i) => (
+        <td key={i} className={cn(
+          'px-4 py-2.5 text-right font-mono text-xs',
+          bold && 'font-bold',
+          color || (v >= 0 ? '' : 'text-destructive'),
+          highlight && (v >= 0 ? 'text-success' : 'text-destructive'),
+        )}>
+          <div>{formatCurrency(Math.abs(v))}</div>
+          {pctValues && (
+            <div className={cn('text-[9px] mt-0.5', pctValues[i] >= 0 ? 'text-success' : 'text-destructive')}>
+              {pctValues[i].toFixed(1)}%
+            </div>
+          )}
+        </td>
+      ))}
+    </tr>
   );
 }
