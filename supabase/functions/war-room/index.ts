@@ -163,121 +163,139 @@ REGRAS DE OUTPUT:
 
     const systemPrompt = isCrisis ? crisisPrompt : proactivePrompt;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `DADOS FINANCEIROS COMPLETOS:\n\n${financialSummary}${marketContext ? `\n\n=== DADOS DE MERCADO EM TEMPO REAL ===\n${marketContext}` : '\n\n(Dados de mercado indisponíveis)'}`,
-          },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "war_room_plan",
-              description: "Return emergency action plan to prevent negative cash balance",
-              parameters: {
-                type: "object",
-                properties: {
-                  summary: {
-                    type: "string",
-                    description: "1-2 sentence executive summary of the crisis and recommended strategy in Portuguese",
-                  },
-                  totalRecoverable: {
-                    type: "number",
-                    description: "Total amount in BRL that can potentially be recovered if all actions are executed",
-                  },
-                  coveragePercentage: {
-                    type: "number",
-                    description: "Percentage of the deficit covered if all actions succeed (0-100+)",
-                  },
-                  actions: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        priority: {
-                          type: "string",
-                          enum: ["imediata", "urgente", "importante", "preventiva"],
-                          description: "Action priority level",
-                        },
-                        category: {
-                          type: "string",
-                          enum: ["cobranca", "antecipacao", "renegociacao", "corte", "credito", "cronograma"],
-                          description: "Category of the action",
-                        },
-                        title: {
-                          type: "string",
-                          description: "Short action title (max 10 words) in Portuguese",
-                        },
-                        description: {
-                          type: "string",
-                          description: "ONE sentence explaining why this action matters. Keep it short and direct. In Portuguese.",
-                        },
-                        steps: {
-                          type: "array",
-                          description: "Break complex actions into 2-4 concrete micro-steps the CEO can follow. Each step starts with a verb. E.g. 'Ligue para Maria', 'Diga: se pagar hoje...', 'Se recusar, ofereça...'",
-                          items: { type: "string" },
-                        },
-                        impactAmount: {
-                          type: "number",
-                          description: "Estimated monetary impact in BRL (positive = cash gained/saved)",
-                        },
-                        impactLabel: {
-                          type: "string",
-                          description: "Short impact description like '+R$43k no caixa' or '-R$18k de saída'",
-                        },
-                        effort: {
-                          type: "string",
-                          enum: ["baixo", "medio", "alto"],
-                          description: "Implementation effort level",
-                        },
-                        deadline: {
-                          type: "string",
-                          description: "Recommended deadline like 'hoje', 'amanhã', 'esta semana', 'próximos 3 dias'",
-                        },
-                        linkTo: {
-                          type: "string",
-                          enum: ["/receber", "/pagar", "/obras", "/fluxo", "/simulador"],
-                          description: "Page to navigate for this action",
-                        },
-                        prefill: {
-                          type: "object",
-                          description: "Optional pre-fill for transaction form",
-                          properties: {
-                            type: { type: "string", enum: ["pagar", "receber"] },
-                            description: { type: "string" },
-                            counterpart: { type: "string" },
-                            amount: { type: "number" },
-                            category: { type: "string" },
-                            notes: { type: "string" },
-                            obraCode: { type: "string" },
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    let response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: `DADOS FINANCEIROS COMPLETOS:\n\n${financialSummary}${marketContext ? `\n\n=== DADOS DE MERCADO EM TEMPO REAL ===\n${marketContext}` : '\n\n(Dados de mercado indisponíveis)'}`,
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "war_room_plan",
+                description: "Return emergency action plan to prevent negative cash balance",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    summary: {
+                      type: "string",
+                      description: "1-2 sentence executive summary of the crisis and recommended strategy in Portuguese",
+                    },
+                    totalRecoverable: {
+                      type: "number",
+                      description: "Total amount in BRL that can potentially be recovered if all actions are executed",
+                    },
+                    coveragePercentage: {
+                      type: "number",
+                      description: "Percentage of the deficit covered if all actions succeed (0-100+)",
+                    },
+                    actions: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          priority: {
+                            type: "string",
+                            enum: ["imediata", "urgente", "importante", "preventiva"],
+                            description: "Action priority level",
                           },
-                          additionalProperties: false,
+                          category: {
+                            type: "string",
+                            enum: ["cobranca", "antecipacao", "renegociacao", "corte", "credito", "cronograma"],
+                            description: "Category of the action",
+                          },
+                          title: {
+                            type: "string",
+                            description: "Short action title (max 10 words) in Portuguese",
+                          },
+                          description: {
+                            type: "string",
+                            description: "ONE sentence explaining why this action matters. Keep it short and direct. In Portuguese.",
+                          },
+                          steps: {
+                            type: "array",
+                            description: "Break complex actions into 2-4 concrete micro-steps the CEO can follow. Each step starts with a verb.",
+                            items: { type: "string" },
+                          },
+                          impactAmount: {
+                            type: "number",
+                            description: "Estimated monetary impact in BRL (positive = cash gained/saved)",
+                          },
+                          impactLabel: {
+                            type: "string",
+                            description: "Short impact description like '+R$43k no caixa' or '-R$18k de saída'",
+                          },
+                          effort: {
+                            type: "string",
+                            enum: ["baixo", "medio", "alto"],
+                            description: "Implementation effort level",
+                          },
+                          deadline: {
+                            type: "string",
+                            description: "Recommended deadline like 'hoje', 'amanhã', 'esta semana', 'próximos 3 dias'",
+                          },
+                          linkTo: {
+                            type: "string",
+                            enum: ["/receber", "/pagar", "/obras", "/fluxo", "/simulador"],
+                            description: "Page to navigate for this action",
+                          },
+                          prefill: {
+                            type: "object",
+                            description: "Optional pre-fill for transaction form",
+                            properties: {
+                              type: { type: "string", enum: ["pagar", "receber"] },
+                              description: { type: "string" },
+                              counterpart: { type: "string" },
+                              amount: { type: "number" },
+                              category: { type: "string" },
+                              notes: { type: "string" },
+                              obraCode: { type: "string" },
+                            },
+                            additionalProperties: false,
+                          },
                         },
+                        required: ["priority", "category", "title", "description", "impactAmount", "impactLabel", "effort", "deadline", "linkTo"],
+                        additionalProperties: false,
                       },
-                      required: ["priority", "category", "title", "description", "impactAmount", "impactLabel", "effort", "deadline", "linkTo"],
-                      additionalProperties: false,
                     },
                   },
+                  required: ["summary", "totalRecoverable", "coveragePercentage", "actions"],
+                  additionalProperties: false,
                 },
-                required: ["summary", "totalRecoverable", "coveragePercentage", "actions"],
-                additionalProperties: false,
               },
             },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "war_room_plan" } },
-      }),
-    });
+          ],
+          tool_choice: { type: "function", function: { name: "war_room_plan" } },
+        }),
+      });
+    } catch (fetchErr) {
+      clearTimeout(timeoutId);
+      if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
+        console.error("AI gateway timeout after 60s");
+        return new Response(JSON.stringify({ error: "Tempo limite excedido (60s). Tente novamente." }), {
+          status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw fetchErr;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const status = response.status;
