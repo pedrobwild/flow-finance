@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, daysBetween } from '@/lib/helpers';
+import type { PeriodRange } from '@/components/DashboardPeriodFilter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock, Globe, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,10 +41,17 @@ interface BriefingData {
   suggestions: Suggestion[];
 }
 
-export default function MorningBriefing() {
+interface MorningBriefingProps {
+  period?: PeriodRange;
+}
+
+export default function MorningBriefing({ period }: MorningBriefingProps) {
   const { obras, getObraFinancials } = useObras();
   const { transactions, currentBalance, projectedBalance } = useFinance();
   const today = todayISO();
+  const periodFrom = period?.from ?? today;
+  const periodTo = period?.to ?? addDays(today, 30);
+  const periodLabel = period?.label ?? '30d';
 
   const [data, setData] = useState<BriefingData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -78,13 +86,15 @@ export default function MorningBriefing() {
 
   const financialSummary = useMemo(() => {
     const bal = currentBalance?.amount ?? 0;
-    const proj30 = projectedBalance(addDays(today, 30));
+    const projEnd = projectedBalance(periodTo);
+    const periodDays = Math.max(1, daysBetween(periodFrom, periodTo));
     const activeObras = obras.filter(o => o.status === 'ativa');
+    const scopedTx = transactions.filter(t => t.dueDate >= periodFrom && t.dueDate <= periodTo);
     const lines: string[] = [];
 
-    lines.push(`Data: ${today}`);
+    lines.push(`Data: ${today} | Período analisado: ${getDayMonth(periodFrom)} a ${getDayMonth(periodTo)} (${periodDays}d)`);
     lines.push(`Saldo atual em conta: ${formatCurrency(bal)}`);
-    lines.push(`Saldo projetado 30 dias: ${formatCurrency(proj30)}`);
+    lines.push(`Saldo projetado fim do período: ${formatCurrency(projEnd)}`);
     lines.push('');
 
     lines.push('=== OBRAS ATIVAS ===');
@@ -106,7 +116,7 @@ export default function MorningBriefing() {
       }
 
       // Billing/collection history per obra
-      const obraReceivables = transactions.filter(t => t.obraId === obra.id && t.type === 'receber');
+      const obraReceivables = scopedTx.filter(t => t.obraId === obra.id && t.type === 'receber');
       const withBilling = obraReceivables.filter(t => t.billingCount > 0);
       if (withBilling.length > 0) {
         lines.push(`  📧 Histórico de cobranças:`);
@@ -131,42 +141,45 @@ export default function MorningBriefing() {
       }
     });
 
-    const corpPending = transactions.filter(t => !t.obraId && t.type === 'pagar' && t.status !== 'confirmado');
+    const corpPending = scopedTx.filter(t => !t.obraId && t.type === 'pagar' && t.status !== 'confirmado');
     if (corpPending.length > 0) {
       lines.push('');
-      lines.push(`Custos corporativos pendentes: ${corpPending.length} itens, ${formatCurrency(corpPending.reduce((s, t) => s + t.amount, 0))}`);
+      lines.push(`Custos corporativos pendentes no período: ${corpPending.length} itens, ${formatCurrency(corpPending.reduce((s, t) => s + t.amount, 0))}`);
     }
 
     lines.push('');
-    lines.push('=== FLUXO POR SEMANA (próximas 4 semanas) ===');
-    for (let w = 0; w < 4; w++) {
-      const ws = addDays(today, w * 7);
-      const we = addDays(today, w * 7 + 6);
-      const weekPay = transactions
-        .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
+    const numWeeks = Math.min(8, Math.ceil(periodDays / 7));
+    lines.push(`=== FLUXO POR SEMANA (${numWeeks} semanas no período) ===`);
+    for (let w = 0; w < numWeeks; w++) {
+      const ws = addDays(periodFrom, w * 7);
+      const we = addDays(periodFrom, w * 7 + 6);
+      if (ws > periodTo) break;
+      const weekEnd = we > periodTo ? periodTo : we;
+      const weekPay = scopedTx
+        .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= weekEnd)
         .reduce((s, t) => s + t.amount, 0);
-      const weekRec = transactions
-        .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
+      const weekRec = scopedTx
+        .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= weekEnd)
         .reduce((s, t) => s + t.amount, 0);
 
       const activeObrasRef = obras.filter(o => o.status === 'ativa');
       const obrasThisWeek = activeObrasRef
         .map(o => ({
           code: o.code,
-          total: transactions.filter(t => t.obraId === o.id && t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we).reduce((s, t) => s + t.amount, 0),
+          total: scopedTx.filter(t => t.obraId === o.id && t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= weekEnd).reduce((s, t) => s + t.amount, 0),
         }))
         .filter(o => o.total > 0);
 
-      lines.push(`Semana ${getDayMonth(ws)}–${getDayMonth(we)}: Saídas ${formatCurrency(weekPay)}, Entradas ${formatCurrency(weekRec)} | Net: ${formatCurrency(weekRec - weekPay)}`);
+      lines.push(`Semana ${getDayMonth(ws)}–${getDayMonth(weekEnd)}: Saídas ${formatCurrency(weekPay)}, Entradas ${formatCurrency(weekRec)} | Net: ${formatCurrency(weekRec - weekPay)}`);
       if (obrasThisWeek.length > 0) {
         lines.push(`  Obras: ${obrasThisWeek.map(o => `${o.code} (${formatCurrency(o.total)})`).join(', ')}`);
       }
     }
 
-    const overdue = transactions.filter(t => t.status === 'atrasado');
+    const overdue = scopedTx.filter(t => t.status === 'atrasado');
     if (overdue.length > 0) {
       lines.push('');
-      lines.push(`=== ATRASADOS: ${overdue.length} itens, total ${formatCurrency(overdue.reduce((s, t) => s + t.amount, 0))} ===`);
+      lines.push(`=== ATRASADOS NO PERÍODO: ${overdue.length} itens, total ${formatCurrency(overdue.reduce((s, t) => s + t.amount, 0))} ===`);
       overdue.slice(0, 5).forEach(t => {
         const daysLate = daysBetween(t.dueDate, today);
         const obraRef = t.obraId ? obras.find(o => o.id === t.obraId) : null;
@@ -175,20 +188,22 @@ export default function MorningBriefing() {
       });
     }
 
-    // Cash pressure analysis
-    const totalPendingOut = transactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate <= addDays(today, 14)).reduce((s, t) => s + t.amount, 0);
-    const totalPendingIn = transactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate <= addDays(today, 14)).reduce((s, t) => s + t.amount, 0);
+    // Cash pressure within period
+    const pressureDays = Math.min(14, periodDays);
+    const pressureEnd = addDays(periodFrom, pressureDays);
+    const totalPendingOut = scopedTx.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate <= pressureEnd).reduce((s, t) => s + t.amount, 0);
+    const totalPendingIn = scopedTx.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate <= pressureEnd).reduce((s, t) => s + t.amount, 0);
     lines.push('');
-    lines.push(`=== PRESSÃO DE CAIXA 14 DIAS ===`);
+    lines.push(`=== PRESSÃO DE CAIXA (${pressureDays} DIAS) ===`);
     lines.push(`Saídas previstas: ${formatCurrency(totalPendingOut)}`);
     lines.push(`Entradas previstas: ${formatCurrency(totalPendingIn)}`);
     lines.push(`Gap: ${formatCurrency(totalPendingIn - totalPendingOut)}`);
     if (bal + totalPendingIn - totalPendingOut < 0) {
-      lines.push(`⚠ CAIXA FICARÁ NEGATIVO em até 14 dias sem ação`);
+      lines.push(`⚠ CAIXA FICARÁ NEGATIVO em até ${pressureDays} dias sem ação`);
     }
 
     return lines.join('\n');
-  }, [obras, transactions, currentBalance, projectedBalance, today, getObraFinancials]);
+  }, [obras, transactions, currentBalance, projectedBalance, today, periodFrom, periodTo, getObraFinancials]);
 
   const fetchBriefing = useCallback(async () => {
     setLoading(true);
