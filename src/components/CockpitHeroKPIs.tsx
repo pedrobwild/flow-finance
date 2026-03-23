@@ -221,7 +221,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
                 />
               </AreaChart>
             </ResponsiveContainer>
-            <p className="text-[9px] text-muted-foreground text-right -mt-1">Projeção 30 dias</p>
+            <p className="text-[9px] text-muted-foreground text-right -mt-1">Projeção {period.label === 'Personalizado' ? `${Math.max(1, daysBetween(period.from, period.to))}d` : period.label}</p>
           </div>
         </div>
 

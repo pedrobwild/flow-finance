@@ -138,15 +138,15 @@ export default function CounterpartRiskScore({ period }: Props) {
     });
 
     return result.filter(r => r.transactionCount >= 2).sort((a, b) => b.riskScore - a.riskScore).slice(0, 12);
-  }, [transactions, today]);
+  }, [scopedTransactions, today]);
 
   // Transaction list for detail sheet
   const counterpartTxs = useMemo(() => {
     if (!selectedRisk) return [];
-    return transactions
+    return scopedTransactions
       .filter(t => t.counterpart === selectedRisk.name)
       .sort((a, b) => b.dueDate.localeCompare(a.dueDate));
-  }, [selectedRisk, transactions]);
+  }, [selectedRisk, scopedTransactions]);
 
   if (risks.length === 0) return null;
 
