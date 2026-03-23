@@ -147,6 +147,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         billing_sent_at: tx.billingSentAt || null,
         billing_count: tx.billingCount || 0,
         attachment_url: tx.attachmentUrl || null,
+        cdi_adjustable: (tx as any).cdiAdjustable || false,
+        cdi_percentage: (tx as any).cdiPercentage || null,
+        base_amount: (tx as any).baseAmount || null,
+        base_date: (tx as any).baseDate || null,
       });
       if (error) throw error;
     },
