@@ -5,7 +5,7 @@ import { formatCurrency, todayISO, daysBetween, toISODate } from '@/lib/helpers'
 import { motion } from 'framer-motion';
 import { Clock, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Area, AreaChart, ResponsiveContainer } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { PeriodRange } from '@/components/DashboardPeriodFilter';
 
 interface MonthlyDsoDpo {
