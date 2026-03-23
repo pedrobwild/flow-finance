@@ -104,11 +104,11 @@ export default function DsoDpoIndicators({ period }: Props) {
                 <span className="text-xs font-semibold text-foreground truncate">{o.code}</span>
                 <span className="text-[10px] text-muted-foreground truncate">{o.clientName}</span>
               </div>
-              <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-3 mt-1">
                 <div className="flex items-center gap-1">
-                  <ArrowDownCircle className="w-3 h-3 text-emerald-500" />
+                  <ArrowDownCircle className="w-3 h-3 text-accent" />
                   <span className="text-[10px] text-muted-foreground">DSO</span>
-                  <span className={cn('text-[11px] font-bold', o.dso > 15 ? 'text-warning' : o.dso > 30 ? 'text-destructive' : 'text-foreground')}>
+                  <span className={cn('text-[11px] font-bold', o.dso > 30 ? 'text-destructive' : o.dso > 15 ? 'text-warning' : 'text-foreground')}>
                     {o.dso}d
                   </span>
                 </div>
@@ -121,7 +121,7 @@ export default function DsoDpoIndicators({ period }: Props) {
                   'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
                   o.gap > 10 ? 'bg-destructive/10 text-destructive' :
                   o.gap > 0 ? 'bg-warning/10 text-warning' :
-                  'bg-emerald-500/10 text-emerald-600'
+                  'bg-accent/10 text-accent'
                 )}>
                   Gap: {o.gap > 0 ? '+' : ''}{o.gap}d
                 </div>
