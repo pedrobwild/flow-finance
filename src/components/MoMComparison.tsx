@@ -73,8 +73,8 @@ export default function MoMComparison() {
     const isPositive = invert ? !isUp : isUp;
     return {
       icon: isUp ? TrendingUp : TrendingDown,
-      color: isPositive ? 'text-emerald-600' : 'text-destructive',
-      bg: isPositive ? 'bg-emerald-500/10' : 'bg-destructive/10',
+      color: isPositive ? 'text-accent' : 'text-destructive',
+      bg: isPositive ? 'bg-accent/10' : 'bg-destructive/10',
       label: `${change > 0 ? '+' : ''}${change.toFixed(0)}%`,
     };
   };

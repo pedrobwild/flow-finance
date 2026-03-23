@@ -129,7 +129,7 @@ export default function DsoDpoIndicators({ period }: Props) {
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-[10px] text-muted-foreground">Pendente</p>
-              <p className="text-[10px] text-emerald-600">{formatCurrency(o.pendingReceivable)}</p>
+              <p className="text-[10px] text-accent">{formatCurrency(o.pendingReceivable)}</p>
               <p className="text-[10px] text-destructive">{formatCurrency(o.pendingPayable)}</p>
             </div>
           </motion.div>
