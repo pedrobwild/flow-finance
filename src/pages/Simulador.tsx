@@ -22,6 +22,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import RetencaoCDICard from '@/components/RetencaoCDICard';
 
 type DeferAction = { type: 'exclude' } | { type: 'defer'; newDate: string };
 
