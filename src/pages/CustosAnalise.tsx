@@ -36,6 +36,24 @@ const CATEGORY_COLORS = [
 export default function CustosAnalise() {
   const { filteredTransactions } = useObraFilter();
   const { obras } = useObras();
+  const [expandedCostCenters, setExpandedCostCenters] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+
+  const toggleCostCenter = (name: string) => {
+    setExpandedCostCenters(prev => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  };
+
+  const toggleCategory = (name: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  };
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
