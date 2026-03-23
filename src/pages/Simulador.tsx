@@ -253,7 +253,7 @@ export default function SimuladorPage() {
           return t;
         });
         const testNeg = points.some((p) => {
-          const testBal = calcBalance(testTxs, hypotheticals, p.date);
+          const testBal = calcBalance(testTxs, allHypotheticals, p.date);
           return testBal < 0;
         });
         if (!testNeg) {
