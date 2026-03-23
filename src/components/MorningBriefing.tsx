@@ -148,26 +148,29 @@ export default function MorningBriefing({ period }: MorningBriefingProps) {
     }
 
     lines.push('');
-    lines.push('=== FLUXO POR SEMANA (próximas 4 semanas) ===');
-    for (let w = 0; w < 4; w++) {
-      const ws = addDays(today, w * 7);
-      const we = addDays(today, w * 7 + 6);
-      const weekPay = transactions
-        .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
+    const numWeeks = Math.min(8, Math.ceil(periodDays / 7));
+    lines.push(`=== FLUXO POR SEMANA (${numWeeks} semanas no período) ===`);
+    for (let w = 0; w < numWeeks; w++) {
+      const ws = addDays(periodFrom, w * 7);
+      const we = addDays(periodFrom, w * 7 + 6);
+      if (ws > periodTo) break;
+      const weekEnd = we > periodTo ? periodTo : we;
+      const weekPay = scopedTx
+        .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= weekEnd)
         .reduce((s, t) => s + t.amount, 0);
-      const weekRec = transactions
-        .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we)
+      const weekRec = scopedTx
+        .filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= weekEnd)
         .reduce((s, t) => s + t.amount, 0);
 
       const activeObrasRef = obras.filter(o => o.status === 'ativa');
       const obrasThisWeek = activeObrasRef
         .map(o => ({
           code: o.code,
-          total: transactions.filter(t => t.obraId === o.id && t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= we).reduce((s, t) => s + t.amount, 0),
+          total: scopedTx.filter(t => t.obraId === o.id && t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= ws && t.dueDate <= weekEnd).reduce((s, t) => s + t.amount, 0),
         }))
         .filter(o => o.total > 0);
 
-      lines.push(`Semana ${getDayMonth(ws)}–${getDayMonth(we)}: Saídas ${formatCurrency(weekPay)}, Entradas ${formatCurrency(weekRec)} | Net: ${formatCurrency(weekRec - weekPay)}`);
+      lines.push(`Semana ${getDayMonth(ws)}–${getDayMonth(weekEnd)}: Saídas ${formatCurrency(weekPay)}, Entradas ${formatCurrency(weekRec)} | Net: ${formatCurrency(weekRec - weekPay)}`);
       if (obrasThisWeek.length > 0) {
         lines.push(`  Obras: ${obrasThisWeek.map(o => `${o.code} (${formatCurrency(o.total)})`).join(', ')}`);
       }
