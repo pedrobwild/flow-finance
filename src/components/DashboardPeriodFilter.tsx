@@ -50,13 +50,13 @@ export default function DashboardPeriodFilter({ value, onChange }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
       {PRESETS.map(p => (
         <Button
           key={p.label}
           size="sm"
           variant={value.label === p.label ? 'default' : 'ghost'}
-          className="h-8 px-3 text-xs font-medium"
+          className="h-8 px-2 sm:px-3 text-xs font-medium min-w-[36px] min-h-[36px]"
           onClick={() => handlePreset(p.days, p.label)}
         >
           {p.label}
@@ -67,12 +67,14 @@ export default function DashboardPeriodFilter({ value, onChange }: Props) {
           <Button
             size="sm"
             variant={value.label === 'Personalizado' ? 'default' : 'outline'}
-            className={cn('h-8 px-3 text-xs gap-1.5', value.label === 'Personalizado' && 'font-medium')}
+            className={cn('h-8 px-2 sm:px-3 text-xs gap-1 sm:gap-1.5 min-h-[36px]', value.label === 'Personalizado' && 'font-medium')}
           >
-            <CalendarIcon className="w-3.5 h-3.5" />
-            {value.label === 'Personalizado'
-              ? `${new Date(value.from + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} – ${new Date(value.to + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
-              : 'Período'}
+            <CalendarIcon className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">
+              {value.label === 'Personalizado'
+                ? `${new Date(value.from + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} – ${new Date(value.to + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
+                : 'Período'}
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="end">
@@ -80,7 +82,7 @@ export default function DashboardPeriodFilter({ value, onChange }: Props) {
             mode="range"
             selected={dateRange as any}
             onSelect={handleCalendarSelect as any}
-            numberOfMonths={2}
+            numberOfMonths={1}
             className={cn("p-3 pointer-events-auto")}
           />
         </PopoverContent>
