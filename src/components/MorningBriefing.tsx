@@ -116,7 +116,7 @@ export default function MorningBriefing({ period }: MorningBriefingProps) {
       }
 
       // Billing/collection history per obra
-      const obraReceivables = transactions.filter(t => t.obraId === obra.id && t.type === 'receber');
+      const obraReceivables = scopedTx.filter(t => t.obraId === obra.id && t.type === 'receber');
       const withBilling = obraReceivables.filter(t => t.billingCount > 0);
       if (withBilling.length > 0) {
         lines.push(`  📧 Histórico de cobranças:`);
