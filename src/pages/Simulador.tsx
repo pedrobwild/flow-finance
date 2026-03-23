@@ -99,6 +99,30 @@ export default function SimuladorPage() {
   const resetAll = useCallback(() => {
     setModifications(new Map());
     setHypotheticals([]);
+    setCdiActive(false);
+    setCdiOverrides(new Map());
+    setCdiHypotheticals([]);
+  }, []);
+
+  const handleCdiApply = useCallback((result: any) => {
+    const overrides = result.amountOverrides as Map<string, number>;
+    setCdiOverrides(overrides);
+    const hyps: HypotheticalTx[] = result.paybackHypotheticals.map((h: any) => ({
+      id: 'cdi-' + Math.random().toString(36).slice(2, 8),
+      type: 'pagar' as const,
+      description: h.description,
+      amount: h.amount,
+      dueDate: h.dueDate,
+      costCenter: 'Operação' as CostCenter,
+    }));
+    setCdiHypotheticals(hyps);
+    setCdiActive(true);
+  }, []);
+
+  const handleCdiClear = useCallback(() => {
+    setCdiActive(false);
+    setCdiOverrides(new Map());
+    setCdiHypotheticals([]);
   }, []);
 
   const addHypothetical = useCallback(() => {
