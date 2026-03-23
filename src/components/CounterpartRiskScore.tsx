@@ -78,10 +78,10 @@ export default function CounterpartRiskScore({ period }: Props) {
       delays: number[]; count: number; confirmed: number; confirmedOnTime: number;
     }>();
 
-    const totalReceber = transactions.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
-    const totalPagar = transactions.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
+    const totalReceber = scopedTransactions.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
+    const totalPagar = scopedTransactions.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
 
-    transactions.forEach(tx => {
+    scopedTransactions.forEach(tx => {
       if (!tx.counterpart) return;
       const key = tx.counterpart;
       if (!counterparts.has(key)) {
