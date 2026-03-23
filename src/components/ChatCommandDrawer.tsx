@@ -213,7 +213,7 @@ export default function ChatCommandDrawer() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-6rem)] bg-card border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed z-50 bg-card border shadow-2xl flex flex-col overflow-hidden bottom-0 left-0 right-0 top-0 lg:bottom-6 lg:right-6 lg:left-auto lg:top-auto lg:w-[400px] lg:max-w-[calc(100vw-2rem)] lg:h-[600px] lg:max-h-[calc(100vh-6rem)] lg:rounded-2xl"
           >
             {/* Header */}
             <div className="px-4 py-3 border-b bg-gradient-to-r from-primary/5 to-accent/5 flex items-center justify-between flex-shrink-0">
