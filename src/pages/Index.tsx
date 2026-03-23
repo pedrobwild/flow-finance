@@ -8,6 +8,9 @@ import ExecutiveReportButton from '@/components/ExecutiveReportButton';
 import MorningBriefing from '@/components/MorningBriefing';
 import ObraCashBalance from '@/components/ObraCashBalance';
 import CounterpartRiskScore from '@/components/CounterpartRiskScore';
+import MoMComparison from '@/components/MoMComparison';
+import DsoDpoIndicators from '@/components/DsoDpoIndicators';
+import WhatIfSimulator from '@/components/WhatIfSimulator';
 
 import { motion } from 'framer-motion';
 
@@ -45,15 +48,29 @@ export default function Dashboard() {
         <CockpitHeroKPIs period={period} />
       </motion.div>
 
-
       {/* === RADAR DE CAIXA (hero chart) === */}
-      <motion.div {...section(0.16)}>
+      <motion.div {...section(0.12)}>
         <CashFlowHeroChart period={period} />
       </motion.div>
+
+      {/* === COMPARATIVO MoM + WHAT-IF === */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <motion.div {...section(0.16)}>
+          <MoMComparison />
+        </motion.div>
+        <motion.div {...section(0.18)}>
+          <WhatIfSimulator period={period} />
+        </motion.div>
+      </div>
 
       {/* === BRIEFING IA === */}
       <motion.div {...section(0.22)}>
         <MorningBriefing period={period} />
+      </motion.div>
+
+      {/* === DSO/DPO POR OBRA === */}
+      <motion.div {...section(0.26)}>
+        <DsoDpoIndicators period={period} />
       </motion.div>
 
       {/* === SALDO POR OBRA === */}
