@@ -50,9 +50,12 @@ export default function SimuladorPage() {
   const today = todayISO();
   const [modifications, setModifications] = useState<Map<string, DeferAction>>(new Map());
   const [hypotheticals, setHypotheticals] = useState<HypotheticalTx[]>([]);
-  const [period, setPeriod] = useState(30);
+  const [period, setPeriod] = useState(60);
   const [showAddForm, setShowAddForm] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'pagar' | 'receber'>('all');
+  const [cdiActive, setCdiActive] = useState(false);
+  const [cdiOverrides, setCdiOverrides] = useState<Map<string, number>>(new Map());
+  const [cdiHypotheticals, setCdiHypotheticals] = useState<HypotheticalTx[]>([]);
 
   // New hypothetical form state
   const [newType, setNewType] = useState<'pagar' | 'receber'>('pagar');
