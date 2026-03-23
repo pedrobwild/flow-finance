@@ -263,7 +263,7 @@ export default function SimuladorPage() {
             impact: `+${formatCurrency(tx.amount)} no período`,
           });
         } else {
-          const testMinBal = Math.min(...points.map(p => calcBalance(testTxs, hypotheticals, p.date)));
+          const testMinBal = Math.min(...points.map(p => calcBalance(testTxs, allHypotheticals, p.date)));
           if (testMinBal > origMin) {
             recommendations.push({
               tx,
