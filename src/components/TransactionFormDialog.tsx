@@ -89,6 +89,8 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         notes: transaction.notes,
         priority: transaction.priority as any,
         billingSentAt: transaction.billingSentAt || '',
+        cdiAdjustable: transaction.cdiAdjustable || false,
+        cdiPercentage: transaction.cdiPercentage?.toString() || '100',
       });
       setAttachmentUrl(transaction.attachmentUrl || null);
     } else {
