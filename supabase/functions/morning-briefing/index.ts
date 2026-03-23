@@ -98,78 +98,94 @@ REGRAS DE PREFILL
 - Se a sugestão é sobre uma obra específica, inclua o obraCode`;
 
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Dados financeiros de hoje:\n\n${financialSummary}${marketContext ? `\n\n=== DADOS DE MERCADO EM TEMPO REAL (Perplexity) ===\n${marketContext}` : '\n\n(Dados de mercado indisponíveis hoje)'}` },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "executive_briefing",
-              description: "Return executive morning briefing with deep insights and actionable decision suggestions",
-              parameters: {
-                type: "object",
-                properties: {
-                  insights: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        severity: { type: "string", enum: ["critical", "warning", "info"] },
-                        text: { type: "string", description: "1-2 sentence insight in Portuguese with specific names, values, dates" },
-                        category: { type: "string", enum: ["cobranca", "desconto", "fornecedor", "cronograma", "caixa", "margem", "mercado"], description: "Category of the insight for icon rendering" },
-                      },
-                      required: ["severity", "text", "category"],
-                      additionalProperties: false,
-                    },
-                  },
-                  suggestions: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        action: { type: "string", description: "Short action title in Portuguese (max 8 words)" },
-                        detail: { type: "string", description: "1-2 sentences explaining why, how, and the expected impact with real numbers" },
-                        urgency: { type: "string", enum: ["hoje", "esta_semana", "proximo"], description: "When this action should be taken" },
-                        link: { type: "string", enum: ["/obras", "/pagar", "/receber", "/simulador", "/fluxo"] },
-                        prefill: {
-                          type: "object",
-                          description: "Optional pre-fill data for a transaction form. Include when the suggestion involves creating/editing a specific transaction.",
-                          properties: {
-                            type: { type: "string", enum: ["pagar", "receber"], description: "Transaction type" },
-                            description: { type: "string", description: "Transaction description" },
-                            counterpart: { type: "string", description: "Client or supplier name" },
-                            amount: { type: "number", description: "Suggested amount in BRL" },
-                            category: { type: "string", description: "Category like Materiais, Mão de Obra, etc." },
-                            notes: { type: "string", description: "Context note explaining why this transaction is suggested" },
-                            obraCode: { type: "string", description: "Obra code if related to a specific project" },
-                          },
-                          additionalProperties: false,
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    let response: Response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Dados financeiros de hoje:\n\n${financialSummary}${marketContext ? `\n\n=== DADOS DE MERCADO EM TEMPO REAL (Perplexity) ===\n${marketContext}` : '\n\n(Dados de mercado indisponíveis hoje)'}` },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "executive_briefing",
+                description: "Return executive morning briefing with deep insights and actionable decision suggestions",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    insights: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          severity: { type: "string", enum: ["critical", "warning", "info"] },
+                          text: { type: "string", description: "1-2 sentence insight in Portuguese with specific names, values, dates" },
+                          category: { type: "string", enum: ["cobranca", "desconto", "fornecedor", "cronograma", "caixa", "margem", "mercado"], description: "Category of the insight for icon rendering" },
                         },
+                        required: ["severity", "text", "category"],
+                        additionalProperties: false,
                       },
-                      required: ["action", "detail", "urgency", "link"],
-                      additionalProperties: false,
+                    },
+                    suggestions: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          action: { type: "string", description: "Short action title in Portuguese (max 8 words)" },
+                          detail: { type: "string", description: "1-2 sentences explaining why, how, and the expected impact with real numbers" },
+                          urgency: { type: "string", enum: ["hoje", "esta_semana", "proximo"], description: "When this action should be taken" },
+                          link: { type: "string", enum: ["/obras", "/pagar", "/receber", "/simulador", "/fluxo"] },
+                          prefill: {
+                            type: "object",
+                            description: "Optional pre-fill data for a transaction form. Include when the suggestion involves creating/editing a specific transaction.",
+                            properties: {
+                              type: { type: "string", enum: ["pagar", "receber"], description: "Transaction type" },
+                              description: { type: "string", description: "Transaction description" },
+                              counterpart: { type: "string", description: "Client or supplier name" },
+                              amount: { type: "number", description: "Suggested amount in BRL" },
+                              category: { type: "string", description: "Category like Materiais, Mão de Obra, etc." },
+                              notes: { type: "string", description: "Context note explaining why this transaction is suggested" },
+                              obraCode: { type: "string", description: "Obra code if related to a specific project" },
+                            },
+                            additionalProperties: false,
+                          },
+                        },
+                        required: ["action", "detail", "urgency", "link"],
+                        additionalProperties: false,
+                      },
                     },
                   },
+                  required: ["insights", "suggestions"],
+                  additionalProperties: false,
                 },
-                required: ["insights", "suggestions"],
-                additionalProperties: false,
               },
             },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "executive_briefing" } },
-      }),
-    });
+          ],
+          tool_choice: { type: "function", function: { name: "executive_briefing" } },
+        }),
+      });
+    } catch (fetchErr) {
+      if ((fetchErr as Error).name === 'AbortError') {
+        return new Response(JSON.stringify({ error: "Tempo limite excedido (60s). Tente novamente." }), {
+          status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw fetchErr;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const status = response.status;
@@ -193,14 +209,34 @@ REGRAS DE PREFILL
       );
     }
 
-    const data = await response.json();
+    let data: any;
+    try {
+      const rawText = await response.text();
+      if (!rawText.trim()) throw new Error("Empty response");
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error("Parse error:", parseErr);
+      return new Response(
+        JSON.stringify({ error: "Resposta incompleta da IA. Tente novamente." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (toolCall?.function?.arguments) {
-      const result = JSON.parse(toolCall.function.arguments);
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      try {
+        const result = JSON.parse(toolCall.function.arguments);
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (argErr) {
+        console.error("Args parse error:", argErr);
+        return new Response(
+          JSON.stringify({ error: "Resposta malformada da IA." }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const content = data.choices?.[0]?.message?.content || "Briefing indisponível no momento.";
