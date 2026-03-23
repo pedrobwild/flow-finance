@@ -57,10 +57,19 @@ const RISK_ICONS: Record<string, React.ElementType> = {
 };
 
 // ── Main Component ─────────────────────────────────────────
-export default function CounterpartRiskScore() {
+interface Props {
+  period?: PeriodRange;
+}
+
+export default function CounterpartRiskScore({ period }: Props) {
   const { transactions } = useFinance();
   const today = todayISO();
   const [selectedRisk, setSelectedRisk] = useState<CounterpartRisk | null>(null);
+
+  const scopedTransactions = useMemo(() => {
+    if (!period) return transactions;
+    return transactions.filter(t => t.dueDate >= period.from && t.dueDate <= period.to);
+  }, [transactions, period]);
 
   const risks = useMemo(() => {
     const counterparts = new Map<string, {
