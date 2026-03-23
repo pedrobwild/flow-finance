@@ -142,7 +142,7 @@ export default function CashFlowHeroChart({ period }: Props) {
         </div>
       </div>
 
-      <div className="p-4" style={{ height: 380 }}>
+      <div className="p-4" style={{ height: 320 }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
