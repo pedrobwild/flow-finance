@@ -176,10 +176,10 @@ export default function MorningBriefing({ period }: MorningBriefingProps) {
       }
     }
 
-    const overdue = transactions.filter(t => t.status === 'atrasado');
+    const overdue = scopedTx.filter(t => t.status === 'atrasado');
     if (overdue.length > 0) {
       lines.push('');
-      lines.push(`=== ATRASADOS: ${overdue.length} itens, total ${formatCurrency(overdue.reduce((s, t) => s + t.amount, 0))} ===`);
+      lines.push(`=== ATRASADOS NO PERÍODO: ${overdue.length} itens, total ${formatCurrency(overdue.reduce((s, t) => s + t.amount, 0))} ===`);
       overdue.slice(0, 5).forEach(t => {
         const daysLate = daysBetween(t.dueDate, today);
         const obraRef = t.obraId ? obras.find(o => o.id === t.obraId) : null;
@@ -188,16 +188,18 @@ export default function MorningBriefing({ period }: MorningBriefingProps) {
       });
     }
 
-    // Cash pressure analysis
-    const totalPendingOut = transactions.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate <= addDays(today, 14)).reduce((s, t) => s + t.amount, 0);
-    const totalPendingIn = transactions.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate <= addDays(today, 14)).reduce((s, t) => s + t.amount, 0);
+    // Cash pressure within period
+    const pressureDays = Math.min(14, periodDays);
+    const pressureEnd = addDays(periodFrom, pressureDays);
+    const totalPendingOut = scopedTx.filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate <= pressureEnd).reduce((s, t) => s + t.amount, 0);
+    const totalPendingIn = scopedTx.filter(t => t.type === 'receber' && t.status !== 'confirmado' && t.dueDate <= pressureEnd).reduce((s, t) => s + t.amount, 0);
     lines.push('');
-    lines.push(`=== PRESSÃO DE CAIXA 14 DIAS ===`);
+    lines.push(`=== PRESSÃO DE CAIXA (${pressureDays} DIAS) ===`);
     lines.push(`Saídas previstas: ${formatCurrency(totalPendingOut)}`);
     lines.push(`Entradas previstas: ${formatCurrency(totalPendingIn)}`);
     lines.push(`Gap: ${formatCurrency(totalPendingIn - totalPendingOut)}`);
     if (bal + totalPendingIn - totalPendingOut < 0) {
-      lines.push(`⚠ CAIXA FICARÁ NEGATIVO em até 14 dias sem ação`);
+      lines.push(`⚠ CAIXA FICARÁ NEGATIVO em até ${pressureDays} dias sem ação`);
     }
 
     return lines.join('\n');
