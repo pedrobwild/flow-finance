@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useObras } from '@/lib/obras-context';
 import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth, daysBetween } from '@/lib/helpers';
+import type { PeriodRange } from '@/components/DashboardPeriodFilter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, AlertTriangle, AlertCircle, Info, RefreshCw, ChevronRight, Zap, Phone, Percent, Truck, Calendar, TrendingDown, PiggyBank, Clock, Globe, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
