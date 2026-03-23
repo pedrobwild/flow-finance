@@ -191,7 +191,7 @@ export default function SimuladorPage() {
     for (let i = 0; i <= period; i++) {
       const date = addDays(today, i);
       const original = projectedBalance(date);
-      const simulated = calcBalance(modifiedTxs, hypotheticals, date);
+      const simulated = calcBalance(modifiedTxs, allHypotheticals, date);
       points.push({
         label: i === 0 ? 'Hoje' : getDayMonth(date),
         date,
