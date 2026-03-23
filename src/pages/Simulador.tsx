@@ -275,7 +275,7 @@ export default function SimuladorPage() {
       }
     }
 
-    const hasChanges = modifications.size > 0 || hypotheticals.length > 0;
+    const hasChanges = modifications.size > 0 || hypotheticals.length > 0 || cdiActive;
 
     // Health score: 0-100
     const healthScore = Math.max(0, Math.min(100,
