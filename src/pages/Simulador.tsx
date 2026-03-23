@@ -810,7 +810,16 @@ export default function SimuladorPage() {
         </motion.div>
       </div>
 
-      {/* Transaction manipulation list */}
+      {/* CDI Retention Strategy */}
+      <motion.div {...sect(0.18)}>
+        <RetencaoCDICard
+          transactions={transactions}
+          onApply={handleCdiApply}
+          onClear={handleCdiClear}
+          isActive={cdiActive}
+        />
+      </motion.div>
+
       <motion.div {...sect(0.2)} className="card-elevated overflow-hidden">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2.5">
