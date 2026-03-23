@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
-import { ChevronLeft, ChevronRight, TrendingDown, Layers, Tag, Building2, Calendar, GitCompareArrows, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, TrendingDown, Layers, Tag, Building2, Calendar, GitCompareArrows, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CustosComparativo from '@/components/CustosComparativo';
 import CustosIndicadores from '@/components/CustosIndicadores';
