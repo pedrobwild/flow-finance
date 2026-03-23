@@ -30,6 +30,25 @@ interface Props {
   period?: PeriodRange;
 }
 
+function SparkTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const dso = payload.find((p: any) => p.dataKey === 'dso')?.value ?? 0;
+  const dpo = payload.find((p: any) => p.dataKey === 'dpo')?.value ?? 0;
+  return (
+    <div className="bg-card border rounded px-2 py-1 shadow-lg text-[9px] space-y-0.5 min-w-[80px]">
+      <p className="font-semibold text-foreground">{label}</p>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-accent">DSO</span>
+        <span className="font-mono font-bold text-foreground">{dso}d</span>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-primary">DPO</span>
+        <span className="font-mono font-bold text-foreground">{dpo}d</span>
+      </div>
+    </div>
+  );
+}
+
 function MiniSparkline({ data, dataKeyA, dataKeyB }: { data: MonthlyDsoDpo[]; dataKeyA: string; dataKeyB: string }) {
   if (data.length < 2) return null;
   return (
@@ -46,6 +65,7 @@ function MiniSparkline({ data, dataKeyA, dataKeyB }: { data: MonthlyDsoDpo[]; da
               <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
             </linearGradient>
           </defs>
+          <Tooltip content={<SparkTooltip />} cursor={false} />
           <Area type="monotone" dataKey={dataKeyA} stroke="hsl(var(--accent))" fill="url(#sparkDso)" strokeWidth={1.5} dot={false} />
           <Area type="monotone" dataKey={dataKeyB} stroke="hsl(var(--primary))" fill="url(#sparkDpo)" strokeWidth={1.5} dot={false} />
         </AreaChart>
