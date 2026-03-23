@@ -41,10 +41,17 @@ interface BriefingData {
   suggestions: Suggestion[];
 }
 
-export default function MorningBriefing() {
+interface MorningBriefingProps {
+  period?: PeriodRange;
+}
+
+export default function MorningBriefing({ period }: MorningBriefingProps) {
   const { obras, getObraFinancials } = useObras();
   const { transactions, currentBalance, projectedBalance } = useFinance();
   const today = todayISO();
+  const periodFrom = period?.from ?? today;
+  const periodTo = period?.to ?? addDays(today, 30);
+  const periodLabel = period?.label ?? '30d';
 
   const [data, setData] = useState<BriefingData | null>(null);
   const [loading, setLoading] = useState(false);
