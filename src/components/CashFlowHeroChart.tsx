@@ -259,7 +259,7 @@ export default function CashFlowHeroChart({ period }: Props) {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-7 w-7 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                           onClick={() => confirmTransaction(tx.id)}
                           title="Confirmar pagamento"
                         >
