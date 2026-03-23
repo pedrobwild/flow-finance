@@ -72,6 +72,10 @@ export default function RecurrenceGenerator() {
             billingSentAt: null,
             billingCount: 0,
             attachmentUrl: null,
+            cdiAdjustable: false,
+            cdiPercentage: null,
+            baseAmount: null,
+            baseDate: null,
           });
         }
         lastDate = nextDate;

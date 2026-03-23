@@ -26,6 +26,10 @@ function makeTx(overrides: Partial<Transaction> & { type: Transaction['type']; d
     billingSentAt: null,
     billingCount: 0,
     attachmentUrl: null,
+    cdiAdjustable: false,
+    cdiPercentage: null,
+    baseAmount: null,
+    baseDate: null,
     ...overrides,
   };
 }

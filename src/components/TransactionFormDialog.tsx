@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Upload, X, FileText } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Building2, Upload, X, FileText, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomCategories } from './CustomCategoriesManager';
 import { toast } from 'sonner';
@@ -53,6 +54,8 @@ const empty = (type: TransactionType, obraId?: string) => ({
   notes: '',
   priority: 'normal' as const,
   billingSentAt: '',
+  cdiAdjustable: false,
+  cdiPercentage: '100',
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId, prefill }: Props) {
@@ -86,6 +89,8 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
         notes: transaction.notes,
         priority: transaction.priority as any,
         billingSentAt: transaction.billingSentAt || '',
+        cdiAdjustable: transaction.cdiAdjustable || false,
+        cdiPercentage: transaction.cdiPercentage?.toString() || '100',
       });
       setAttachmentUrl(transaction.attachmentUrl || null);
     } else {
@@ -186,6 +191,10 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       obraId: form.obraId || null,
       billingSentAt: form.billingSentAt || null,
       attachmentUrl: attachmentUrl || null,
+      cdiAdjustable: form.cdiAdjustable,
+      cdiPercentage: form.cdiAdjustable ? parseFloat(form.cdiPercentage) || 100 : null,
+      baseAmount: form.cdiAdjustable ? (parseFloat(form.amount) || 0) : null,
+      baseDate: form.cdiAdjustable ? form.dueDate : null,
     };
     if (isEdit && transaction) {
       updateTransaction(transaction.id, data);
@@ -383,6 +392,36 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                 <p className="text-[9px] text-muted-foreground mt-0.5">
                   Gera {recurrenceCount} parcela(s) adicional(is) automaticamente
                 </p>
+              </div>
+            )}
+            {/* CDI Adjustment - only for pagar */}
+            {form.type === 'pagar' && (
+              <div className="col-span-2 rounded-lg border border-dashed p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs flex items-center gap-1.5">
+                    <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                    Reajuste automático por CDI
+                  </Label>
+                  <Switch
+                    checked={form.cdiAdjustable}
+                    onCheckedChange={v => setForm(f => ({ ...f, cdiAdjustable: v }))}
+                  />
+                </div>
+                {form.cdiAdjustable && (
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs whitespace-nowrap">Taxa CDI:</Label>
+                    <Select value={form.cdiPercentage} onValueChange={v => set('cdiPercentage', v)}>
+                      <SelectTrigger className="text-sm w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="100">100% CDI</SelectItem>
+                        <SelectItem value="160">160% CDI</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[9px] text-muted-foreground">
+                      Valor será reajustado diariamente
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             <div>

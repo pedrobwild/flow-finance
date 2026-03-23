@@ -28,7 +28,21 @@ function rowToTransaction(row: any): Transaction {
     billingSentAt: row.billing_sent_at || null,
     billingCount: Number(row.billing_count) || 0,
     attachmentUrl: row.attachment_url || null,
+    cdiAdjustable: row.cdi_adjustable || false,
+    cdiPercentage: row.cdi_percentage != null ? Number(row.cdi_percentage) : null,
+    baseAmount: row.base_amount != null ? Number(row.base_amount) : null,
+    baseDate: row.base_date || null,
   };
+  // Auto-recalculate CDI-adjusted amount
+  if (tx.cdiAdjustable && tx.baseAmount != null && tx.baseDate && tx.cdiPercentage != null && tx.status !== 'confirmado') {
+    const CDI_ANNUAL = 0.1415; // Selic/CDI ~14.15% a.a.
+    const today = new Date();
+    const base = new Date(tx.baseDate + 'T12:00:00');
+    const daysDiff = Math.max(0, Math.round((today.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)));
+    const dailyRate = Math.pow(1 + CDI_ANNUAL, 1 / 252) - 1;
+    const factor = Math.pow(1 + dailyRate * (tx.cdiPercentage / 100), daysDiff);
+    tx.amount = Math.round(tx.baseAmount * factor * 100) / 100;
+  }
   tx.status = computeStatus(tx);
   return tx;
 }
@@ -133,6 +147,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         billing_sent_at: tx.billingSentAt || null,
         billing_count: tx.billingCount || 0,
         attachment_url: tx.attachmentUrl || null,
+        cdi_adjustable: (tx as any).cdiAdjustable || false,
+        cdi_percentage: (tx as any).cdiPercentage || null,
+        base_amount: (tx as any).baseAmount || null,
+        base_date: (tx as any).baseDate || null,
       });
       if (error) throw error;
     },
@@ -166,6 +184,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         billing_sent_at: tx.billingSentAt || null,
         billing_count: tx.billingCount || 0,
         attachment_url: tx.attachmentUrl || null,
+        cdi_adjustable: (tx as any).cdiAdjustable || false,
+        cdi_percentage: (tx as any).cdiPercentage || null,
+        base_amount: (tx as any).baseAmount || null,
+        base_date: (tx as any).baseDate || null,
       }));
       const { error } = await supabase.from('transactions').insert(rows);
       if (error) throw error;
@@ -196,6 +218,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (updates.billingSentAt !== undefined) db.billing_sent_at = updates.billingSentAt;
       if (updates.billingCount !== undefined) db.billing_count = updates.billingCount;
       if (updates.attachmentUrl !== undefined) db.attachment_url = updates.attachmentUrl;
+      if ((updates as any).cdiAdjustable !== undefined) db.cdi_adjustable = (updates as any).cdiAdjustable;
+      if ((updates as any).cdiPercentage !== undefined) db.cdi_percentage = (updates as any).cdiPercentage;
+      if ((updates as any).baseAmount !== undefined) db.base_amount = (updates as any).baseAmount;
+      if ((updates as any).baseDate !== undefined) db.base_date = (updates as any).baseDate;
       const { error } = await supabase.from('transactions').update(db).eq('id', id);
       if (error) throw error;
     },

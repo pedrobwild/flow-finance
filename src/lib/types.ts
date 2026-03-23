@@ -24,6 +24,10 @@ export interface Transaction {
   billingSentAt: string | null;
   billingCount: number;
   attachmentUrl: string | null;
+  cdiAdjustable: boolean;
+  cdiPercentage: number | null;
+  baseAmount: number | null;
+  baseDate: string | null;
 }
 
 export interface CashBalance {
