@@ -288,8 +288,30 @@ export default function ContasPagar() {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <motion.div {...sect(0)} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Sticky mobile header */}
+      <div className="lg:hidden sticky top-14 z-20 bg-background/95 backdrop-blur-sm -mx-4 px-4 py-2 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ArrowDownRight className="w-4 h-4 text-destructive" />
+            <span className="text-sm font-bold">A Pagar</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            {currentBalance && (
+              <span className={cn('font-mono font-bold', currentBalance.amount >= 0 ? 'text-success' : 'text-destructive')}>
+                {formatCurrency(currentBalance.amount)}
+              </span>
+            )}
+            {hasUrgent && (
+              <span className="font-mono font-bold text-destructive">
+                {countUrgent} pend.
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <motion.div {...sect(0)} className="hidden lg:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center">
             <ArrowDownRight className="w-[18px] h-[18px] text-destructive" />
