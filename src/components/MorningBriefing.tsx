@@ -86,13 +86,15 @@ export default function MorningBriefing({ period }: MorningBriefingProps) {
 
   const financialSummary = useMemo(() => {
     const bal = currentBalance?.amount ?? 0;
-    const proj30 = projectedBalance(addDays(today, 30));
+    const projEnd = projectedBalance(periodTo);
+    const periodDays = Math.max(1, daysBetween(periodFrom, periodTo));
     const activeObras = obras.filter(o => o.status === 'ativa');
+    const scopedTx = transactions.filter(t => t.dueDate >= periodFrom && t.dueDate <= periodTo);
     const lines: string[] = [];
 
-    lines.push(`Data: ${today}`);
+    lines.push(`Data: ${today} | Período analisado: ${getDayMonth(periodFrom)} a ${getDayMonth(periodTo)} (${periodDays}d)`);
     lines.push(`Saldo atual em conta: ${formatCurrency(bal)}`);
-    lines.push(`Saldo projetado 30 dias: ${formatCurrency(proj30)}`);
+    lines.push(`Saldo projetado fim do período: ${formatCurrency(projEnd)}`);
     lines.push('');
 
     lines.push('=== OBRAS ATIVAS ===');
