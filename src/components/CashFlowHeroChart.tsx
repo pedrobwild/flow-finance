@@ -128,7 +128,7 @@ export default function CashFlowHeroChart({ period }: Props) {
               Saldo projetado + entradas e saídas · Clique em um dia para agir
             </p>
           </div>
-          <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+          <div className="hidden sm:flex items-center gap-4 text-[10px] text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="w-5 h-2.5 rounded-sm bg-success/50" /> Entradas
             </span>
@@ -142,7 +142,7 @@ export default function CashFlowHeroChart({ period }: Props) {
         </div>
       </div>
 
-      <div className="p-4" style={{ height: 380 }}>
+      <div className="p-4" style={{ height: 320 }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
@@ -259,7 +259,7 @@ export default function CashFlowHeroChart({ period }: Props) {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-7 w-7 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                           onClick={() => confirmTransaction(tx.id)}
                           title="Confirmar pagamento"
                         >
@@ -288,7 +288,7 @@ export default function CashFlowHeroChart({ period }: Props) {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-7 w-7 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                           onClick={() => confirmTransaction(tx.id)}
                           title="Confirmar recebimento"
                         >
