@@ -25,15 +25,15 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-5 pb-8">
+    <div className="space-y-4 sm:space-y-5 pb-8">
       {/* === HEADER === */}
       <motion.div {...section(0)}>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-lg font-bold tracking-tight">Cockpit Financeiro</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Visão executiva em tempo real</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <ExecutiveReportButton />
             <DashboardPeriodFilter value={period} onChange={setPeriod} />
           </div>

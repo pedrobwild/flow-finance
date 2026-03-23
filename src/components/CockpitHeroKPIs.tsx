@@ -129,9 +129,9 @@ export default function CockpitHeroKPIs({ period }: Props) {
 
   return (
     <div className="hero-panel p-0">
-      <div className="relative z-10 p-5 lg:p-6">
-        <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
-          <div className="flex-1">
+      <div className="relative z-10 p-4 sm:p-5 lg:p-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Wallet className="w-4 h-4 text-muted-foreground" />
               <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Saldo em Conta</span>
@@ -148,28 +148,29 @@ export default function CockpitHeroKPIs({ period }: Props) {
                   value={balanceInput}
                   onChange={e => setBalanceInput(e.target.value)}
                   placeholder="150000"
-                  className="h-9 text-sm flex-1 max-w-[180px] bg-background border-border text-foreground placeholder:text-muted-foreground"
+                  className="h-11 text-base flex-1 max-w-[200px] bg-background border-border text-foreground placeholder:text-muted-foreground"
+                  inputMode="decimal"
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleSaveBalance()}
                 />
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-foreground hover:bg-muted" onClick={handleSaveBalance}>
+                <Button size="icon" variant="ghost" className="h-10 w-10 text-foreground hover:bg-muted" onClick={handleSaveBalance}>
                   <Check className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:bg-muted" onClick={() => setEditingBalance(false)}>
+                <Button size="icon" variant="ghost" className="h-10 w-10 text-muted-foreground hover:bg-muted" onClick={() => setEditingBalance(false)}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
             ) : (
-              <div className="flex items-baseline gap-3">
-                <p className="text-3xl lg:text-4xl font-bold font-mono tracking-tight text-foreground">
+              <div className="flex items-baseline gap-2 sm:gap-3">
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono tracking-tight text-foreground truncate">
                   {!filteredBalance ? '—' : formatCurrency(metrics.bal)}
                 </p>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <BalanceHistoryDrawer />
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={() => { setBalanceInput(filteredBalance?.amount?.toString() || ''); setEditingBalance(true); }}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -219,9 +220,9 @@ export default function CockpitHeroKPIs({ period }: Props) {
           </div>
         </div>
 
-        <div className="h-px bg-border my-4" />
+        <div className="h-px bg-border my-3 sm:my-4" />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-5">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

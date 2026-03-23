@@ -246,12 +246,12 @@ export default function FluxoCaixa() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Header */}
-      <motion.div {...sect(0)} className="flex flex-col sm:flex-row items-start justify-between gap-4">
+      <motion.div {...sect(0)} className="flex flex-col gap-3">
         <div>
-          <h1 className="text-2xl font-bold leading-tight tracking-tight">Fluxo de Caixa</h1>
-          <p className="text-muted-foreground text-sm mt-1 flex items-center gap-2 flex-wrap">
+          <h1 className="text-xl sm:text-2xl font-bold leading-tight tracking-tight">Fluxo de Caixa</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 flex items-center gap-2 flex-wrap">
             Visão operacional e análise
             {isFiltered && selectedObra && (
               <Badge variant="outline" className="text-[10px] border-primary/50 bg-primary/5">
@@ -261,7 +261,7 @@ export default function FluxoCaixa() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
           <RecurrenceGenerator />
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
           <ExportDropdown
@@ -277,7 +277,7 @@ export default function FluxoCaixa() {
       </motion.div>
 
       {/* Quick Status Strip */}
-      <motion.div {...sect(0.04)} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <motion.div {...sect(0.04)} className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         <StatusCard
           icon={Wallet} label="Saldo Atual" value={formatCurrency(currentBal)}
           iconBg="bg-primary/10" iconColor="text-primary"
@@ -311,20 +311,22 @@ export default function FluxoCaixa() {
       {/* Main Tabs */}
       <motion.div {...sect(0.08)}>
         <Tabs defaultValue="operacional" className="space-y-4">
-          <TabsList className="bg-muted/60 p-1 h-10">
-            <TabsTrigger value="operacional" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
-              <Target className="w-3.5 h-3.5" /> Agenda Operacional
-            </TabsTrigger>
-            <TabsTrigger value="projecao" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
-              <LineChart className="w-3.5 h-3.5" /> Projeção 30d
-            </TabsTrigger>
-            <TabsTrigger value="analise" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
-              <BarChart3 className="w-3.5 h-3.5" /> Análise Mensal
-            </TabsTrigger>
-            <TabsTrigger value="tabela" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
-              <List className="w-3.5 h-3.5" /> Tabela 30d
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+            <TabsList className="bg-muted/60 p-1 h-10 w-max sm:w-auto">
+              <TabsTrigger value="operacional" className="gap-1.5 text-[11px] sm:text-xs data-[state=active]:shadow-sm min-h-[36px]">
+                <Target className="w-3.5 h-3.5 shrink-0" /> <span className="hidden xs:inline">Agenda</span> Operacional
+              </TabsTrigger>
+              <TabsTrigger value="projecao" className="gap-1.5 text-[11px] sm:text-xs data-[state=active]:shadow-sm min-h-[36px]">
+                <LineChart className="w-3.5 h-3.5 shrink-0" /> Projeção
+              </TabsTrigger>
+              <TabsTrigger value="analise" className="gap-1.5 text-[11px] sm:text-xs data-[state=active]:shadow-sm min-h-[36px]">
+                <BarChart3 className="w-3.5 h-3.5 shrink-0" /> Análise
+              </TabsTrigger>
+              <TabsTrigger value="tabela" className="gap-1.5 text-[11px] sm:text-xs data-[state=active]:shadow-sm min-h-[36px]">
+                <List className="w-3.5 h-3.5 shrink-0" /> Tabela
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* === OPERATIONAL TAB === */}
           <TabsContent value="operacional" className="mt-0 space-y-4">

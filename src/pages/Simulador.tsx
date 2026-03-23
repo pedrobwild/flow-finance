@@ -308,46 +308,46 @@ export default function SimuladorPage() {
   const healthLabel = analysis.healthScore >= 70 ? 'Saudável' : analysis.healthScore >= 40 ? 'Atenção' : 'Crítico';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Page header */}
-      <motion.div {...sect(0)} className="flex items-start justify-between">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center border border-accent/20">
-            <Beaker className="w-5 h-5 text-accent" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl font-bold">Simulador de Cenários</h1>
-              {analysis.hasChanges && (
-                <Badge variant="outline" className="text-[10px] font-semibold border-accent/30 text-accent gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  {modifications.size + hypotheticals.length} alteração{(modifications.size + hypotheticals.length) > 1 ? 'ões' : ''}
-                </Badge>
-              )}
+      <motion.div {...sect(0)} className="flex flex-col gap-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-accent/10 flex items-center justify-center border border-accent/20 shrink-0">
+              <Beaker className="w-5 h-5 text-accent" />
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">Simule decisões financeiras e veja o impacto em tempo real</p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg sm:text-xl font-bold">Simulador</h1>
+                {analysis.hasChanges && (
+                  <Badge variant="outline" className="text-[10px] font-semibold border-accent/30 text-accent gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    {modifications.size + hypotheticals.length}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 hidden sm:block">Simule decisões financeiras e veja o impacto</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
           {analysis.hasChanges && (
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={resetAll}>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9 min-h-[36px] shrink-0" onClick={resetAll}>
               <RotateCcw className="w-3.5 h-3.5" /> Resetar
             </Button>
           )}
-          <div className="flex items-center bg-muted rounded-lg p-0.5 border border-border">
-            {[30, 45, 60, 90].map(p => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={cn(
-                  'px-3 py-1.5 text-xs font-medium rounded-md transition-all',
-                  period === p ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {p}d
-              </button>
-            ))}
-          </div>
+        </div>
+        <div className="flex items-center bg-muted rounded-lg p-0.5 border border-border w-max">
+          {[30, 45, 60, 90].map(p => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={cn(
+                'px-3.5 py-2 text-xs font-medium rounded-md transition-all min-h-[36px]',
+                period === p ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {p}d
+            </button>
+          ))}
         </div>
       </motion.div>
 
@@ -360,7 +360,7 @@ export default function SimuladorPage() {
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ duration: 0.3 }}
             className={cn(
-              'rounded-xl border-2 p-4 flex items-center justify-between',
+              'rounded-xl border-2 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between',
               analysis.deltaEnd >= 0
                 ? 'bg-success/5 border-success/25'
                 : 'bg-destructive/5 border-destructive/25'
@@ -422,7 +422,7 @@ export default function SimuladorPage() {
       </AnimatePresence>
 
       {/* Metrics grid - 5 columns */}
-      <motion.div {...sect(0.05)} className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <motion.div {...sect(0.05)} className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
         {/* Current balance */}
         <div className="card-elevated p-4 space-y-2">
           <div className="flex items-center gap-2">
