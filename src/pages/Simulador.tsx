@@ -152,11 +152,19 @@ export default function SimuladorPage() {
 
     const modifiedTxs = transactions.map(t => {
       const mod = modifications.get(t.id);
-      if (!mod) return t;
-      if (mod.type === 'exclude') return { ...t, status: 'confirmado' as const };
-      if (mod.type === 'defer') return { ...t, dueDate: mod.newDate };
-      return t;
+      let tx = t;
+      if (mod) {
+        if (mod.type === 'exclude') tx = { ...tx, status: 'confirmado' as const };
+        else if (mod.type === 'defer') tx = { ...tx, dueDate: mod.newDate };
+      }
+      // Apply CDI retention overrides (reduce amount by retained %)
+      if (cdiActive && cdiOverrides.has(tx.id)) {
+        tx = { ...tx, amount: cdiOverrides.get(tx.id)! };
+      }
+      return tx;
     });
+
+    const allHypotheticals = [...hypotheticals, ...cdiHypotheticals];
 
     const calcBalance = (txSet: Transaction[], hSet: HypotheticalTx[], date: string) => {
       let b = bal;
