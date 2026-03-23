@@ -334,9 +334,13 @@ export type Database = {
         Row: {
           amount: number
           attachment_url: string | null
+          base_amount: number | null
+          base_date: string | null
           billing_count: number
           billing_sent_at: string | null
           category: string
+          cdi_adjustable: boolean
+          cdi_percentage: number | null
           cost_center: string
           counterpart: string
           created_at: string
@@ -356,9 +360,13 @@ export type Database = {
         Insert: {
           amount?: number
           attachment_url?: string | null
+          base_amount?: number | null
+          base_date?: string | null
           billing_count?: number
           billing_sent_at?: string | null
           category?: string
+          cdi_adjustable?: boolean
+          cdi_percentage?: number | null
           cost_center?: string
           counterpart?: string
           created_at?: string
@@ -378,9 +386,13 @@ export type Database = {
         Update: {
           amount?: number
           attachment_url?: string | null
+          base_amount?: number | null
+          base_date?: string | null
           billing_count?: number
           billing_sent_at?: string | null
           category?: string
+          cdi_adjustable?: boolean
+          cdi_percentage?: number | null
           cost_center?: string
           counterpart?: string
           created_at?: string
