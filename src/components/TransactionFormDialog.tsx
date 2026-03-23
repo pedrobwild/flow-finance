@@ -394,6 +394,36 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                 </p>
               </div>
             )}
+            {/* CDI Adjustment - only for pagar */}
+            {form.type === 'pagar' && (
+              <div className="col-span-2 rounded-lg border border-dashed p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs flex items-center gap-1.5">
+                    <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                    Reajuste automático por CDI
+                  </Label>
+                  <Switch
+                    checked={form.cdiAdjustable}
+                    onCheckedChange={v => setForm(f => ({ ...f, cdiAdjustable: v }))}
+                  />
+                </div>
+                {form.cdiAdjustable && (
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs whitespace-nowrap">Taxa CDI:</Label>
+                    <Select value={form.cdiPercentage} onValueChange={v => set('cdiPercentage', v)}>
+                      <SelectTrigger className="text-sm w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="100">100% CDI</SelectItem>
+                        <SelectItem value="160">160% CDI</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[9px] text-muted-foreground">
+                      Valor será reajustado diariamente
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <Label className="text-xs">{form.type === 'pagar' ? 'Pago em' : 'Recebido em'}</Label>
               <Input type="date" value={form.paidAt} onChange={e => set('paidAt', e.target.value)} />
