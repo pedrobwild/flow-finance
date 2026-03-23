@@ -246,12 +246,12 @@ export default function FluxoCaixa() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Header */}
-      <motion.div {...sect(0)} className="flex flex-col sm:flex-row items-start justify-between gap-4">
+      <motion.div {...sect(0)} className="flex flex-col gap-3">
         <div>
-          <h1 className="text-2xl font-bold leading-tight tracking-tight">Fluxo de Caixa</h1>
-          <p className="text-muted-foreground text-sm mt-1 flex items-center gap-2 flex-wrap">
+          <h1 className="text-xl sm:text-2xl font-bold leading-tight tracking-tight">Fluxo de Caixa</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 flex items-center gap-2 flex-wrap">
             Visão operacional e análise
             {isFiltered && selectedObra && (
               <Badge variant="outline" className="text-[10px] border-primary/50 bg-primary/5">
@@ -261,7 +261,7 @@ export default function FluxoCaixa() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
           <RecurrenceGenerator />
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
           <ExportDropdown
