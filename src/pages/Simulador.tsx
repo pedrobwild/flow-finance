@@ -303,7 +303,7 @@ export default function SimuladorPage() {
       currentBal: bal,
       healthScore,
     };
-  }, [transactions, modifications, hypotheticals, currentBalance, projectedBalance, today, period]);
+  }, [transactions, modifications, hypotheticals, cdiHypotheticals, cdiActive, cdiOverrides, currentBalance, projectedBalance, today, period]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
