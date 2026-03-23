@@ -203,7 +203,7 @@ export default function MorningBriefing({ period }: MorningBriefingProps) {
     }
 
     return lines.join('\n');
-  }, [obras, transactions, currentBalance, projectedBalance, today, getObraFinancials]);
+  }, [obras, transactions, currentBalance, projectedBalance, today, periodFrom, periodTo, getObraFinancials]);
 
   const fetchBriefing = useCallback(async () => {
     setLoading(true);

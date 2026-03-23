@@ -53,7 +53,7 @@ export default function Dashboard() {
 
       {/* === BRIEFING IA === */}
       <motion.div {...section(0.22)}>
-        <MorningBriefing />
+        <MorningBriefing period={period} />
       </motion.div>
 
       {/* === SALDO POR OBRA === */}
