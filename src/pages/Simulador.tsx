@@ -358,7 +358,7 @@ export default function SimuladorPage() {
                 {analysis.hasChanges && (
                   <Badge variant="outline" className="text-[10px] font-semibold border-accent/30 text-accent gap-1">
                     <Sparkles className="w-3 h-3" />
-                    {modifications.size + hypotheticals.length}
+                    {modifications.size + hypotheticals.length + (cdiActive ? 1 : 0)}
                   </Badge>
                 )}
               </div>
