@@ -191,6 +191,10 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       obraId: form.obraId || null,
       billingSentAt: form.billingSentAt || null,
       attachmentUrl: attachmentUrl || null,
+      cdiAdjustable: form.cdiAdjustable,
+      cdiPercentage: form.cdiAdjustable ? parseFloat(form.cdiPercentage) || 100 : null,
+      baseAmount: form.cdiAdjustable ? (parseFloat(form.amount) || 0) : null,
+      baseDate: form.cdiAdjustable ? form.dueDate : null,
     };
     if (isEdit && transaction) {
       updateTransaction(transaction.id, data);
