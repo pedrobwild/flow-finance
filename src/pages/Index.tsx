@@ -60,7 +60,7 @@ export default function Dashboard() {
       <ObraCashBalance period={period} />
 
       {/* === SCORE DE RISCO === */}
-      <CounterpartRiskScore />
+      <CounterpartRiskScore period={period} />
     </div>
   );
 }

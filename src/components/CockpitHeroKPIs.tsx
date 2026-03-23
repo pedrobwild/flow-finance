@@ -91,11 +91,16 @@ export default function CockpitHeroKPIs({ period }: Props) {
       .filter(t => t.type === 'pagar' && t.status !== 'confirmado' && t.dueDate >= period.from && t.dueDate <= period.to)
       .length;
 
-    // Sparkline for hero chart
-    const sparkData: { d: number; v: number }[] = [];
-    for (let d = 0; d <= 30; d += 2) {
-      sparkData.push({ d, v: filteredProjectedBalance(addDays(today, d)) });
-    }
+      // Sparkline aligned with selected period
+      const periodDays = Math.max(1, daysBetween(period.from, period.to));
+      const step = periodDays <= 14 ? 1 : periodDays <= 45 ? 2 : periodDays <= 90 ? 5 : 7;
+      const sparkData: { d: number; v: number }[] = [];
+      for (let d = 0; d <= periodDays; d += step) {
+        sparkData.push({ d, v: filteredProjectedBalance(addDays(period.from, d)) });
+      }
+      if (sparkData[sparkData.length - 1]?.d !== periodDays) {
+        sparkData.push({ d: periodDays, v: filteredProjectedBalance(period.to) });
+      }
 
     return {
       bal, balAge, balDate, runwayDays,
@@ -216,7 +221,7 @@ export default function CockpitHeroKPIs({ period }: Props) {
                 />
               </AreaChart>
             </ResponsiveContainer>
-            <p className="text-[9px] text-muted-foreground text-right -mt-1">Projeção 30 dias</p>
+            <p className="text-[9px] text-muted-foreground text-right -mt-1">Projeção {period.label === 'Personalizado' ? `${Math.max(1, daysBetween(period.from, period.to))}d` : period.label}</p>
           </div>
         </div>
 

@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatCurrency, formatDate, todayISO, daysBetween } from '@/lib/helpers';
+import type { PeriodRange } from './DashboardPeriodFilter';
 import { Transaction } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -56,10 +57,19 @@ const RISK_ICONS: Record<string, React.ElementType> = {
 };
 
 // ── Main Component ─────────────────────────────────────────
-export default function CounterpartRiskScore() {
+interface Props {
+  period?: PeriodRange;
+}
+
+export default function CounterpartRiskScore({ period }: Props) {
   const { transactions } = useFinance();
   const today = todayISO();
   const [selectedRisk, setSelectedRisk] = useState<CounterpartRisk | null>(null);
+
+  const scopedTransactions = useMemo(() => {
+    if (!period) return transactions;
+    return transactions.filter(t => t.dueDate >= period.from && t.dueDate <= period.to);
+  }, [transactions, period]);
 
   const risks = useMemo(() => {
     const counterparts = new Map<string, {
@@ -68,10 +78,10 @@ export default function CounterpartRiskScore() {
       delays: number[]; count: number; confirmed: number; confirmedOnTime: number;
     }>();
 
-    const totalReceber = transactions.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
-    const totalPagar = transactions.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
+    const totalReceber = scopedTransactions.filter(t => t.type === 'receber').reduce((s, t) => s + t.amount, 0);
+    const totalPagar = scopedTransactions.filter(t => t.type === 'pagar').reduce((s, t) => s + t.amount, 0);
 
-    transactions.forEach(tx => {
+    scopedTransactions.forEach(tx => {
       if (!tx.counterpart) return;
       const key = tx.counterpart;
       if (!counterparts.has(key)) {
@@ -128,15 +138,15 @@ export default function CounterpartRiskScore() {
     });
 
     return result.filter(r => r.transactionCount >= 2).sort((a, b) => b.riskScore - a.riskScore).slice(0, 12);
-  }, [transactions, today]);
+  }, [scopedTransactions, today]);
 
   // Transaction list for detail sheet
   const counterpartTxs = useMemo(() => {
     if (!selectedRisk) return [];
-    return transactions
+    return scopedTransactions
       .filter(t => t.counterpart === selectedRisk.name)
       .sort((a, b) => b.dueDate.localeCompare(a.dueDate));
-  }, [selectedRisk, transactions]);
+  }, [selectedRisk, scopedTransactions]);
 
   if (risks.length === 0) return null;
 
