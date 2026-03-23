@@ -422,7 +422,7 @@ export default function SimuladorPage() {
       </AnimatePresence>
 
       {/* Metrics grid - 5 columns */}
-      <motion.div {...sect(0.05)} className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <motion.div {...sect(0.05)} className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
         {/* Current balance */}
         <div className="card-elevated p-4 space-y-2">
           <div className="flex items-center gap-2">

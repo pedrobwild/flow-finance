@@ -220,9 +220,9 @@ export default function CockpitHeroKPIs({ period }: Props) {
           </div>
         </div>
 
-        <div className="h-px bg-border my-4" />
+        <div className="h-px bg-border my-3 sm:my-4" />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-5">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

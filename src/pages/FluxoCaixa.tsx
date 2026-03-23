@@ -311,20 +311,22 @@ export default function FluxoCaixa() {
       {/* Main Tabs */}
       <motion.div {...sect(0.08)}>
         <Tabs defaultValue="operacional" className="space-y-4">
-          <TabsList className="bg-muted/60 p-1 h-10">
-            <TabsTrigger value="operacional" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
-              <Target className="w-3.5 h-3.5" /> Agenda Operacional
-            </TabsTrigger>
-            <TabsTrigger value="projecao" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
-              <LineChart className="w-3.5 h-3.5" /> Projeção 30d
-            </TabsTrigger>
-            <TabsTrigger value="analise" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
-              <BarChart3 className="w-3.5 h-3.5" /> Análise Mensal
-            </TabsTrigger>
-            <TabsTrigger value="tabela" className="gap-1.5 text-xs data-[state=active]:shadow-sm">
-              <List className="w-3.5 h-3.5" /> Tabela 30d
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+            <TabsList className="bg-muted/60 p-1 h-10 w-max sm:w-auto">
+              <TabsTrigger value="operacional" className="gap-1.5 text-[11px] sm:text-xs data-[state=active]:shadow-sm min-h-[36px]">
+                <Target className="w-3.5 h-3.5 shrink-0" /> <span className="hidden xs:inline">Agenda</span> Operacional
+              </TabsTrigger>
+              <TabsTrigger value="projecao" className="gap-1.5 text-[11px] sm:text-xs data-[state=active]:shadow-sm min-h-[36px]">
+                <LineChart className="w-3.5 h-3.5 shrink-0" /> Projeção
+              </TabsTrigger>
+              <TabsTrigger value="analise" className="gap-1.5 text-[11px] sm:text-xs data-[state=active]:shadow-sm min-h-[36px]">
+                <BarChart3 className="w-3.5 h-3.5 shrink-0" /> Análise
+              </TabsTrigger>
+              <TabsTrigger value="tabela" className="gap-1.5 text-[11px] sm:text-xs data-[state=active]:shadow-sm min-h-[36px]">
+                <List className="w-3.5 h-3.5 shrink-0" /> Tabela
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* === OPERATIONAL TAB === */}
           <TabsContent value="operacional" className="mt-0 space-y-4">

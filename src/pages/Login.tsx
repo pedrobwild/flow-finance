@@ -44,12 +44,12 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-bottom">
+      <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center">
-          <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
-            <DollarSign className="w-7 h-7 text-primary-foreground" />
+          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
+            <DollarSign className="w-8 h-8 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">BWILD Finance</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -58,24 +58,25 @@ export default function Login() {
         </div>
 
         <Card className="border-border/50">
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="pt-6 pb-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {isSignup && (
                 <div>
-                  <Label className="text-xs flex items-center gap-1 mb-1.5">
-                    <User className="h-3 w-3" /> Nome completo
+                  <Label className="text-sm flex items-center gap-1.5 mb-2">
+                    <User className="h-3.5 w-3.5" /> Nome completo
                   </Label>
                   <Input
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
                     placeholder="Seu nome"
                     required
+                    className="h-12 text-base"
                   />
                 </div>
               )}
               <div>
-                <Label className="text-xs flex items-center gap-1 mb-1.5">
-                  <Mail className="h-3 w-3" /> Email
+                <Label className="text-sm flex items-center gap-1.5 mb-2">
+                  <Mail className="h-3.5 w-3.5" /> Email
                 </Label>
                 <Input
                   type="email"
@@ -83,11 +84,14 @@ export default function Login() {
                   onChange={e => setEmail(e.target.value)}
                   placeholder="seu@email.com"
                   required
+                  className="h-12 text-base"
+                  inputMode="email"
+                  autoComplete="email"
                 />
               </div>
               <div>
-                <Label className="text-xs flex items-center gap-1 mb-1.5">
-                  <Lock className="h-3 w-3" /> Senha
+                <Label className="text-sm flex items-center gap-1.5 mb-2">
+                  <Lock className="h-3.5 w-3.5" /> Senha
                 </Label>
                 <Input
                   type="password"
@@ -96,19 +100,21 @@ export default function Login() {
                   placeholder="••••••••"
                   required
                   minLength={6}
+                  className="h-12 text-base"
+                  autoComplete={isSignup ? 'new-password' : 'current-password'}
                 />
               </div>
-              <Button type="submit" className="w-full gap-2" disabled={loading}>
+              <Button type="submit" className="w-full gap-2 h-12 text-base font-semibold" disabled={loading}>
                 {loading ? 'Aguarde...' : isSignup ? 'Criar conta' : 'Entrar'}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </form>
 
-            <div className="mt-4 text-center">
+            <div className="mt-5 text-center">
               <button
                 type="button"
                 onClick={() => setIsSignup(!isSignup)}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:underline min-h-[44px] px-4"
               >
                 {isSignup ? 'Já tem conta? Faça login' : 'Não tem conta? Cadastre-se'}
               </button>
