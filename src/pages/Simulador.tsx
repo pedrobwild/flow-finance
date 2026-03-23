@@ -360,7 +360,7 @@ export default function SimuladorPage() {
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ duration: 0.3 }}
             className={cn(
-              'rounded-xl border-2 p-4 flex items-center justify-between',
+              'rounded-xl border-2 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between',
               analysis.deltaEnd >= 0
                 ? 'bg-success/5 border-success/25'
                 : 'bg-destructive/5 border-destructive/25'
