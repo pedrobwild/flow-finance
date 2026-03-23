@@ -54,8 +54,24 @@ export default function ContasReceber() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <motion.div {...sect(0)} className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      {/* Sticky mobile header */}
+      <div className="lg:hidden sticky top-14 z-20 bg-background/95 backdrop-blur-sm -mx-4 px-4 py-2 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ArrowUpRight className="w-4 h-4 text-success" />
+            <span className="text-sm font-bold">A Receber</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="font-mono font-bold text-success">{formatCurrency(insights.totalPending)}</span>
+            {insights.overdueCount > 0 && (
+              <span className="text-destructive font-medium">{insights.overdueCount} atrasado(s)</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <motion.div {...sect(0)} className="hidden lg:flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
