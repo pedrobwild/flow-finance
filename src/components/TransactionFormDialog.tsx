@@ -54,6 +54,8 @@ const empty = (type: TransactionType, obraId?: string) => ({
   notes: '',
   priority: 'normal' as const,
   billingSentAt: '',
+  cdiAdjustable: false,
+  cdiPercentage: '100',
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId, prefill }: Props) {
