@@ -297,7 +297,7 @@ export default function SimuladorPage() {
       excludedTotal,
       excludedCount,
       deferredCount,
-      hypotheticalCount: hypotheticals.length,
+      hypotheticalCount: hypotheticals.length + cdiHypotheticals.length,
       hasChanges,
       recommendations,
       currentBal: bal,
