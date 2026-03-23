@@ -128,7 +128,7 @@ export default function CashFlowHeroChart({ period }: Props) {
               Saldo projetado + entradas e saídas · Clique em um dia para agir
             </p>
           </div>
-          <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+          <div className="hidden sm:flex items-center gap-4 text-[10px] text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="w-5 h-2.5 rounded-sm bg-success/50" /> Entradas
             </span>
