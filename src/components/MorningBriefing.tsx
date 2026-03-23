@@ -141,10 +141,10 @@ export default function MorningBriefing({ period }: MorningBriefingProps) {
       }
     });
 
-    const corpPending = transactions.filter(t => !t.obraId && t.type === 'pagar' && t.status !== 'confirmado');
+    const corpPending = scopedTx.filter(t => !t.obraId && t.type === 'pagar' && t.status !== 'confirmado');
     if (corpPending.length > 0) {
       lines.push('');
-      lines.push(`Custos corporativos pendentes: ${corpPending.length} itens, ${formatCurrency(corpPending.reduce((s, t) => s + t.amount, 0))}`);
+      lines.push(`Custos corporativos pendentes no período: ${corpPending.length} itens, ${formatCurrency(corpPending.reduce((s, t) => s + t.amount, 0))}`);
     }
 
     lines.push('');
