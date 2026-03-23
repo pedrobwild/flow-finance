@@ -225,7 +225,7 @@ export default function WhatIfSimulator({ period }: Props) {
                     </div>
                     <div className="p-2.5 rounded-lg border bg-card text-center">
                       <p className="text-[9px] text-muted-foreground">Impacto</p>
-                      <p className={cn('text-xs font-bold', simulation.impact < 0 ? 'text-destructive' : 'text-emerald-600')}>
+                      <p className={cn('text-xs font-bold', simulation.impact < 0 ? 'text-destructive' : 'text-accent')}>
                         {formatCurrency(simulation.impact)}
                       </p>
                     </div>
