@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatCurrency, formatDate, todayISO, daysBetween } from '@/lib/helpers';
+import type { PeriodRange } from './DashboardPeriodFilter';
 import { Transaction } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
