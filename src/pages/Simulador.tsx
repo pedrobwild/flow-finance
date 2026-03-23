@@ -22,6 +22,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import RetencaoCDICard from '@/components/RetencaoCDICard';
 
 type DeferAction = { type: 'exclude' } | { type: 'defer'; newDate: string };
 
@@ -49,9 +50,12 @@ export default function SimuladorPage() {
   const today = todayISO();
   const [modifications, setModifications] = useState<Map<string, DeferAction>>(new Map());
   const [hypotheticals, setHypotheticals] = useState<HypotheticalTx[]>([]);
-  const [period, setPeriod] = useState(30);
+  const [period, setPeriod] = useState(60);
   const [showAddForm, setShowAddForm] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'pagar' | 'receber'>('all');
+  const [cdiActive, setCdiActive] = useState(false);
+  const [cdiOverrides, setCdiOverrides] = useState<Map<string, number>>(new Map());
+  const [cdiHypotheticals, setCdiHypotheticals] = useState<HypotheticalTx[]>([]);
 
   // New hypothetical form state
   const [newType, setNewType] = useState<'pagar' | 'receber'>('pagar');
@@ -95,6 +99,30 @@ export default function SimuladorPage() {
   const resetAll = useCallback(() => {
     setModifications(new Map());
     setHypotheticals([]);
+    setCdiActive(false);
+    setCdiOverrides(new Map());
+    setCdiHypotheticals([]);
+  }, []);
+
+  const handleCdiApply = useCallback((result: any) => {
+    const overrides = result.amountOverrides as Map<string, number>;
+    setCdiOverrides(overrides);
+    const hyps: HypotheticalTx[] = result.paybackHypotheticals.map((h: any) => ({
+      id: 'cdi-' + Math.random().toString(36).slice(2, 8),
+      type: 'pagar' as const,
+      description: h.description,
+      amount: h.amount,
+      dueDate: h.dueDate,
+      costCenter: 'Operação' as CostCenter,
+    }));
+    setCdiHypotheticals(hyps);
+    setCdiActive(true);
+  }, []);
+
+  const handleCdiClear = useCallback(() => {
+    setCdiActive(false);
+    setCdiOverrides(new Map());
+    setCdiHypotheticals([]);
   }, []);
 
   const addHypothetical = useCallback(() => {
@@ -124,11 +152,19 @@ export default function SimuladorPage() {
 
     const modifiedTxs = transactions.map(t => {
       const mod = modifications.get(t.id);
-      if (!mod) return t;
-      if (mod.type === 'exclude') return { ...t, status: 'confirmado' as const };
-      if (mod.type === 'defer') return { ...t, dueDate: mod.newDate };
-      return t;
+      let tx = t;
+      if (mod) {
+        if (mod.type === 'exclude') tx = { ...tx, status: 'confirmado' as const };
+        else if (mod.type === 'defer') tx = { ...tx, dueDate: mod.newDate };
+      }
+      // Apply CDI retention overrides (reduce amount by retained %)
+      if (cdiActive && cdiOverrides.has(tx.id)) {
+        tx = { ...tx, amount: cdiOverrides.get(tx.id)! };
+      }
+      return tx;
     });
+
+    const allHypotheticals = [...hypotheticals, ...cdiHypotheticals];
 
     const calcBalance = (txSet: Transaction[], hSet: HypotheticalTx[], date: string) => {
       let b = bal;
@@ -155,7 +191,7 @@ export default function SimuladorPage() {
     for (let i = 0; i <= period; i++) {
       const date = addDays(today, i);
       const original = projectedBalance(date);
-      const simulated = calcBalance(modifiedTxs, hypotheticals, date);
+      const simulated = calcBalance(modifiedTxs, allHypotheticals, date);
       points.push({
         label: i === 0 ? 'Hoje' : getDayMonth(date),
         date,
@@ -217,7 +253,7 @@ export default function SimuladorPage() {
           return t;
         });
         const testNeg = points.some((p) => {
-          const testBal = calcBalance(testTxs, hypotheticals, p.date);
+          const testBal = calcBalance(testTxs, allHypotheticals, p.date);
           return testBal < 0;
         });
         if (!testNeg) {
@@ -227,7 +263,7 @@ export default function SimuladorPage() {
             impact: `+${formatCurrency(tx.amount)} no período`,
           });
         } else {
-          const testMinBal = Math.min(...points.map(p => calcBalance(testTxs, hypotheticals, p.date)));
+          const testMinBal = Math.min(...points.map(p => calcBalance(testTxs, allHypotheticals, p.date)));
           if (testMinBal > origMin) {
             recommendations.push({
               tx,
@@ -239,7 +275,7 @@ export default function SimuladorPage() {
       }
     }
 
-    const hasChanges = modifications.size > 0 || hypotheticals.length > 0;
+    const hasChanges = modifications.size > 0 || hypotheticals.length > 0 || cdiActive;
 
     // Health score: 0-100
     const healthScore = Math.max(0, Math.min(100,
@@ -261,13 +297,13 @@ export default function SimuladorPage() {
       excludedTotal,
       excludedCount,
       deferredCount,
-      hypotheticalCount: hypotheticals.length,
+      hypotheticalCount: hypotheticals.length + cdiHypotheticals.length,
       hasChanges,
       recommendations,
       currentBal: bal,
       healthScore,
     };
-  }, [transactions, modifications, hypotheticals, currentBalance, projectedBalance, today, period]);
+  }, [transactions, modifications, hypotheticals, cdiHypotheticals, cdiActive, cdiOverrides, currentBalance, projectedBalance, today, period]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
@@ -322,7 +358,7 @@ export default function SimuladorPage() {
                 {analysis.hasChanges && (
                   <Badge variant="outline" className="text-[10px] font-semibold border-accent/30 text-accent gap-1">
                     <Sparkles className="w-3 h-3" />
-                    {modifications.size + hypotheticals.length}
+                    {modifications.size + hypotheticals.length + (cdiActive ? 1 : 0)}
                   </Badge>
                 )}
               </div>
@@ -774,7 +810,16 @@ export default function SimuladorPage() {
         </motion.div>
       </div>
 
-      {/* Transaction manipulation list */}
+      {/* CDI Retention Strategy */}
+      <motion.div {...sect(0.18)}>
+        <RetencaoCDICard
+          transactions={transactions}
+          onApply={handleCdiApply}
+          onClear={handleCdiClear}
+          isActive={cdiActive}
+        />
+      </motion.div>
+
       <motion.div {...sect(0.2)} className="card-elevated overflow-hidden">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2.5">
