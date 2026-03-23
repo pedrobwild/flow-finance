@@ -278,20 +278,38 @@ export default function CustosAnalise() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {byCostCenter.map(d => (
-                    <TableRow key={d.name}>
-                      <TableCell className="text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: d.color }} />
-                          {d.name}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs font-mono text-right font-semibold">{formatCurrency(d.total)}</TableCell>
-                      <TableCell className="text-xs font-mono text-right text-success">{formatCurrency(d.confirmed)}</TableCell>
-                      <TableCell className="text-xs font-mono text-right text-muted-foreground">{totalMonth > 0 ? `${Math.round(d.total / totalMonth * 100)}%` : '–'}</TableCell>
-                      <TableCell className="text-xs font-mono text-right">{d.count}</TableCell>
-                    </TableRow>
-                  ))}
+                  {byCostCenter.map(d => {
+                    const isExpanded = expandedCostCenters.has(d.name);
+                    const txs = isExpanded ? monthTxs.filter(t => t.costCenter === d.name).sort((a, b) => b.amount - a.amount) : [];
+                    return (
+                      <>
+                        <TableRow key={d.name} className="cursor-pointer hover:bg-muted/70" onClick={() => toggleCostCenter(d.name)}>
+                          <TableCell className="text-xs">
+                            <div className="flex items-center gap-2">
+                              {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                              <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: d.color }} />
+                              {d.name}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-right font-semibold">{formatCurrency(d.total)}</TableCell>
+                          <TableCell className="text-xs font-mono text-right text-success">{formatCurrency(d.confirmed)}</TableCell>
+                          <TableCell className="text-xs font-mono text-right text-muted-foreground">{totalMonth > 0 ? `${Math.round(d.total / totalMonth * 100)}%` : '–'}</TableCell>
+                          <TableCell className="text-xs font-mono text-right">{d.count}</TableCell>
+                        </TableRow>
+                        {isExpanded && txs.map(tx => (
+                          <TableRow key={tx.id} className="bg-muted/20">
+                            <TableCell className="text-[11px] pl-12 text-muted-foreground">{tx.description} <span className="text-muted-foreground/60">· {tx.counterpart}</span></TableCell>
+                            <TableCell className="text-[11px] font-mono text-right">{formatCurrency(tx.amount)}</TableCell>
+                            <TableCell className="text-[11px] font-mono text-right">
+                              <Badge variant="outline" className="text-[9px] font-normal">{tx.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-[11px] font-mono text-right text-muted-foreground">{formatDate(tx.dueDate)}</TableCell>
+                            <TableCell className="text-[11px] font-mono text-right text-muted-foreground">{tx.category}</TableCell>
+                          </TableRow>
+                        ))}
+                      </>
+                    );
+                  })}
                   {byCostCenter.length === 0 && (
                     <TableRow><TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-8">Sem custos neste mês</TableCell></TableRow>
                   )}
