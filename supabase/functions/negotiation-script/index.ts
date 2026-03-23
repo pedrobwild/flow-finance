@@ -100,19 +100,25 @@ REGRAS
 - Se o fornecedor tem histórico de flexibilidade, explore isso
 - Se é fornecedor crítico (sem alternativa), seja mais cauteloso na proposta`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Gere um script de negociação para:
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    let response: Response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: `Gere um script de negociação para:
 - Fornecedor/Contraparte: ${counterpart}
 - Valor: R$ ${amount}
 - Vencimento: ${dueDate}
@@ -121,71 +127,81 @@ REGRAS
 ${transactionHistory ? `- Histórico: ${transactionHistory}` : ''}
 
 Preciso de scripts prontos para ligar e negociar.`,
-          },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "negotiation_scripts",
-              description: "Return negotiation scripts and strategy for a specific payable",
-              parameters: {
-                type: "object",
-                properties: {
-                  supplierProfile: {
-                    type: "string",
-                    description: "Brief assessment of the supplier relationship and leverage points",
-                  },
-                  recommendedApproach: {
-                    type: "string",
-                    enum: ["desconto", "parcelamento", "prazo", "troca"],
-                    description: "Best negotiation approach for this case",
-                  },
-                  scenarios: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string", description: "Scenario name: 'Ideal', 'Intermediário', or 'Mínimo'" },
-                        description: { type: "string", description: "What you're proposing" },
-                        proposedAmount: { type: "number", description: "Proposed payment amount" },
-                        proposedDate: { type: "string", description: "Proposed payment date (YYYY-MM-DD)" },
-                        savings: { type: "number", description: "How much the company saves vs original" },
-                        script: { type: "string", description: "Word-for-word script to use on the phone (2-3 paragraphs)" },
-                        whatsappMessage: { type: "string", description: "Ready-to-send WhatsApp message" },
-                        formalEmail: { type: "string", description: "Ready-to-send formal email with subject line on first line, then blank line, then body. Professional corporate tone." },
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "negotiation_scripts",
+                description: "Return negotiation scripts and strategy for a specific payable",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    supplierProfile: {
+                      type: "string",
+                      description: "Brief assessment of the supplier relationship and leverage points",
+                    },
+                    recommendedApproach: {
+                      type: "string",
+                      enum: ["desconto", "parcelamento", "prazo", "troca"],
+                      description: "Best negotiation approach for this case",
+                    },
+                    scenarios: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          name: { type: "string", description: "Scenario name: 'Ideal', 'Intermediário', or 'Mínimo'" },
+                          description: { type: "string", description: "What you're proposing" },
+                          proposedAmount: { type: "number", description: "Proposed payment amount" },
+                          proposedDate: { type: "string", description: "Proposed payment date (YYYY-MM-DD)" },
+                          savings: { type: "number", description: "How much the company saves vs original" },
+                          script: { type: "string", description: "Word-for-word script to use on the phone (2-3 paragraphs)" },
+                          whatsappMessage: { type: "string", description: "Ready-to-send WhatsApp message" },
+                          formalEmail: { type: "string", description: "Ready-to-send formal email with subject line on first line, then blank line, then body. Professional corporate tone." },
+                        },
+                        required: ["name", "description", "proposedAmount", "proposedDate", "savings", "script", "whatsappMessage", "formalEmail"],
+                        additionalProperties: false,
                       },
-                      required: ["name", "description", "proposedAmount", "proposedDate", "savings", "script", "whatsappMessage", "formalEmail"],
-                      additionalProperties: false,
+                    },
+                    objections: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          objection: { type: "string", description: "Common objection the supplier may raise" },
+                          response: { type: "string", description: "How to respond" },
+                        },
+                        required: ["objection", "response"],
+                        additionalProperties: false,
+                      },
+                    },
+                    tips: {
+                      type: "array",
+                      items: { type: "string" },
+                      description: "3-5 practical tips for this specific negotiation",
                     },
                   },
-                  objections: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        objection: { type: "string", description: "Common objection the supplier may raise" },
-                        response: { type: "string", description: "How to respond" },
-                      },
-                      required: ["objection", "response"],
-                      additionalProperties: false,
-                    },
-                  },
-                  tips: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "3-5 practical tips for this specific negotiation",
-                  },
+                  required: ["supplierProfile", "recommendedApproach", "scenarios", "objections", "tips"],
+                  additionalProperties: false,
                 },
-                required: ["supplierProfile", "recommendedApproach", "scenarios", "objections", "tips"],
-                additionalProperties: false,
               },
             },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "negotiation_scripts" } },
-      }),
-    });
+          ],
+          tool_choice: { type: "function", function: { name: "negotiation_scripts" } },
+        }),
+      });
+    } catch (fetchErr) {
+      if ((fetchErr as Error).name === 'AbortError') {
+        return new Response(JSON.stringify({ error: "Tempo limite excedido (60s). Tente novamente." }), {
+          status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw fetchErr;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const status = response.status;
@@ -196,12 +212,26 @@ Preciso de scripts prontos para ligar e negociar.`,
       return new Response(JSON.stringify({ error: "Erro ao gerar script" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const data = await response.json();
+    let data: any;
+    try {
+      const rawText = await response.text();
+      if (!rawText.trim()) throw new Error("Empty response");
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error("Parse error:", parseErr);
+      return new Response(JSON.stringify({ error: "Resposta incompleta da IA. Tente novamente." }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
-      return new Response(JSON.stringify(JSON.parse(toolCall.function.arguments)), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      try {
+        return new Response(JSON.stringify(JSON.parse(toolCall.function.arguments)), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (argErr) {
+        console.error("Args parse error:", argErr);
+        return new Response(JSON.stringify({ error: "Resposta malformada da IA." }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     return new Response(JSON.stringify({ error: "Resposta inválida da IA" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
