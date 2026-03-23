@@ -277,7 +277,7 @@ export default function FluxoCaixa() {
       </motion.div>
 
       {/* Quick Status Strip */}
-      <motion.div {...sect(0.04)} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <motion.div {...sect(0.04)} className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         <StatusCard
           icon={Wallet} label="Saldo Atual" value={formatCurrency(currentBal)}
           iconBg="bg-primary/10" iconColor="text-primary"
