@@ -92,7 +92,7 @@ export default function OFXImportDialog({ open, onClose }: Props) {
             amount: m.ofxTx.amount,
             dueDate: m.ofxTx.date,
             paidAt: m.ofxTx.date,
-            status: 'confirmado',
+            status: 'conciliar',
             costCenter: 'Operação',
             category: 'Outros',
             recurrence: 'única',

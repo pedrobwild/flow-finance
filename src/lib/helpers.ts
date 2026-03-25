@@ -58,6 +58,7 @@ export function daysBetween(from: string, to: string): number {
 
 export function computeStatus(tx: Transaction): TransactionStatus {
   if (tx.status === 'confirmado' || tx.paidAt) return 'confirmado';
+  if (tx.status === 'conciliar') return 'conciliar';
   const today = todayISO();
   if (tx.dueDate < today) return 'atrasado';
   const daysUntilDue = daysBetween(today, tx.dueDate);

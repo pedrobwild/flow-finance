@@ -118,6 +118,7 @@ export const RECEBER_CATEGORIES = [
 export const STATUS_LABELS: Record<TransactionStatus, string> = {
   previsto: 'Previsto',
   pendente: 'Pendente',
+  conciliar: 'Conciliar',
   confirmado: 'Confirmado',
   atrasado: 'Atrasado',
 };
