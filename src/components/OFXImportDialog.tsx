@@ -91,8 +91,8 @@ export default function OFXImportDialog({ open, onClose }: Props) {
             counterpart: m.ofxTx.name || '',
             amount: m.ofxTx.amount,
             dueDate: m.ofxTx.date,
-            paidAt: m.ofxTx.date,
-            status: 'confirmado',
+            paidAt: null,
+            status: 'conciliar',
             costCenter: 'Operação',
             category: 'Outros',
             recurrence: 'única',
@@ -304,7 +304,7 @@ export default function OFXImportDialog({ open, onClose }: Props) {
                                     )}
                                     {!m.systemTx && (
                                       <p className="text-muted-foreground italic">
-                                        Será criada como transação confirmada ({isDebit ? 'pagar' : 'receber'}).
+                                        Será criada com status "Conciliar" para você completar os dados ({isDebit ? 'pagar' : 'receber'}).
                                       </p>
                                     )}
                                   </motion.div>

@@ -1,5 +1,5 @@
 export type TransactionType = 'pagar' | 'receber';
-export type TransactionStatus = 'previsto' | 'pendente' | 'confirmado' | 'atrasado';
+export type TransactionStatus = 'previsto' | 'pendente' | 'confirmado' | 'atrasado' | 'conciliar';
 export type Priority = 'crítica' | 'alta' | 'normal' | 'baixa';
 export type CostCenter = 'Operação' | 'Marketing' | 'Vendas' | 'Produto' | 'RH' | 'Jurídico' | 'Administrativo' | 'Diretoria';
 export type Recurrence = 'única' | 'mensal' | 'semanal' | 'trimestral' | 'anual';
@@ -95,7 +95,7 @@ export const COST_CENTERS: CostCenter[] = [
   'Operação', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
 ];
 
-export const STATUS_OPTIONS: TransactionStatus[] = ['previsto', 'pendente', 'confirmado', 'atrasado'];
+export const STATUS_OPTIONS: TransactionStatus[] = ['previsto', 'pendente', 'conciliar', 'confirmado', 'atrasado'];
 
 export const RECURRENCE_OPTIONS: Recurrence[] = ['única', 'mensal', 'semanal', 'trimestral', 'anual'];
 
@@ -118,6 +118,7 @@ export const RECEBER_CATEGORIES = [
 export const STATUS_LABELS: Record<TransactionStatus, string> = {
   previsto: 'Previsto',
   pendente: 'Pendente',
+  conciliar: 'Conciliar',
   confirmado: 'Confirmado',
   atrasado: 'Atrasado',
 };
