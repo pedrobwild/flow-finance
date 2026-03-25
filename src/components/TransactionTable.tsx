@@ -32,6 +32,7 @@ import TransactionFormDialog from './TransactionFormDialog';
 import ObraDetailSheet from './ObraDetailSheet';
 import AuditLogDrawer from './AuditLogDrawer';
 import CustomCategoriesManager from './CustomCategoriesManager';
+import ConfirmPaymentDialog from './ConfirmPaymentDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props { type: TransactionType; }
