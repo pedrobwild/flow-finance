@@ -283,11 +283,7 @@ export default function TransactionTable({ type }: Props) {
                     <Button
                       size="sm"
                       className="flex-1 h-9 text-xs gap-1.5"
-                      onClick={() => {
-                        setConfirmTx(tx);
-                        setActualAmount(tx.amount.toString());
-                        setConfirmPaidAt(todayISO());
-                      }}
+                      onClick={() => setConfirmTx(tx)}
                     >
                       <Check className="w-3.5 h-3.5" />
                       {isPagar ? 'Confirmar pgto' : 'Confirmar receb.'}
