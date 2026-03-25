@@ -16,6 +16,7 @@ const sect = (delay: number) => ({
 
 export default function ContasReceber() {
   const { } = useFinance();
+  const [showOFXImport, setShowOFXImport] = useState(false);
   const { filteredTransactions: transactions, isFiltered } = useObraFilter();
   const today = todayISO();
 
