@@ -498,6 +498,8 @@ export default function ContasPagar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
     </div>
   );
 }

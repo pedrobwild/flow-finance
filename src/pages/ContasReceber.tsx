@@ -150,6 +150,8 @@ export default function ContasReceber() {
       <motion.div {...sect(0.18)}>
         <TransactionTable type="receber" />
       </motion.div>
+
+      <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
     </div>
   );
 }
