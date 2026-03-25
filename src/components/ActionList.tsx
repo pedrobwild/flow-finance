@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, formatDate, todayISO, addDays } from '@/lib/helpers';
-import { PRIORITY_CLASSES, PRIORITY_LABELS } from '@/lib/types';
+import { PRIORITY_CLASSES, PRIORITY_LABELS, STATUS_LABELS } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDownCircle, ArrowUpCircle, Check, AlertTriangle, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
