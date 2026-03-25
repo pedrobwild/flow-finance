@@ -264,6 +264,11 @@ export default function FluxoCaixa() {
           </p>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+          <Button variant="outline" size="sm" onClick={() => setShowOFXImport(true)} className="text-xs gap-1.5 shrink-0">
+            <Upload className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Importar OFX</span>
+            <span className="sm:hidden">OFX</span>
+          </Button>
           <RecurrenceGenerator />
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
           <ExportDropdown
