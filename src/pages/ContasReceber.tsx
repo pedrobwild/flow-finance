@@ -1,10 +1,12 @@
-import { useMemo } from 'react'; 
+import { useMemo, useState } from 'react'; 
 import { motion } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
-import { ArrowUpRight, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, Clock, AlertTriangle, TrendingUp, Upload } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
+import OFXImportDialog from '@/components/OFXImportDialog';
+import { Button } from '@/components/ui/button';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 16, filter: 'blur(4px)' } as const,
