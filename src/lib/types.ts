@@ -95,7 +95,7 @@ export const COST_CENTERS: CostCenter[] = [
   'Operação', 'Marketing', 'Vendas', 'Produto', 'RH', 'Jurídico', 'Administrativo', 'Diretoria'
 ];
 
-export const STATUS_OPTIONS: TransactionStatus[] = ['previsto', 'pendente', 'confirmado', 'atrasado'];
+export const STATUS_OPTIONS: TransactionStatus[] = ['previsto', 'pendente', 'conciliar', 'confirmado', 'atrasado'];
 
 export const RECURRENCE_OPTIONS: Recurrence[] = ['única', 'mensal', 'semanal', 'trimestral', 'anual'];
 
