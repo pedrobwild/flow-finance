@@ -806,9 +806,9 @@ export default function TransactionTable({ type }: Props) {
                                 </Button>
                               )}
                               {!isConfirmed && (
-                                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-success/10 active:scale-90"
-                                  onClick={() => { setConfirmTx(tx); setActualAmount(tx.amount.toString()); setConfirmPaidAt(todayISO()); }}
-                                  title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}>
+                                 <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-success/10 active:scale-90"
+                                   onClick={() => setConfirmTx(tx)}
+                                   title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}>
                                   <Check className="w-3.5 h-3.5 text-success" />
                                 </Button>
                               )}
