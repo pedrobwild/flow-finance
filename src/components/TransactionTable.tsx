@@ -32,6 +32,7 @@ import TransactionFormDialog from './TransactionFormDialog';
 import ObraDetailSheet from './ObraDetailSheet';
 import AuditLogDrawer from './AuditLogDrawer';
 import CustomCategoriesManager from './CustomCategoriesManager';
+import ConfirmPaymentDialog from './ConfirmPaymentDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props { type: TransactionType; }
@@ -73,8 +74,6 @@ export default function TransactionTable({ type }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
-  const [actualAmount, setActualAmount] = useState('');
-  const [confirmPaidAt, setConfirmPaidAt] = useState(todayISO());
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
@@ -284,11 +283,7 @@ export default function TransactionTable({ type }: Props) {
                     <Button
                       size="sm"
                       className="flex-1 h-9 text-xs gap-1.5"
-                      onClick={() => {
-                        setConfirmTx(tx);
-                        setActualAmount(tx.amount.toString());
-                        setConfirmPaidAt(todayISO());
-                      }}
+                      onClick={() => setConfirmTx(tx)}
                     >
                       <Check className="w-3.5 h-3.5" />
                       {isPagar ? 'Confirmar pgto' : 'Confirmar receb.'}
@@ -807,9 +802,9 @@ export default function TransactionTable({ type }: Props) {
                                 </Button>
                               )}
                               {!isConfirmed && (
-                                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-success/10 active:scale-90"
-                                  onClick={() => { setConfirmTx(tx); setActualAmount(tx.amount.toString()); setConfirmPaidAt(todayISO()); }}
-                                  title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}>
+                                 <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-success/10 active:scale-90"
+                                   onClick={() => setConfirmTx(tx)}
+                                   title={isPagar ? 'Confirmar pagamento' : 'Confirmar recebimento'}>
                                   <Check className="w-3.5 h-3.5 text-success" />
                                 </Button>
                               )}
@@ -877,46 +872,10 @@ export default function TransactionTable({ type }: Props) {
       </Dialog>
 
       {/* Confirm payment/receivable modal */}
-      <Dialog open={!!confirmTx} onOpenChange={(v) => !v && setConfirmTx(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{confirmTx?.type === 'pagar' ? 'Confirmar pagamento' : 'Confirmar recebimento'}</DialogTitle>
-            <DialogDescription>
-              Informe o valor real {confirmTx?.type === 'pagar' ? 'pago' : 'recebido'} para <strong>{confirmTx?.description}</strong>.
-              <span className="block mt-1.5 text-xs text-muted-foreground">
-                Valor planejado: <span className="font-mono font-semibold text-foreground">{confirmTx && formatCurrency(confirmTx.amount)}</span>
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2 space-y-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                Valor {confirmTx?.type === 'pagar' ? 'pago' : 'recebido'} (R$)
-              </label>
-              <Input type="number" step="0.01" value={actualAmount} onChange={(e) => setActualAmount(e.target.value)} className="font-mono text-base" autoFocus />
-              {confirmTx && parseFloat(actualAmount) !== confirmTx.amount && actualAmount !== '' && (
-                <p className="text-[11px] mt-1.5 text-muted-foreground">
-                  Diferença: <span className={cn('font-mono font-semibold', parseFloat(actualAmount) > confirmTx.amount ? 'text-success' : 'text-destructive')}>
-                    {parseFloat(actualAmount) > confirmTx.amount ? '+' : ''}{formatCurrency(parseFloat(actualAmount) - confirmTx.amount)}
-                  </span>
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                Data do {confirmTx?.type === 'pagar' ? 'pagamento' : 'recebimento'}
-              </label>
-              <Input type="date" value={confirmPaidAt} onChange={(e) => setConfirmPaidAt(e.target.value)} className="text-sm" />
-            </div>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" size="sm" onClick={() => setConfirmTx(null)}>Cancelar</Button>
-            <Button size="sm" onClick={() => { if (confirmTx && actualAmount) { confirmTransaction(confirmTx.id, parseFloat(actualAmount), confirmTx.type, confirmPaidAt); setConfirmTx(null); } }} disabled={!actualAmount || parseFloat(actualAmount) <= 0 || !confirmPaidAt}>
-              Confirmar e atualizar saldo
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmPaymentDialog
+        transaction={confirmTx}
+        onClose={() => setConfirmTx(null)}
+      />
     </div>
   );
 }
