@@ -502,6 +502,7 @@ export default function ContasPagar() {
       </Dialog>
 
       <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
+      <ConfirmPaymentDialog transaction={confirmTx} onClose={() => setConfirmTx(null)} />
     </div>
   );
 }
