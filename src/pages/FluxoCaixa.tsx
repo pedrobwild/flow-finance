@@ -667,6 +667,8 @@ export default function FluxoCaixa() {
           </TabsContent>
         </Tabs>
       </motion.div>
+
+      <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
     </div>
   );
 }
