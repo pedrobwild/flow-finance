@@ -11,7 +11,7 @@ import {
   AlertTriangle, ChevronRight, Calendar, TrendingUp, TrendingDown,
   ArrowDownRight, ArrowUpRight, Wallet, ShieldAlert, CheckCircle2,
   BarChart3, Clock, Building2, LineChart, Table2, ArrowRight,
-  Users, FileText, Phone, Receipt, Target, Flame, ArrowDown, ArrowUp, List
+  Users, FileText, Phone, Receipt, Target, Flame, ArrowDown, ArrowUp, List, Upload
 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +23,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AreaChart, Area, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, ComposedChart, Line } from 'recharts';
 import CashFlowTable from '@/components/CashFlowTable';
+import OFXImportDialog from '@/components/OFXImportDialog';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 14, filter: 'blur(6px)' },
@@ -35,6 +36,7 @@ export default function FluxoCaixa() {
   const { filteredTransactions: transactions, isFiltered, selectedObraId, filteredBalance, filteredProjectedBalance } = useObraFilter();
   const { obras, getObraFinancials } = useObras();
   const today = todayISO();
+  const [showOFXImport, setShowOFXImport] = useState(false);
   const [period, setPeriod] = useState<PeriodRange>({
     from: todayISO(),
     to: addDays(todayISO(), 30),
@@ -262,6 +264,11 @@ export default function FluxoCaixa() {
           </p>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+          <Button variant="outline" size="sm" onClick={() => setShowOFXImport(true)} className="text-xs gap-1.5 shrink-0">
+            <Upload className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Importar OFX</span>
+            <span className="sm:hidden">OFX</span>
+          </Button>
           <RecurrenceGenerator />
           <DashboardPeriodFilter value={period} onChange={setPeriod} />
           <ExportDropdown
@@ -660,6 +667,8 @@ export default function FluxoCaixa() {
           </TabsContent>
         </Tabs>
       </motion.div>
+
+      <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
     </div>
   );
 }

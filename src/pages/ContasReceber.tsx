@@ -1,10 +1,12 @@
-import { useMemo } from 'react'; 
+import { useMemo, useState } from 'react'; 
 import { motion } from 'framer-motion';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
-import { ArrowUpRight, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, Clock, AlertTriangle, TrendingUp, Upload } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
+import OFXImportDialog from '@/components/OFXImportDialog';
+import { Button } from '@/components/ui/button';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 16, filter: 'blur(4px)' } as const,
@@ -14,6 +16,7 @@ const sect = (delay: number) => ({
 
 export default function ContasReceber() {
   const { } = useFinance();
+  const [showOFXImport, setShowOFXImport] = useState(false);
   const { filteredTransactions: transactions, isFiltered } = useObraFilter();
   const today = todayISO();
 
@@ -84,6 +87,10 @@ export default function ContasReceber() {
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs">
+          <Button variant="outline" size="sm" onClick={() => setShowOFXImport(true)} className="text-xs gap-1.5">
+            <Upload className="w-3.5 h-3.5" />
+            Importar OFX
+          </Button>
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <TrendingUp className="w-3.5 h-3.5 text-success" />
             <span>Taxa de confirmação: <span className="font-bold text-foreground">{insights.conversionRate}%</span></span>
@@ -143,6 +150,8 @@ export default function ContasReceber() {
       <motion.div {...sect(0.18)}>
         <TransactionTable type="receber" />
       </motion.div>
+
+      <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
     </div>
   );
 }

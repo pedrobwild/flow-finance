@@ -8,7 +8,7 @@ import { formatCurrency, todayISO, addDays, daysBetween, getDayMonth, formatDate
 import {
   ArrowDownRight, AlertTriangle, Clock, Check, CheckCheck, CalendarDays, Wallet,
   CreditCard, Tag, Building2, ChevronDown, ChevronUp, FileText, MoreHorizontal,
-  Pencil, Trash2, CalendarClock, RotateCcw
+  Pencil, Trash2, CalendarClock, RotateCcw, Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import TransactionFormDialog from '@/components/TransactionFormDialog';
 import TransactionTable from '@/components/TransactionTable';
+import OFXImportDialog from '@/components/OFXImportDialog';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 12 } as const,
@@ -42,6 +43,7 @@ export default function ContasPagar() {
   const [rescheduleTx, setRescheduleTx] = useState<Transaction | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [refundTx, setRefundTx] = useState<Transaction | null>(null);
+  const [showOFXImport, setShowOFXImport] = useState(false);
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -322,6 +324,10 @@ export default function ContasPagar() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setShowOFXImport(true)} className="text-xs gap-1.5">
+            <Upload className="w-3.5 h-3.5" />
+            Importar OFX
+          </Button>
           {currentBalance && (
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/50 border border-border/50 text-xs">
               <Wallet className="w-3.5 h-3.5 text-primary" />
@@ -492,6 +498,8 @@ export default function ContasPagar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
     </div>
   );
 }
