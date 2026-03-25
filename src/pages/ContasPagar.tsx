@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import TransactionFormDialog from '@/components/TransactionFormDialog';
 import TransactionTable from '@/components/TransactionTable';
+import OFXImportDialog from '@/components/OFXImportDialog';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 12 } as const,
