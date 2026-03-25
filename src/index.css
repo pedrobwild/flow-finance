@@ -129,6 +129,11 @@
     color: hsl(var(--success));
   }
 
+  .status-conciliar {
+    background-color: hsl(var(--primary) / 0.12);
+    color: hsl(var(--primary));
+  }
+
   .priority-critica {
     @apply bg-destructive/10 text-destructive font-semibold;
   }
