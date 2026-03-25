@@ -74,8 +74,6 @@ export default function TransactionTable({ type }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
-  const [actualAmount, setActualAmount] = useState('');
-  const [confirmPaidAt, setConfirmPaidAt] = useState(todayISO());
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
