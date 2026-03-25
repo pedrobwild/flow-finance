@@ -177,7 +177,7 @@ export default function ContasPagar() {
             size="icon"
             variant="ghost"
             className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90 hover:bg-success/10"
-            onClick={() => confirmTransaction(tx.id, tx.amount, tx.type)}
+            onClick={() => setConfirmTx(tx)}
             title="Confirmar pagamento"
           >
             <Check className="w-4 h-4 text-success" />
