@@ -1,5 +1,5 @@
 export type TransactionType = 'pagar' | 'receber';
-export type TransactionStatus = 'previsto' | 'pendente' | 'confirmado' | 'atrasado';
+export type TransactionStatus = 'previsto' | 'pendente' | 'confirmado' | 'atrasado' | 'conciliar';
 export type Priority = 'crítica' | 'alta' | 'normal' | 'baixa';
 export type CostCenter = 'Operação' | 'Marketing' | 'Vendas' | 'Produto' | 'RH' | 'Jurídico' | 'Administrativo' | 'Diretoria';
 export type Recurrence = 'única' | 'mensal' | 'semanal' | 'trimestral' | 'anual';
