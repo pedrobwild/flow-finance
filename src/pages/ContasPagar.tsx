@@ -45,6 +45,7 @@ export default function ContasPagar() {
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [refundTx, setRefundTx] = useState<Transaction | null>(null);
   const [showOFXImport, setShowOFXImport] = useState(false);
+  const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
