@@ -91,7 +91,7 @@ export default function ActionList() {
               <div className="flex items-center gap-1 shrink-0">
                 {tx.priority === 'crítica' && <AlertTriangle className="w-3.5 h-3.5 text-destructive" />}
                 <span className={cn('status-badge text-[10px]', `status-${tx.status}`)}>
-                  {tx.status === 'atrasado' ? 'Atrasado' : tx.status === 'pendente' ? 'Pendente' : 'Previsto'}
+                  {STATUS_LABELS[tx.status]}
                 </span>
                 <span className={cn('status-badge text-[10px] hidden md:inline-flex', PRIORITY_CLASSES[tx.priority])}>
                   {PRIORITY_LABELS[tx.priority]}
