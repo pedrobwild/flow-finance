@@ -87,6 +87,10 @@ export default function ContasReceber() {
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs">
+          <Button variant="outline" size="sm" onClick={() => setShowOFXImport(true)} className="text-xs gap-1.5">
+            <Upload className="w-3.5 h-3.5" />
+            Importar OFX
+          </Button>
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <TrendingUp className="w-3.5 h-3.5 text-success" />
             <span>Taxa de confirmação: <span className="font-bold text-foreground">{insights.conversionRate}%</span></span>
