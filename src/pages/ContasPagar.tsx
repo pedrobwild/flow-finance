@@ -324,6 +324,10 @@ export default function ContasPagar() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setShowOFXImport(true)} className="text-xs gap-1.5">
+            <Upload className="w-3.5 h-3.5" />
+            Importar OFX
+          </Button>
           {currentBalance && (
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted/50 border border-border/50 text-xs">
               <Wallet className="w-3.5 h-3.5 text-primary" />
