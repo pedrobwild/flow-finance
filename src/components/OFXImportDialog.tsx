@@ -304,7 +304,7 @@ export default function OFXImportDialog({ open, onClose }: Props) {
                                     )}
                                     {!m.systemTx && (
                                       <p className="text-muted-foreground italic">
-                                        Será criada como transação confirmada ({isDebit ? 'pagar' : 'receber'}).
+                                        Será criada com status "Conciliar" para você completar os dados ({isDebit ? 'pagar' : 'receber'}).
                                       </p>
                                     )}
                                   </motion.div>
