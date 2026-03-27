@@ -25,6 +25,7 @@ import TransactionFormDialog from '@/components/TransactionFormDialog';
 import TransactionTable from '@/components/TransactionTable';
 import OFXImportDialog from '@/components/OFXImportDialog';
 import ConfirmPaymentDialog from '@/components/ConfirmPaymentDialog';
+import NFReportDialog from '@/components/NFReportDialog';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 12 } as const,
@@ -46,6 +47,7 @@ export default function ContasPagar() {
   const [refundTx, setRefundTx] = useState<Transaction | null>(null);
   const [showOFXImport, setShowOFXImport] = useState(false);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
+  const [showNFReport, setShowNFReport] = useState(false);
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -326,6 +328,10 @@ export default function ContasPagar() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setShowNFReport(true)} className="text-xs gap-1.5">
+            <FileText className="w-3.5 h-3.5" />
+            Relatório NF
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowOFXImport(true)} className="text-xs gap-1.5">
             <Upload className="w-3.5 h-3.5" />
             Importar OFX
@@ -503,6 +509,7 @@ export default function ContasPagar() {
 
       <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
       <ConfirmPaymentDialog transaction={confirmTx} onClose={() => setConfirmTx(null)} />
+      <NFReportDialog open={showNFReport} onClose={() => setShowNFReport(false)} />
     </div>
   );
 }
