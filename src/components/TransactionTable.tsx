@@ -847,6 +847,23 @@ export default function TransactionTable({ type }: Props) {
                                   <span className="text-muted-foreground/30 text-[10px]">—</span>
                                 )}
                               </td>
+                              <td className="px-3 py-3 text-center hidden lg:table-cell">
+                                {tx.receiptUrl ? (
+                                  <a href={tx.receiptUrl} target="_blank" rel="noopener noreferrer">
+                                    <Badge variant="outline" className="text-[10px] gap-1 text-success border-success/30 hover:bg-success/10 cursor-pointer">
+                                      <FileUp className="w-3 h-3" /> Comp.
+                                    </Badge>
+                                  </a>
+                                ) : isConfirmed ? (
+                                  <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:bg-muted"
+                                    onClick={() => { setReceiptTargetTxId(tx.id); receiptFileRef.current?.click(); }}
+                                    disabled={uploadingReceiptId === tx.id}>
+                                    {uploadingReceiptId === tx.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><FileUp className="w-3 h-3" />Anexar</>}
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground/30 text-[10px]">—</span>
+                                )}
+                              </td>
                             </>
                           ) : (
                             <>
