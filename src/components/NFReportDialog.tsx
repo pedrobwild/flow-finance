@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
+import { format } from 'date-fns';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
-import { formatCurrency, formatDateFull } from '@/lib/helpers';
+import { formatCurrency, formatDateFull, toISODate } from '@/lib/helpers';
 import { exportToCSV, exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, Download, FileSpreadsheet, FileText, TrendingUp } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CheckCircle2, XCircle, FileText, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ExportDropdown from './ExportDropdown';
 
@@ -33,11 +35,21 @@ export default function NFReportDialog({ open, onClose }: Props) {
   const { filteredTransactions } = useObraFilter();
   const { obras } = useObras();
   const [viewMode, setViewMode] = useState<'month' | 'detail'>('month');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
-  const confirmedPayables = useMemo(() =>
-    filteredTransactions.filter(t => t.type === 'pagar' && t.status === 'confirmado'),
-    [filteredTransactions]
-  );
+  const confirmedPayables = useMemo(() => {
+    let txs = filteredTransactions.filter(t => t.type === 'pagar' && t.status === 'confirmado');
+    if (dateFrom) {
+      const fromISO = toISODate(dateFrom);
+      txs = txs.filter(t => t.dueDate >= fromISO);
+    }
+    if (dateTo) {
+      const toISO = toISODate(dateTo);
+      txs = txs.filter(t => t.dueDate <= toISO);
+    }
+    return txs;
+  }, [filteredTransactions, dateFrom, dateTo]);
 
   const monthGroups = useMemo(() => {
     const map = new Map<string, MonthGroup>();
@@ -166,6 +178,38 @@ export default function NFReportDialog({ open, onClose }: Props) {
               />
             </div>
           </div>
+        </div>
+
+        {/* Period filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn('h-8 text-xs gap-1.5', !dateFrom && 'text-muted-foreground')}>
+                <CalendarIcon className="w-3.5 h-3.5" />
+                {dateFrom ? format(dateFrom, 'dd/MM/yyyy') : 'Data início'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} className={cn("p-3 pointer-events-auto")} />
+            </PopoverContent>
+          </Popover>
+          <span className="text-xs text-muted-foreground">até</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn('h-8 text-xs gap-1.5', !dateTo && 'text-muted-foreground')}>
+                <CalendarIcon className="w-3.5 h-3.5" />
+                {dateTo ? format(dateTo, 'dd/MM/yyyy') : 'Data fim'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dateTo} onSelect={setDateTo} className={cn("p-3 pointer-events-auto")} />
+            </PopoverContent>
+          </Popover>
+          {(dateFrom || dateTo) && (
+            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+              Limpar
+            </Button>
+          )}
         </div>
 
         {/* Controls */}
