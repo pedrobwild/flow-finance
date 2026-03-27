@@ -29,6 +29,9 @@ interface MonthGroup {
   totalWithNF: number;
   totalWithoutNF: number;
   coverage: number;
+  countWithReceipt: number;
+  countWithoutReceipt: number;
+  receiptCoverage: number;
 }
 
 export default function NFReportDialog({ open, onClose }: Props) {
