@@ -12,6 +12,7 @@ import MoMComparison from '@/components/MoMComparison';
 import DsoDpoIndicators from '@/components/DsoDpoIndicators';
 import WhatIfSimulator from '@/components/WhatIfSimulator';
 import MissingNFBanner from '@/components/MissingNFBanner';
+import MissingReceiptBanner from '@/components/MissingReceiptBanner';
 
 import { motion } from 'framer-motion';
 
@@ -44,8 +45,11 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* === ALERTA NF PENDENTE === */}
-      <MissingNFBanner />
+      {/* === ALERTAS DE ANEXOS PENDENTES === */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <MissingNFBanner />
+        <MissingReceiptBanner />
+      </div>
 
       {/* === HERO: KPIs Preditivos (dark panel) === */}
       <motion.div {...section(0.04)}>
