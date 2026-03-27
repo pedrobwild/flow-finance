@@ -13,6 +13,7 @@ import DsoDpoIndicators from '@/components/DsoDpoIndicators';
 import WhatIfSimulator from '@/components/WhatIfSimulator';
 import MissingNFBanner from '@/components/MissingNFBanner';
 import MissingReceiptBanner from '@/components/MissingReceiptBanner';
+import DailyBalanceProjection from '@/components/DailyBalanceProjection';
 
 import { motion } from 'framer-motion';
 
@@ -59,6 +60,11 @@ export default function Dashboard() {
       {/* === RADAR DE CAIXA (hero chart) === */}
       <motion.div {...section(0.12)}>
         <CashFlowHeroChart period={period} />
+      </motion.div>
+
+      {/* === PROJEÇÃO DE SALDO DIÁRIO 30/60/90d === */}
+      <motion.div {...section(0.14)}>
+        <DailyBalanceProjection />
       </motion.div>
 
       {/* === COMPARATIVO MoM + WHAT-IF === */}
