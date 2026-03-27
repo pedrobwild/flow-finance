@@ -344,8 +344,8 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
-          <Button size="sm" onClick={handleConfirm} disabled={!canConfirm || nfUploading}>
-            {nfUploading && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+          <Button size="sm" onClick={handleConfirm} disabled={!canConfirm || uploading}>
+            {uploading && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
             {splitEnabled ? 'Confirmar e ratear' : 'Confirmar e atualizar saldo'}
           </Button>
         </DialogFooter>
