@@ -166,33 +166,31 @@ export default function NFReportDialog({ open, onClose }: Props) {
         </DialogHeader>
 
         {/* Summary KPIs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="rounded-lg border bg-muted/30 p-3 text-center">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Pago</p>
             <p className="text-sm font-bold font-mono mt-1">{formatCurrency(totals.total)}</p>
             <p className="text-[10px] text-muted-foreground">{confirmedPayables.length} transações</p>
           </div>
-          <div className="rounded-lg border bg-success/5 border-success/20 p-3 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Com NF</p>
-            <p className="text-sm font-bold font-mono text-success mt-1">{formatCurrency(totals.totalWithNF)}</p>
-            <p className="text-[10px] text-muted-foreground">{totals.withNF} transações</p>
-          </div>
-          <div className="rounded-lg border bg-destructive/5 border-destructive/20 p-3 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Sem NF</p>
-            <p className="text-sm font-bold font-mono text-destructive mt-1">{formatCurrency(totals.totalWithoutNF)}</p>
-            <p className="text-[10px] text-muted-foreground">{totals.withoutNF} transações</p>
-          </div>
           <div className="rounded-lg border bg-primary/5 border-primary/20 p-3 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cobertura</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cobertura NF</p>
             <p className={cn('text-sm font-bold font-mono mt-1', totals.coverage >= 80 ? 'text-success' : totals.coverage >= 50 ? 'text-warning' : 'text-destructive')}>
               {totals.coverage.toFixed(0)}%
             </p>
             <div className="w-full h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
-              <div
-                className={cn('h-full rounded-full transition-all', totals.coverage >= 80 ? 'bg-success' : totals.coverage >= 50 ? 'bg-warning' : 'bg-destructive')}
-                style={{ width: `${totals.coverage}%` }}
-              />
+              <div className={cn('h-full rounded-full transition-all', totals.coverage >= 80 ? 'bg-success' : totals.coverage >= 50 ? 'bg-warning' : 'bg-destructive')} style={{ width: `${totals.coverage}%` }} />
             </div>
+            <p className="text-[10px] text-muted-foreground mt-1">{totals.withNF} com / {totals.withoutNF} sem</p>
+          </div>
+          <div className="rounded-lg border bg-primary/5 border-primary/20 p-3 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cobertura Comp.</p>
+            <p className={cn('text-sm font-bold font-mono mt-1', totals.receiptCoverage >= 80 ? 'text-success' : totals.receiptCoverage >= 50 ? 'text-warning' : 'text-destructive')}>
+              {totals.receiptCoverage.toFixed(0)}%
+            </p>
+            <div className="w-full h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+              <div className={cn('h-full rounded-full transition-all', totals.receiptCoverage >= 80 ? 'bg-success' : totals.receiptCoverage >= 50 ? 'bg-warning' : 'bg-destructive')} style={{ width: `${totals.receiptCoverage}%` }} />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">{totals.withReceipt} com / {totals.withoutReceipt} sem</p>
           </div>
         </div>
 
