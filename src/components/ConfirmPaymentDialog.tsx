@@ -302,42 +302,49 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
             <div className="flex items-center gap-2">
               <Paperclip className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-xs font-semibold">Nota Fiscal / Comprovante</p>
-                <p className="text-[10px] text-muted-foreground">Anexe o PDF da NF (opcional agora, pode anexar depois)</p>
+                <p className="text-xs font-semibold">Nota Fiscal</p>
+                <p className="text-[10px] text-muted-foreground">PDF da NF (opcional, pode anexar depois)</p>
               </div>
             </div>
-            <input
-              ref={nfInputRef}
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.webp"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  if (file.size > 10 * 1024 * 1024) {
-                    toast.error('Arquivo muito grande (máx 10MB)');
-                    return;
-                  }
-                  setNfFile(file);
-                }
-              }}
-            />
+            <input ref={nfInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 10*1024*1024) { toast.error('Máx 10MB'); return; } setNfFile(f); } }} />
             {nfFile ? (
               <div className="flex items-center gap-2 text-xs bg-background rounded-md px-2.5 py-1.5 border">
                 <FileUp className="w-3.5 h-3.5 text-success shrink-0" />
                 <span className="truncate flex-1 font-medium">{nfFile.name}</span>
-                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setNfFile(null)}>
-                  <XIcon className="w-3 h-3" />
-                </Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setNfFile(null)}><XIcon className="w-3 h-3" /></Button>
               </div>
             ) : transaction?.attachmentUrl ? (
-              <div className="flex items-center gap-2 text-xs text-success">
-                <Paperclip className="w-3 h-3" />
-                <span>NF já anexada</span>
-              </div>
+              <div className="flex items-center gap-2 text-xs text-success"><Paperclip className="w-3 h-3" /><span>NF já anexada</span></div>
             ) : (
               <Button variant="outline" size="sm" className="w-full text-xs h-7 gap-1" onClick={() => nfInputRef.current?.click()}>
-                <FileUp className="w-3 h-3" /> Selecionar arquivo
+                <FileUp className="w-3 h-3" /> Selecionar NF
+              </Button>
+            )}
+          </div>
+
+          {/* Comprovante de pagamento upload */}
+          <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
+            <div className="flex items-center gap-2">
+              <FileUp className="w-4 h-4 text-primary" />
+              <div>
+                <p className="text-xs font-semibold">Comprovante de Pagamento</p>
+                <p className="text-[10px] text-muted-foreground">PIX, boleto pago, TED (opcional)</p>
+              </div>
+            </div>
+            <input ref={receiptInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 10*1024*1024) { toast.error('Máx 10MB'); return; } setReceiptFile(f); } }} />
+            {receiptFile ? (
+              <div className="flex items-center gap-2 text-xs bg-background rounded-md px-2.5 py-1.5 border">
+                <FileUp className="w-3.5 h-3.5 text-success shrink-0" />
+                <span className="truncate flex-1 font-medium">{receiptFile.name}</span>
+                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setReceiptFile(null)}><XIcon className="w-3 h-3" /></Button>
+              </div>
+            ) : transaction?.receiptUrl ? (
+              <div className="flex items-center gap-2 text-xs text-success"><FileUp className="w-3 h-3" /><span>Comprovante já anexado</span></div>
+            ) : (
+              <Button variant="outline" size="sm" className="w-full text-xs h-7 gap-1" onClick={() => receiptInputRef.current?.click()}>
+                <FileUp className="w-3 h-3" /> Selecionar comprovante
               </Button>
             )}
           </div>
