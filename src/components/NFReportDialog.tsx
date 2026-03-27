@@ -35,11 +35,21 @@ export default function NFReportDialog({ open, onClose }: Props) {
   const { filteredTransactions } = useObraFilter();
   const { obras } = useObras();
   const [viewMode, setViewMode] = useState<'month' | 'detail'>('month');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
-  const confirmedPayables = useMemo(() =>
-    filteredTransactions.filter(t => t.type === 'pagar' && t.status === 'confirmado'),
-    [filteredTransactions]
-  );
+  const confirmedPayables = useMemo(() => {
+    let txs = filteredTransactions.filter(t => t.type === 'pagar' && t.status === 'confirmado');
+    if (dateFrom) {
+      const fromISO = toISODate(dateFrom);
+      txs = txs.filter(t => t.dueDate >= fromISO);
+    }
+    if (dateTo) {
+      const toISO = toISODate(dateTo);
+      txs = txs.filter(t => t.dueDate <= toISO);
+    }
+    return txs;
+  }, [filteredTransactions, dateFrom, dateTo]);
 
   const monthGroups = useMemo(() => {
     const map = new Map<string, MonthGroup>();
