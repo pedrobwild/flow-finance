@@ -108,7 +108,7 @@ export default function TransactionTable({ type }: Props) {
     }
   };
 
-  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || (!isFiltered && obraFilter !== 'todos') || !!dateRange?.from || search.length > 0;
+  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || (!isFiltered && obraFilter !== 'todos') || !!dateRange?.from || search.length > 0 || (isPagar && nfFilter !== 'todos');
 
   const clearFilters = () => {
     setSearch('');
@@ -119,6 +119,7 @@ export default function TransactionTable({ type }: Props) {
     setObraFilter('todos');
     setBillingFilter('todos');
     setCostTypeFilter('todos');
+    setNfFilter('todos');
     setDateRange(undefined);
   };
 
