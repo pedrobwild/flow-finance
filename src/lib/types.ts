@@ -25,6 +25,7 @@ export interface Transaction {
   billingCount: number;
   attachmentUrl: string | null;
   receiptUrl: string | null;
+  cdiAdjustable: boolean;
   cdiPercentage: number | null;
   baseAmount: number | null;
   baseDate: string | null;
