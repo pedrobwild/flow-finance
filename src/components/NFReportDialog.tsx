@@ -61,7 +61,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
       if (!map.has(key)) {
-        map.set(key, { key, label, total: 0, countAll: 0, countWithNF: 0, countWithoutNF: 0, totalWithNF: 0, totalWithoutNF: 0, coverage: 0 });
+        map.set(key, { key, label, total: 0, countAll: 0, countWithNF: 0, countWithoutNF: 0, totalWithNF: 0, totalWithoutNF: 0, coverage: 0, countWithReceipt: 0, countWithoutReceipt: 0, receiptCoverage: 0 });
       }
       const g = map.get(key)!;
       g.total += t.amount;
