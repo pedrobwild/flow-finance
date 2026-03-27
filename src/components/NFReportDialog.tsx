@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
+import { format } from 'date-fns';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { useObras } from '@/lib/obras-context';
-import { formatCurrency, formatDateFull } from '@/lib/helpers';
+import { formatCurrency, formatDateFull, toISODate } from '@/lib/helpers';
 import { exportToCSV, exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, Download, FileSpreadsheet, FileText, TrendingUp } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CheckCircle2, XCircle, FileText, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ExportDropdown from './ExportDropdown';
 
