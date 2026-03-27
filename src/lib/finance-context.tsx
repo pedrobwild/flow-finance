@@ -28,6 +28,7 @@ function rowToTransaction(row: any): Transaction {
     billingSentAt: row.billing_sent_at || null,
     billingCount: Number(row.billing_count) || 0,
     attachmentUrl: row.attachment_url || null,
+    receiptUrl: row.receipt_url || null,
     cdiAdjustable: row.cdi_adjustable || false,
     cdiPercentage: row.cdi_percentage != null ? Number(row.cdi_percentage) : null,
     baseAmount: row.base_amount != null ? Number(row.base_amount) : null,
