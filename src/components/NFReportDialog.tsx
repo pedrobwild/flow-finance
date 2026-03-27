@@ -112,6 +112,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
           category: t.category,
           obra: obra?.code || '-',
           hasNF: !!t.attachmentUrl,
+          hasReceipt: !!t.receiptUrl,
         };
       }),
     [confirmedPayables, obras]
