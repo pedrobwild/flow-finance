@@ -13,6 +13,7 @@ import DsoDpoIndicators from '@/components/DsoDpoIndicators';
 import WhatIfSimulator from '@/components/WhatIfSimulator';
 import MissingNFBanner from '@/components/MissingNFBanner';
 import MissingReceiptBanner from '@/components/MissingReceiptBanner';
+import DailyBalanceProjection from '@/components/DailyBalanceProjection';
 
 import { motion } from 'framer-motion';
 
