@@ -605,7 +605,18 @@ export default function TransactionTable({ type }: Props) {
                 </SelectContent>
               </Select>
             )}
-            {!isPagar && (
+            {isPagar && (
+              <Select value={nfFilter} onValueChange={setNfFilter}>
+                <SelectTrigger className={cn("w-[120px] h-8 text-xs", nfFilter === 'sem_nf' && 'border-warning text-warning')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Nota Fiscal</SelectItem>
+                  <SelectItem value="sem_nf">⚠ Sem NF</SelectItem>
+                  <SelectItem value="com_nf">✓ Com NF</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
               <Select value={billingFilter} onValueChange={setBillingFilter}>
                 <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
