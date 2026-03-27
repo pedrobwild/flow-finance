@@ -35,6 +35,9 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
   const [paidAt, setPaidAt] = useState(todayISO());
   const [splitEnabled, setSplitEnabled] = useState(false);
   const [allocations, setAllocations] = useState<ObraAllocation[]>([]);
+  const [nfFile, setNfFile] = useState<File | null>(null);
+  const [nfUploading, setNfUploading] = useState(false);
+  const nfInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (transaction) {
