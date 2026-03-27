@@ -315,7 +315,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
               <TableBody>
                 {detailRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
+                    <TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-8">
                       Nenhum pagamento confirmado encontrado.
                     </TableCell>
                   </TableRow>
