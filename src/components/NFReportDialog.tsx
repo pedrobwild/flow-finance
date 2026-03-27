@@ -253,9 +253,10 @@ export default function NFReportDialog({ open, onClose }: Props) {
                 <TableRow className="bg-muted/30">
                   <TableHead className="text-[11px]">Período</TableHead>
                   <TableHead className="text-[11px] text-right">Total</TableHead>
-                  <TableHead className="text-[11px] text-center">Com NF</TableHead>
-                  <TableHead className="text-[11px] text-center">Sem NF</TableHead>
-                  <TableHead className="text-[11px] text-right">Cobertura</TableHead>
+                  <TableHead className="text-[11px] text-center">NF</TableHead>
+                  <TableHead className="text-[11px] text-center">Comp.</TableHead>
+                  <TableHead className="text-[11px] text-right">Cob. NF</TableHead>
+                  <TableHead className="text-[11px] text-right">Cob. Comp.</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
