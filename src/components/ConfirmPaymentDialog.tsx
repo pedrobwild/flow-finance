@@ -88,33 +88,35 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
     }
   };
 
-  const uploadNf = async (): Promise<string | null> => {
-    if (!nfFile) return null;
-    setNfUploading(true);
+  const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
     try {
-      const ext = nfFile.name.split('.').pop() || 'pdf';
-      const path = `nf/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('attachments').upload(path, nfFile);
+      const ext = file.name.split('.').pop() || 'pdf';
+      const path = `${prefix}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file);
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
       return urlData.publicUrl;
     } catch (err) {
-      toast.error('Erro ao enviar nota fiscal');
+      toast.error(`Erro ao enviar ${prefix === 'nf' ? 'nota fiscal' : 'comprovante'}`);
       return null;
-    } finally {
-      setNfUploading(false);
     }
   };
 
   const handleConfirm = async () => {
     if (!transaction) return;
 
-    const nfUrl = await uploadNf();
+    setUploading(true);
+    const nfUrl = nfFile ? await uploadFile(nfFile, 'nf') : null;
+    const receiptUrl = receiptFile ? await uploadFile(receiptFile, 'receipts') : null;
+    setUploading(false);
 
     if (!splitEnabled) {
       confirmTransaction(transaction.id, totalAmount, transaction.type, paidAt);
-      if (nfUrl) {
-        updateTransaction(transaction.id, { attachmentUrl: nfUrl });
+      const updates: Partial<Transaction> = {};
+      if (nfUrl) updates.attachmentUrl = nfUrl;
+      if (receiptUrl) updates.receiptUrl = receiptUrl;
+      if (Object.keys(updates).length > 0) {
+        updateTransaction(transaction.id, updates);
       }
       onClose();
       return;
