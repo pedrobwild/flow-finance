@@ -333,6 +333,13 @@ export default function NFReportDialog({ open, onClose }: Props) {
                         <XCircle className="w-4 h-4 text-destructive mx-auto" />
                       )}
                     </TableCell>
+                    <TableCell className="text-center">
+                      {r.hasReceipt ? (
+                        <CheckCircle2 className="w-4 h-4 text-success mx-auto" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-destructive mx-auto" />
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
