@@ -180,6 +180,38 @@ export default function NFReportDialog({ open, onClose }: Props) {
           </div>
         </div>
 
+        {/* Period filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn('h-8 text-xs gap-1.5', !dateFrom && 'text-muted-foreground')}>
+                <CalendarIcon className="w-3.5 h-3.5" />
+                {dateFrom ? format(dateFrom, 'dd/MM/yyyy') : 'Data início'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} className={cn("p-3 pointer-events-auto")} />
+            </PopoverContent>
+          </Popover>
+          <span className="text-xs text-muted-foreground">até</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn('h-8 text-xs gap-1.5', !dateTo && 'text-muted-foreground')}>
+                <CalendarIcon className="w-3.5 h-3.5" />
+                {dateTo ? format(dateTo, 'dd/MM/yyyy') : 'Data fim'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dateTo} onSelect={setDateTo} className={cn("p-3 pointer-events-auto")} />
+            </PopoverContent>
+          </Popover>
+          {(dateFrom || dateTo) && (
+            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+              Limpar
+            </Button>
+          )}
+        </div>
+
         {/* Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
