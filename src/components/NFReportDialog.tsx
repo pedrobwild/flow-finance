@@ -161,7 +161,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <FileText className="w-4 h-4 text-primary" />
-            Relatório de Notas Fiscais
+            Relatório de Auditoria — NF e Comprovantes
           </DialogTitle>
         </DialogHeader>
 
