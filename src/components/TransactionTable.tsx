@@ -798,6 +798,37 @@ export default function TransactionTable({ type }: Props) {
                               <td className="px-3 py-3 text-xs hidden lg:table-cell">
                                 {obraCode ? <Badge variant="outline" className="text-[10px] font-mono">{obraCode}</Badge> : <span className="text-muted-foreground/40">Corp.</span>}
                               </td>
+                              <td className="px-3 py-3 text-center hidden lg:table-cell">
+                                {tx.attachmentUrl ? (
+                                  <a href={tx.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                    <Badge variant="outline" className="text-[10px] gap-1 text-success border-success/30 hover:bg-success/10 cursor-pointer">
+                                      <Paperclip className="w-3 h-3" /> NF
+                                    </Badge>
+                                  </a>
+                                ) : isConfirmed ? (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-[10px] gap-1 text-warning hover:text-warning hover:bg-warning/10"
+                                    onClick={() => {
+                                      setNfTargetTxId(tx.id);
+                                      nfFileRef.current?.click();
+                                    }}
+                                    disabled={uploadingNfId === tx.id}
+                                  >
+                                    {uploadingNfId === tx.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <FileWarning className="w-3 h-3" />
+                                        Sem NF
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground/30 text-[10px]">—</span>
+                                )}
+                              </td>
                             </>
                           ) : (
                             <>
