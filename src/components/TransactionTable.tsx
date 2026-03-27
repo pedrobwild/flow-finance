@@ -453,6 +453,15 @@ export default function TransactionTable({ type }: Props) {
               {totals.confirmedCount} pago(s): {formatCurrency(totals.confirmedTotal)}
             </span>
           )}
+          {totals.missingNfCount > 0 && (
+            <button
+              onClick={() => { setStatusFilter('confirmado'); setNfFilter('sem_nf'); }}
+              className="flex items-center gap-1 text-warning font-medium hover:underline"
+            >
+              <FileWarning className="w-3 h-3" />
+              {totals.missingNfCount} sem NF
+            </button>
+          )}
         </div>
       )}
 
