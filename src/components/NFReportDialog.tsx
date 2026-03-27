@@ -147,12 +147,12 @@ export default function NFReportDialog({ open, onClose }: Props) {
   };
 
   const handleExportPDF = () => {
-    const headers = ['Descrição', 'Fornecedor', 'Valor', 'Vencimento', 'Categoria', 'Obra', 'NF'];
+    const headers = ['Descrição', 'Fornecedor', 'Valor', 'Vencimento', 'Categoria', 'Obra', 'NF', 'Comp.'];
     const rows = detailRows.map(r => [
       r.description, r.counterpart, formatCurrency(r.amount),
-      formatDateFull(r.dueDate), r.category, r.obra, r.hasNF ? '✓' : '✗',
+      formatDateFull(r.dueDate), r.category, r.obra, r.hasNF ? '✓' : '✗', r.hasReceipt ? '✓' : '✗',
     ]);
-    exportToPDF('Relatório de Notas Fiscais', headers, rows);
+    exportToPDF('Relatório de Notas Fiscais e Comprovantes', headers, rows);
   };
 
   return (
