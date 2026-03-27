@@ -44,6 +44,9 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      {/* === ALERTA NF PENDENTE === */}
+      <MissingNFBanner />
+
       {/* === HERO: KPIs Preditivos (dark panel) === */}
       <motion.div {...section(0.04)}>
         <CockpitHeroKPIs period={period} />
