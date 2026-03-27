@@ -111,6 +111,21 @@ export default function TransactionTable({ type }: Props) {
     }
   };
 
+  const handleReceiptUpload = async (file: File, txId: string) => {
+    if (file.size > 10 * 1024 * 1024) { toast.error('Arquivo muito grande (máx 10MB)'); return; }
+    setUploadingReceiptId(txId);
+    try {
+      const ext = file.name.split('.').pop() || 'pdf';
+      const path = `receipts/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      updateTransaction(txId, { receiptUrl: urlData.publicUrl });
+      toast.success('Comprovante anexado!');
+    } catch { toast.error('Erro ao enviar comprovante'); }
+    finally { setUploadingReceiptId(null); setReceiptTargetTxId(null); }
+  };
+
   const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || (!isFiltered && obraFilter !== 'todos') || !!dateRange?.from || search.length > 0 || (isPagar && nfFilter !== 'todos');
 
   const clearFilters = () => {
