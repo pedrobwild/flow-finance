@@ -178,13 +178,19 @@ export default function TransactionTable({ type }: Props) {
         const s = search.toLowerCase();
         return t.description.toLowerCase().includes(s) || t.counterpart.toLowerCase().includes(s);
       })
+      .filter(t => {
+        if (nfFilter === 'todos') return true;
+        if (nfFilter === 'sem_nf') return t.status === 'confirmado' && !t.attachmentUrl;
+        if (nfFilter === 'com_nf') return !!t.attachmentUrl;
+        return true;
+      })
       .sort((a, b) => {
         const sa = STATUS_ORDER[a.status] ?? 9;
         const sb = STATUS_ORDER[b.status] ?? 9;
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, costTypeFilter, counterpartFilter, obraFilter, billingFilter, dateRange]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, costTypeFilter, counterpartFilter, obraFilter, billingFilter, nfFilter, dateRange]);
 
   const totals = useMemo(() => {
     const today = todayISO();
