@@ -617,6 +617,7 @@ export default function TransactionTable({ type }: Props) {
                 </SelectContent>
               </Select>
             )}
+            {!isPagar && (
               <Select value={billingFilter} onValueChange={setBillingFilter}>
                 <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
