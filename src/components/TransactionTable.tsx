@@ -999,6 +999,19 @@ export default function TransactionTable({ type }: Props) {
           if (nfFileRef.current) nfFileRef.current.value = '';
         }}
       />
+      <input
+        ref={receiptFileRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && receiptTargetTxId) {
+            handleReceiptUpload(file, receiptTargetTxId);
+          }
+          if (receiptFileRef.current) receiptFileRef.current.value = '';
+        }}
+      />
     </div>
   );
 }
