@@ -44,7 +44,7 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
       setActualAmount(transaction.amount.toString());
       setPaidAt(todayISO());
       setSplitEnabled(false);
-      // Pre-fill first allocation with existing obra if present
+      setNfFile(null);
       if (transaction.obraId) {
         setAllocations([{ obraId: transaction.obraId, amount: transaction.amount.toString() }]);
       } else {
