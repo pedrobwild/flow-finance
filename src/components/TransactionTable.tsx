@@ -81,8 +81,11 @@ export default function TransactionTable({ type }: Props) {
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [uploadingNfId, setUploadingNfId] = useState<string | null>(null);
+  const [uploadingReceiptId, setUploadingReceiptId] = useState<string | null>(null);
   const nfFileRef = useRef<HTMLInputElement>(null);
+  const receiptFileRef = useRef<HTMLInputElement>(null);
   const [nfTargetTxId, setNfTargetTxId] = useState<string | null>(null);
+  const [receiptTargetTxId, setReceiptTargetTxId] = useState<string | null>(null);
 
   const isPagar = type === 'pagar';
 
