@@ -73,14 +73,40 @@ export default function TransactionTable({ type }: Props) {
   const [costTypeFilter, setCostTypeFilter] = useState('todos');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [billingFilter, setBillingFilter] = useState('todos');
+  const [nfFilter, setNfFilter] = useState('todos');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [uploadingNfId, setUploadingNfId] = useState<string | null>(null);
+  const nfFileRef = useRef<HTMLInputElement>(null);
+  const [nfTargetTxId, setNfTargetTxId] = useState<string | null>(null);
 
   const isPagar = type === 'pagar';
+
+  const handleNfUpload = async (file: File, txId: string) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Arquivo muito grande (máx 10MB)');
+      return;
+    }
+    setUploadingNfId(txId);
+    try {
+      const ext = file.name.split('.').pop() || 'pdf';
+      const path = `nf/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      updateTransaction(txId, { attachmentUrl: urlData.publicUrl });
+      toast.success('Nota fiscal anexada!');
+    } catch {
+      toast.error('Erro ao enviar nota fiscal');
+    } finally {
+      setUploadingNfId(null);
+      setNfTargetTxId(null);
+    }
+  };
 
   const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || (!isFiltered && obraFilter !== 'todos') || !!dateRange?.from || search.length > 0;
 
