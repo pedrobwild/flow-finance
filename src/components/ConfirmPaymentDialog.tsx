@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Transaction } from '@/lib/types';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import { formatCurrency, todayISO } from '@/lib/helpers';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
@@ -12,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Building2, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Building2, AlertTriangle, Paperclip, FileUp, X as XIcon, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ObraAllocation {
   obraId: string;
@@ -25,7 +27,7 @@ interface Props {
 }
 
 export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
-  const { confirmTransaction, addTransactions, deleteTransaction } = useFinance();
+  const { confirmTransaction, addTransactions, deleteTransaction, updateTransaction } = useFinance();
   const { obras } = useObras();
   const activeObras = useMemo(() => obras.filter(o => o.status === 'ativa'), [obras]);
 
@@ -33,13 +35,16 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
   const [paidAt, setPaidAt] = useState(todayISO());
   const [splitEnabled, setSplitEnabled] = useState(false);
   const [allocations, setAllocations] = useState<ObraAllocation[]>([]);
+  const [nfFile, setNfFile] = useState<File | null>(null);
+  const [nfUploading, setNfUploading] = useState(false);
+  const nfInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (transaction) {
       setActualAmount(transaction.amount.toString());
       setPaidAt(todayISO());
       setSplitEnabled(false);
-      // Pre-fill first allocation with existing obra if present
+      setNfFile(null);
       if (transaction.obraId) {
         setAllocations([{ obraId: transaction.obraId, amount: transaction.amount.toString() }]);
       } else {
@@ -80,17 +85,38 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
     }
   };
 
+  const uploadNf = async (): Promise<string | null> => {
+    if (!nfFile) return null;
+    setNfUploading(true);
+    try {
+      const ext = nfFile.name.split('.').pop() || 'pdf';
+      const path = `nf/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, nfFile);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      return urlData.publicUrl;
+    } catch (err) {
+      toast.error('Erro ao enviar nota fiscal');
+      return null;
+    } finally {
+      setNfUploading(false);
+    }
+  };
+
   const handleConfirm = async () => {
     if (!transaction) return;
 
+    const nfUrl = await uploadNf();
+
     if (!splitEnabled) {
-      // Normal confirm
       confirmTransaction(transaction.id, totalAmount, transaction.type, paidAt);
+      if (nfUrl) {
+        updateTransaction(transaction.id, { attachmentUrl: nfUrl });
+      }
       onClose();
       return;
     }
 
-    // Split confirm: delete original, create N confirmed transactions
     const validAllocations = allocations.filter(a => a.obraId && parseFloat(a.amount) > 0);
     if (validAllocations.length === 0 || !isBalanced) return;
 
@@ -115,7 +141,7 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
         obraId: a.obraId,
         billingSentAt: transaction.billingSentAt,
         billingCount: transaction.billingCount,
-        attachmentUrl: transaction.attachmentUrl,
+        attachmentUrl: nfUrl || transaction.attachmentUrl,
         cdiAdjustable: transaction.cdiAdjustable,
         cdiPercentage: transaction.cdiPercentage,
         baseAmount: transaction.baseAmount,
@@ -265,9 +291,55 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
           )}
         </div>
 
+          {/* Nota Fiscal upload */}
+          <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
+            <div className="flex items-center gap-2">
+              <Paperclip className="w-4 h-4 text-primary" />
+              <div>
+                <p className="text-xs font-semibold">Nota Fiscal / Comprovante</p>
+                <p className="text-[10px] text-muted-foreground">Anexe o PDF da NF (opcional agora, pode anexar depois)</p>
+              </div>
+            </div>
+            <input
+              ref={nfInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast.error('Arquivo muito grande (máx 10MB)');
+                    return;
+                  }
+                  setNfFile(file);
+                }
+              }}
+            />
+            {nfFile ? (
+              <div className="flex items-center gap-2 text-xs bg-background rounded-md px-2.5 py-1.5 border">
+                <FileUp className="w-3.5 h-3.5 text-success shrink-0" />
+                <span className="truncate flex-1 font-medium">{nfFile.name}</span>
+                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setNfFile(null)}>
+                  <XIcon className="w-3 h-3" />
+                </Button>
+              </div>
+            ) : transaction?.attachmentUrl ? (
+              <div className="flex items-center gap-2 text-xs text-success">
+                <Paperclip className="w-3 h-3" />
+                <span>NF já anexada</span>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="w-full text-xs h-7 gap-1" onClick={() => nfInputRef.current?.click()}>
+                <FileUp className="w-3 h-3" /> Selecionar arquivo
+              </Button>
+            )}
+          </div>
+
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
-          <Button size="sm" onClick={handleConfirm} disabled={!canConfirm}>
+          <Button size="sm" onClick={handleConfirm} disabled={!canConfirm || nfUploading}>
+            {nfUploading && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
             {splitEnabled ? 'Confirmar e ratear' : 'Confirmar e atualizar saldo'}
           </Button>
         </DialogFooter>

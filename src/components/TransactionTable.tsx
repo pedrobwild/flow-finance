@@ -20,6 +20,7 @@ import {
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
   Clock, AlertTriangle, CalendarDays, X, CalendarIcon, Send, FileText, CreditCard, Paperclip, ChevronDown,
+  FileUp, Loader2, FileWarning,
 } from 'lucide-react';
 import ExportDropdown from './ExportDropdown';
 import { exportToCSV, exportToExcel, exportToPDF, transactionsToExportRows } from '@/lib/export-utils';
@@ -34,6 +35,8 @@ import AuditLogDrawer from './AuditLogDrawer';
 import CustomCategoriesManager from './CustomCategoriesManager';
 import ConfirmPaymentDialog from './ConfirmPaymentDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Props { type: TransactionType; }
 
@@ -70,16 +73,42 @@ export default function TransactionTable({ type }: Props) {
   const [costTypeFilter, setCostTypeFilter] = useState('todos');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [billingFilter, setBillingFilter] = useState('todos');
+  const [nfFilter, setNfFilter] = useState('todos');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [uploadingNfId, setUploadingNfId] = useState<string | null>(null);
+  const nfFileRef = useRef<HTMLInputElement>(null);
+  const [nfTargetTxId, setNfTargetTxId] = useState<string | null>(null);
 
   const isPagar = type === 'pagar';
 
-  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || (!isFiltered && obraFilter !== 'todos') || !!dateRange?.from || search.length > 0;
+  const handleNfUpload = async (file: File, txId: string) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Arquivo muito grande (máx 10MB)');
+      return;
+    }
+    setUploadingNfId(txId);
+    try {
+      const ext = file.name.split('.').pop() || 'pdf';
+      const path = `nf/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      updateTransaction(txId, { attachmentUrl: urlData.publicUrl });
+      toast.success('Nota fiscal anexada!');
+    } catch {
+      toast.error('Erro ao enviar nota fiscal');
+    } finally {
+      setUploadingNfId(null);
+      setNfTargetTxId(null);
+    }
+  };
+
+  const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || (!isFiltered && obraFilter !== 'todos') || !!dateRange?.from || search.length > 0 || (isPagar && nfFilter !== 'todos');
 
   const clearFilters = () => {
     setSearch('');
@@ -90,6 +119,7 @@ export default function TransactionTable({ type }: Props) {
     setObraFilter('todos');
     setBillingFilter('todos');
     setCostTypeFilter('todos');
+    setNfFilter('todos');
     setDateRange(undefined);
   };
 
@@ -148,13 +178,19 @@ export default function TransactionTable({ type }: Props) {
         const s = search.toLowerCase();
         return t.description.toLowerCase().includes(s) || t.counterpart.toLowerCase().includes(s);
       })
+      .filter(t => {
+        if (nfFilter === 'todos') return true;
+        if (nfFilter === 'sem_nf') return t.status === 'confirmado' && !t.attachmentUrl;
+        if (nfFilter === 'com_nf') return !!t.attachmentUrl;
+        return true;
+      })
       .sort((a, b) => {
         const sa = STATUS_ORDER[a.status] ?? 9;
         const sb = STATUS_ORDER[b.status] ?? 9;
         if (sa !== sb) return sa - sb;
         return a.dueDate.localeCompare(b.dueDate);
       });
-  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, costTypeFilter, counterpartFilter, obraFilter, billingFilter, dateRange]);
+  }, [transactions, type, search, statusFilter, priorityFilter, costCenterFilter, costTypeFilter, counterpartFilter, obraFilter, billingFilter, nfFilter, dateRange]);
 
   const totals = useMemo(() => {
     const today = todayISO();
@@ -166,7 +202,8 @@ export default function TransactionTable({ type }: Props) {
     const next7Total = next7.reduce((s, t) => s + t.amount, 0);
     const confirmed = filtered.filter(t => t.status === 'confirmado');
     const confirmedTotal = confirmed.reduce((s, t) => s + t.amount, 0);
-    return { total, overdueCount: overdue.length, overdueTotal, next7Total, next7Count: next7.length, confirmedTotal, confirmedCount: confirmed.length };
+    const missingNf = filtered.filter(t => t.status === 'confirmado' && !t.attachmentUrl);
+    return { total, overdueCount: overdue.length, overdueTotal, next7Total, next7Count: next7.length, confirmedTotal, confirmedCount: confirmed.length, missingNfCount: missingNf.length };
   }, [filtered]);
 
   const cLabel = isPagar ? 'Fornecedor' : 'Obra / Cliente';
@@ -416,6 +453,15 @@ export default function TransactionTable({ type }: Props) {
               {totals.confirmedCount} pago(s): {formatCurrency(totals.confirmedTotal)}
             </span>
           )}
+          {totals.missingNfCount > 0 && (
+            <button
+              onClick={() => { setStatusFilter('confirmado'); setNfFilter('sem_nf'); }}
+              className="flex items-center gap-1 text-warning font-medium hover:underline"
+            >
+              <FileWarning className="w-3 h-3" />
+              {totals.missingNfCount} sem NF
+            </button>
+          )}
         </div>
       )}
 
@@ -559,6 +605,18 @@ export default function TransactionTable({ type }: Props) {
                 </SelectContent>
               </Select>
             )}
+            {isPagar && (
+              <Select value={nfFilter} onValueChange={setNfFilter}>
+                <SelectTrigger className={cn("w-[120px] h-8 text-xs", nfFilter === 'sem_nf' && 'border-warning text-warning')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Nota Fiscal</SelectItem>
+                  <SelectItem value="sem_nf">⚠ Sem NF</SelectItem>
+                  <SelectItem value="com_nf">✓ Com NF</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             {!isPagar && (
               <Select value={billingFilter} onValueChange={setBillingFilter}>
                 <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -663,6 +721,7 @@ export default function TransactionTable({ type }: Props) {
                         <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Fornecedor</th>
                         <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Categoria</th>
                         <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Obra</th>
+                        <th className="text-center px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">NF</th>
                       </>
                     ) : (
                       <>
@@ -738,6 +797,37 @@ export default function TransactionTable({ type }: Props) {
                               <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell">{tx.category}</td>
                               <td className="px-3 py-3 text-xs hidden lg:table-cell">
                                 {obraCode ? <Badge variant="outline" className="text-[10px] font-mono">{obraCode}</Badge> : <span className="text-muted-foreground/40">Corp.</span>}
+                              </td>
+                              <td className="px-3 py-3 text-center hidden lg:table-cell">
+                                {tx.attachmentUrl ? (
+                                  <a href={tx.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                    <Badge variant="outline" className="text-[10px] gap-1 text-success border-success/30 hover:bg-success/10 cursor-pointer">
+                                      <Paperclip className="w-3 h-3" /> NF
+                                    </Badge>
+                                  </a>
+                                ) : isConfirmed ? (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-[10px] gap-1 text-warning hover:text-warning hover:bg-warning/10"
+                                    onClick={() => {
+                                      setNfTargetTxId(tx.id);
+                                      nfFileRef.current?.click();
+                                    }}
+                                    disabled={uploadingNfId === tx.id}
+                                  >
+                                    {uploadingNfId === tx.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <FileWarning className="w-3 h-3" />
+                                        Sem NF
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground/30 text-[10px]">—</span>
+                                )}
                               </td>
                             </>
                           ) : (
@@ -875,6 +965,21 @@ export default function TransactionTable({ type }: Props) {
       <ConfirmPaymentDialog
         transaction={confirmTx}
         onClose={() => setConfirmTx(null)}
+      />
+
+      {/* Hidden NF file input */}
+      <input
+        ref={nfFileRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && nfTargetTxId) {
+            handleNfUpload(file, nfTargetTxId);
+          }
+          if (nfFileRef.current) nfFileRef.current.value = '';
+        }}
       />
     </div>
   );
