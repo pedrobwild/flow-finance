@@ -85,17 +85,38 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
     }
   };
 
+  const uploadNf = async (): Promise<string | null> => {
+    if (!nfFile) return null;
+    setNfUploading(true);
+    try {
+      const ext = nfFile.name.split('.').pop() || 'pdf';
+      const path = `nf/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, nfFile);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      return urlData.publicUrl;
+    } catch (err) {
+      toast.error('Erro ao enviar nota fiscal');
+      return null;
+    } finally {
+      setNfUploading(false);
+    }
+  };
+
   const handleConfirm = async () => {
     if (!transaction) return;
 
+    const nfUrl = await uploadNf();
+
     if (!splitEnabled) {
-      // Normal confirm
       confirmTransaction(transaction.id, totalAmount, transaction.type, paidAt);
+      if (nfUrl) {
+        updateTransaction(transaction.id, { attachmentUrl: nfUrl });
+      }
       onClose();
       return;
     }
 
-    // Split confirm: delete original, create N confirmed transactions
     const validAllocations = allocations.filter(a => a.obraId && parseFloat(a.amount) > 0);
     if (validAllocations.length === 0 || !isBalanced) return;
 
@@ -120,7 +141,7 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
         obraId: a.obraId,
         billingSentAt: transaction.billingSentAt,
         billingCount: transaction.billingCount,
-        attachmentUrl: transaction.attachmentUrl,
+        attachmentUrl: nfUrl || transaction.attachmentUrl,
         cdiAdjustable: transaction.cdiAdjustable,
         cdiPercentage: transaction.cdiPercentage,
         baseAmount: transaction.baseAmount,
