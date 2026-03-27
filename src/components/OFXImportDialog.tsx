@@ -103,6 +103,7 @@ export default function OFXImportDialog({ open, onClose }: Props) {
             billingSentAt: null,
             billingCount: 0,
             attachmentUrl: null,
+            receiptUrl: null,
             cdiAdjustable: false,
             cdiPercentage: null,
             baseAmount: null,

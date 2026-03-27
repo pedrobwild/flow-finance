@@ -28,6 +28,7 @@ function rowToTransaction(row: any): Transaction {
     billingSentAt: row.billing_sent_at || null,
     billingCount: Number(row.billing_count) || 0,
     attachmentUrl: row.attachment_url || null,
+    receiptUrl: row.receipt_url || null,
     cdiAdjustable: row.cdi_adjustable || false,
     cdiPercentage: row.cdi_percentage != null ? Number(row.cdi_percentage) : null,
     baseAmount: row.base_amount != null ? Number(row.base_amount) : null,
@@ -147,6 +148,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         billing_sent_at: tx.billingSentAt || null,
         billing_count: tx.billingCount || 0,
         attachment_url: tx.attachmentUrl || null,
+        receipt_url: tx.receiptUrl || null,
         cdi_adjustable: (tx as any).cdiAdjustable || false,
         cdi_percentage: (tx as any).cdiPercentage || null,
         base_amount: (tx as any).baseAmount || null,
@@ -184,6 +186,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         billing_sent_at: tx.billingSentAt || null,
         billing_count: tx.billingCount || 0,
         attachment_url: tx.attachmentUrl || null,
+        receipt_url: tx.receiptUrl || null,
         cdi_adjustable: (tx as any).cdiAdjustable || false,
         cdi_percentage: (tx as any).cdiPercentage || null,
         base_amount: (tx as any).baseAmount || null,
@@ -218,6 +221,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (updates.billingSentAt !== undefined) db.billing_sent_at = updates.billingSentAt;
       if (updates.billingCount !== undefined) db.billing_count = updates.billingCount;
       if (updates.attachmentUrl !== undefined) db.attachment_url = updates.attachmentUrl;
+      if (updates.receiptUrl !== undefined) db.receipt_url = updates.receiptUrl;
       if ((updates as any).cdiAdjustable !== undefined) db.cdi_adjustable = (updates as any).cdiAdjustable;
       if ((updates as any).cdiPercentage !== undefined) db.cdi_percentage = (updates as any).cdiPercentage;
       if ((updates as any).baseAmount !== undefined) db.base_amount = (updates as any).baseAmount;

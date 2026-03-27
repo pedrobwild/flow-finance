@@ -36,8 +36,10 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
   const [splitEnabled, setSplitEnabled] = useState(false);
   const [allocations, setAllocations] = useState<ObraAllocation[]>([]);
   const [nfFile, setNfFile] = useState<File | null>(null);
-  const [nfUploading, setNfUploading] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const nfInputRef = useRef<HTMLInputElement>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (transaction) {
@@ -45,6 +47,7 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
       setPaidAt(todayISO());
       setSplitEnabled(false);
       setNfFile(null);
+      setReceiptFile(null);
       if (transaction.obraId) {
         setAllocations([{ obraId: transaction.obraId, amount: transaction.amount.toString() }]);
       } else {
@@ -85,33 +88,35 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
     }
   };
 
-  const uploadNf = async (): Promise<string | null> => {
-    if (!nfFile) return null;
-    setNfUploading(true);
+  const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
     try {
-      const ext = nfFile.name.split('.').pop() || 'pdf';
-      const path = `nf/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('attachments').upload(path, nfFile);
+      const ext = file.name.split('.').pop() || 'pdf';
+      const path = `${prefix}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file);
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
       return urlData.publicUrl;
     } catch (err) {
-      toast.error('Erro ao enviar nota fiscal');
+      toast.error(`Erro ao enviar ${prefix === 'nf' ? 'nota fiscal' : 'comprovante'}`);
       return null;
-    } finally {
-      setNfUploading(false);
     }
   };
 
   const handleConfirm = async () => {
     if (!transaction) return;
 
-    const nfUrl = await uploadNf();
+    setUploading(true);
+    const nfUrl = nfFile ? await uploadFile(nfFile, 'nf') : null;
+    const receiptUrl = receiptFile ? await uploadFile(receiptFile, 'receipts') : null;
+    setUploading(false);
 
     if (!splitEnabled) {
       confirmTransaction(transaction.id, totalAmount, transaction.type, paidAt);
-      if (nfUrl) {
-        updateTransaction(transaction.id, { attachmentUrl: nfUrl });
+      const updates: Partial<Transaction> = {};
+      if (nfUrl) updates.attachmentUrl = nfUrl;
+      if (receiptUrl) updates.receiptUrl = receiptUrl;
+      if (Object.keys(updates).length > 0) {
+        updateTransaction(transaction.id, updates);
       }
       onClose();
       return;
@@ -142,6 +147,7 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
         billingSentAt: transaction.billingSentAt,
         billingCount: transaction.billingCount,
         attachmentUrl: nfUrl || transaction.attachmentUrl,
+        receiptUrl: receiptUrl || transaction.receiptUrl,
         cdiAdjustable: transaction.cdiAdjustable,
         cdiPercentage: transaction.cdiPercentage,
         baseAmount: transaction.baseAmount,
@@ -296,50 +302,57 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
             <div className="flex items-center gap-2">
               <Paperclip className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-xs font-semibold">Nota Fiscal / Comprovante</p>
-                <p className="text-[10px] text-muted-foreground">Anexe o PDF da NF (opcional agora, pode anexar depois)</p>
+                <p className="text-xs font-semibold">Nota Fiscal</p>
+                <p className="text-[10px] text-muted-foreground">PDF da NF (opcional, pode anexar depois)</p>
               </div>
             </div>
-            <input
-              ref={nfInputRef}
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.webp"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  if (file.size > 10 * 1024 * 1024) {
-                    toast.error('Arquivo muito grande (máx 10MB)');
-                    return;
-                  }
-                  setNfFile(file);
-                }
-              }}
-            />
+            <input ref={nfInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 10*1024*1024) { toast.error('Máx 10MB'); return; } setNfFile(f); } }} />
             {nfFile ? (
               <div className="flex items-center gap-2 text-xs bg-background rounded-md px-2.5 py-1.5 border">
                 <FileUp className="w-3.5 h-3.5 text-success shrink-0" />
                 <span className="truncate flex-1 font-medium">{nfFile.name}</span>
-                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setNfFile(null)}>
-                  <XIcon className="w-3 h-3" />
-                </Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setNfFile(null)}><XIcon className="w-3 h-3" /></Button>
               </div>
             ) : transaction?.attachmentUrl ? (
-              <div className="flex items-center gap-2 text-xs text-success">
-                <Paperclip className="w-3 h-3" />
-                <span>NF já anexada</span>
-              </div>
+              <div className="flex items-center gap-2 text-xs text-success"><Paperclip className="w-3 h-3" /><span>NF já anexada</span></div>
             ) : (
               <Button variant="outline" size="sm" className="w-full text-xs h-7 gap-1" onClick={() => nfInputRef.current?.click()}>
-                <FileUp className="w-3 h-3" /> Selecionar arquivo
+                <FileUp className="w-3 h-3" /> Selecionar NF
+              </Button>
+            )}
+          </div>
+
+          {/* Comprovante de pagamento upload */}
+          <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
+            <div className="flex items-center gap-2">
+              <FileUp className="w-4 h-4 text-primary" />
+              <div>
+                <p className="text-xs font-semibold">Comprovante de Pagamento</p>
+                <p className="text-[10px] text-muted-foreground">PIX, boleto pago, TED (opcional)</p>
+              </div>
+            </div>
+            <input ref={receiptInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 10*1024*1024) { toast.error('Máx 10MB'); return; } setReceiptFile(f); } }} />
+            {receiptFile ? (
+              <div className="flex items-center gap-2 text-xs bg-background rounded-md px-2.5 py-1.5 border">
+                <FileUp className="w-3.5 h-3.5 text-success shrink-0" />
+                <span className="truncate flex-1 font-medium">{receiptFile.name}</span>
+                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setReceiptFile(null)}><XIcon className="w-3 h-3" /></Button>
+              </div>
+            ) : transaction?.receiptUrl ? (
+              <div className="flex items-center gap-2 text-xs text-success"><FileUp className="w-3 h-3" /><span>Comprovante já anexado</span></div>
+            ) : (
+              <Button variant="outline" size="sm" className="w-full text-xs h-7 gap-1" onClick={() => receiptInputRef.current?.click()}>
+                <FileUp className="w-3 h-3" /> Selecionar comprovante
               </Button>
             )}
           </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
-          <Button size="sm" onClick={handleConfirm} disabled={!canConfirm || nfUploading}>
-            {nfUploading && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+          <Button size="sm" onClick={handleConfirm} disabled={!canConfirm || uploading}>
+            {uploading && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
             {splitEnabled ? 'Confirmar e ratear' : 'Confirmar e atualizar saldo'}
           </Button>
         </DialogFooter>

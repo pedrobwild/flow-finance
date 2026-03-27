@@ -81,8 +81,11 @@ export default function TransactionTable({ type }: Props) {
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [uploadingNfId, setUploadingNfId] = useState<string | null>(null);
+  const [uploadingReceiptId, setUploadingReceiptId] = useState<string | null>(null);
   const nfFileRef = useRef<HTMLInputElement>(null);
+  const receiptFileRef = useRef<HTMLInputElement>(null);
   const [nfTargetTxId, setNfTargetTxId] = useState<string | null>(null);
+  const [receiptTargetTxId, setReceiptTargetTxId] = useState<string | null>(null);
 
   const isPagar = type === 'pagar';
 
@@ -106,6 +109,21 @@ export default function TransactionTable({ type }: Props) {
       setUploadingNfId(null);
       setNfTargetTxId(null);
     }
+  };
+
+  const handleReceiptUpload = async (file: File, txId: string) => {
+    if (file.size > 10 * 1024 * 1024) { toast.error('Arquivo muito grande (máx 10MB)'); return; }
+    setUploadingReceiptId(txId);
+    try {
+      const ext = file.name.split('.').pop() || 'pdf';
+      const path = `receipts/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      updateTransaction(txId, { receiptUrl: urlData.publicUrl });
+      toast.success('Comprovante anexado!');
+    } catch { toast.error('Erro ao enviar comprovante'); }
+    finally { setUploadingReceiptId(null); setReceiptTargetTxId(null); }
   };
 
   const hasActiveFilters = statusFilter !== 'pendentes' || (isPagar && priorityFilter !== 'todas') || (isPagar && costCenterFilter !== 'todos') || (isPagar && costTypeFilter !== 'todos') || (type === 'receber' && counterpartFilter !== 'todos') || (!isPagar && billingFilter !== 'todos') || (!isFiltered && obraFilter !== 'todos') || !!dateRange?.from || search.length > 0 || (isPagar && nfFilter !== 'todos');
@@ -722,6 +740,7 @@ export default function TransactionTable({ type }: Props) {
                         <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Categoria</th>
                         <th className="text-left px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Obra</th>
                         <th className="text-center px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">NF</th>
+                        <th className="text-center px-3 py-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Comp.</th>
                       </>
                     ) : (
                       <>
@@ -824,6 +843,23 @@ export default function TransactionTable({ type }: Props) {
                                         Sem NF
                                       </>
                                     )}
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground/30 text-[10px]">—</span>
+                                )}
+                              </td>
+                              <td className="px-3 py-3 text-center hidden lg:table-cell">
+                                {tx.receiptUrl ? (
+                                  <a href={tx.receiptUrl} target="_blank" rel="noopener noreferrer">
+                                    <Badge variant="outline" className="text-[10px] gap-1 text-success border-success/30 hover:bg-success/10 cursor-pointer">
+                                      <FileUp className="w-3 h-3" /> Comp.
+                                    </Badge>
+                                  </a>
+                                ) : isConfirmed ? (
+                                  <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:bg-muted"
+                                    onClick={() => { setReceiptTargetTxId(tx.id); receiptFileRef.current?.click(); }}
+                                    disabled={uploadingReceiptId === tx.id}>
+                                    {uploadingReceiptId === tx.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><FileUp className="w-3 h-3" />Anexar</>}
                                   </Button>
                                 ) : (
                                   <span className="text-muted-foreground/30 text-[10px]">—</span>
@@ -979,6 +1015,19 @@ export default function TransactionTable({ type }: Props) {
             handleNfUpload(file, nfTargetTxId);
           }
           if (nfFileRef.current) nfFileRef.current.value = '';
+        }}
+      />
+      <input
+        ref={receiptFileRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && receiptTargetTxId) {
+            handleReceiptUpload(file, receiptTargetTxId);
+          }
+          if (receiptFileRef.current) receiptFileRef.current.value = '';
         }}
       />
     </div>
