@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Transaction } from '@/lib/types';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import { formatCurrency, todayISO } from '@/lib/helpers';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
@@ -12,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Building2, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Building2, AlertTriangle, Paperclip, FileUp, X as XIcon, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ObraAllocation {
   obraId: string;
