@@ -147,7 +147,7 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
         billingSentAt: transaction.billingSentAt,
         billingCount: transaction.billingCount,
         attachmentUrl: nfUrl || transaction.attachmentUrl,
-        receiptUrl: transaction.receiptUrl,
+        receiptUrl: receiptUrl || transaction.receiptUrl,
         cdiAdjustable: transaction.cdiAdjustable,
         cdiPercentage: transaction.cdiPercentage,
         baseAmount: transaction.baseAmount,
