@@ -47,6 +47,7 @@ export default function ContasPagar() {
   const [refundTx, setRefundTx] = useState<Transaction | null>(null);
   const [showOFXImport, setShowOFXImport] = useState(false);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
+  const [showNFReport, setShowNFReport] = useState(false);
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
