@@ -20,6 +20,7 @@ import {
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
   Clock, AlertTriangle, CalendarDays, X, CalendarIcon, Send, FileText, CreditCard, Paperclip, ChevronDown,
+  FileUp, Loader2, FileWarning,
 } from 'lucide-react';
 import ExportDropdown from './ExportDropdown';
 import { exportToCSV, exportToExcel, exportToPDF, transactionsToExportRows } from '@/lib/export-utils';
@@ -34,6 +35,8 @@ import AuditLogDrawer from './AuditLogDrawer';
 import CustomCategoriesManager from './CustomCategoriesManager';
 import ConfirmPaymentDialog from './ConfirmPaymentDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Props { type: TransactionType; }
 
