@@ -966,6 +966,21 @@ export default function TransactionTable({ type }: Props) {
         transaction={confirmTx}
         onClose={() => setConfirmTx(null)}
       />
+
+      {/* Hidden NF file input */}
+      <input
+        ref={nfFileRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && nfTargetTxId) {
+            handleNfUpload(file, nfTargetTxId);
+          }
+          if (nfFileRef.current) nfFileRef.current.value = '';
+        }}
+      />
     </div>
   );
 }
