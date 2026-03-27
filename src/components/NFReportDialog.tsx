@@ -82,16 +82,22 @@ export default function NFReportDialog({ open, onClose }: Props) {
     return Array.from(map.values()).sort((a, b) => b.key.localeCompare(a.key));
   }, [confirmedPayables]);
 
-  const totals = useMemo(() => ({
-    total: confirmedPayables.reduce((s, t) => s + t.amount, 0),
-    withNF: confirmedPayables.filter(t => t.attachmentUrl).length,
-    withoutNF: confirmedPayables.filter(t => !t.attachmentUrl).length,
-    totalWithNF: confirmedPayables.filter(t => t.attachmentUrl).reduce((s, t) => s + t.amount, 0),
-    totalWithoutNF: confirmedPayables.filter(t => !t.attachmentUrl).reduce((s, t) => s + t.amount, 0),
-    coverage: confirmedPayables.length > 0
-      ? (confirmedPayables.filter(t => t.attachmentUrl).length / confirmedPayables.length) * 100
-      : 0,
-  }), [confirmedPayables]);
+  const totals = useMemo(() => {
+    const withReceipt = confirmedPayables.filter(t => t.receiptUrl).length;
+    return {
+      total: confirmedPayables.reduce((s, t) => s + t.amount, 0),
+      withNF: confirmedPayables.filter(t => t.attachmentUrl).length,
+      withoutNF: confirmedPayables.filter(t => !t.attachmentUrl).length,
+      totalWithNF: confirmedPayables.filter(t => t.attachmentUrl).reduce((s, t) => s + t.amount, 0),
+      totalWithoutNF: confirmedPayables.filter(t => !t.attachmentUrl).reduce((s, t) => s + t.amount, 0),
+      coverage: confirmedPayables.length > 0
+        ? (confirmedPayables.filter(t => t.attachmentUrl).length / confirmedPayables.length) * 100
+        : 0,
+      withReceipt,
+      withoutReceipt: confirmedPayables.length - withReceipt,
+      receiptCoverage: confirmedPayables.length > 0 ? (withReceipt / confirmedPayables.length) * 100 : 0,
+    };
+  }, [confirmedPayables]);
 
   const detailRows = useMemo(() =>
     confirmedPayables
