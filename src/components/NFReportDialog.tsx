@@ -271,22 +271,23 @@ export default function NFReportDialog({ open, onClose }: Props) {
                     <TableCell className="text-xs font-medium capitalize">{g.label}</TableCell>
                     <TableCell className="text-xs font-mono text-right">{formatCurrency(g.total)}</TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="outline" className="text-[10px] gap-1 bg-success/5 text-success border-success/20">
-                        <CheckCircle2 className="w-3 h-3" />{g.countWithNF}
+                      <Badge variant="outline" className={cn("text-[10px] gap-1", g.countWithNF > 0 ? "bg-success/5 text-success border-success/20" : "text-muted-foreground")}>
+                        <CheckCircle2 className="w-3 h-3" />{g.countWithNF}/{g.countAll}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      {g.countWithoutNF > 0 ? (
-                        <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/5 text-destructive border-destructive/20">
-                          <XCircle className="w-3 h-3" />{g.countWithoutNF}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground">—</Badge>
-                      )}
+                      <Badge variant="outline" className={cn("text-[10px] gap-1", g.countWithReceipt > 0 ? "bg-success/5 text-success border-success/20" : "text-muted-foreground")}>
+                        <CheckCircle2 className="w-3 h-3" />{g.countWithReceipt}/{g.countAll}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <span className={cn('text-xs font-bold', g.coverage >= 80 ? 'text-success' : g.coverage >= 50 ? 'text-warning' : 'text-destructive')}>
                         {g.coverage.toFixed(0)}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={cn('text-xs font-bold', g.receiptCoverage >= 80 ? 'text-success' : g.receiptCoverage >= 50 ? 'text-warning' : 'text-destructive')}>
+                        {g.receiptCoverage.toFixed(0)}%
                       </span>
                     </TableCell>
                   </TableRow>
