@@ -352,6 +352,7 @@ export type Database = {
           paid_at: string | null
           payment_method: string | null
           priority: string
+          receipt_url: string | null
           recurrence: string
           status: string
           type: string
@@ -378,6 +379,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           priority?: string
+          receipt_url?: string | null
           recurrence?: string
           status?: string
           type: string
@@ -404,6 +406,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           priority?: string
+          receipt_url?: string | null
           recurrence?: string
           status?: string
           type?: string
