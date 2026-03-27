@@ -25,6 +25,7 @@ import TransactionFormDialog from '@/components/TransactionFormDialog';
 import TransactionTable from '@/components/TransactionTable';
 import OFXImportDialog from '@/components/OFXImportDialog';
 import ConfirmPaymentDialog from '@/components/ConfirmPaymentDialog';
+import NFReportDialog from '@/components/NFReportDialog';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 12 } as const,
