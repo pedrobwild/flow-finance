@@ -47,6 +47,7 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
       setPaidAt(todayISO());
       setSplitEnabled(false);
       setNfFile(null);
+      setReceiptFile(null);
       if (transaction.obraId) {
         setAllocations([{ obraId: transaction.obraId, amount: transaction.amount.toString() }]);
       } else {
