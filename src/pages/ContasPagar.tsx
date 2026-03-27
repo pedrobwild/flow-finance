@@ -328,6 +328,10 @@ export default function ContasPagar() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setShowNFReport(true)} className="text-xs gap-1.5">
+            <FileText className="w-3.5 h-3.5" />
+            Relatório NF
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowOFXImport(true)} className="text-xs gap-1.5">
             <Upload className="w-3.5 h-3.5" />
             Importar OFX
