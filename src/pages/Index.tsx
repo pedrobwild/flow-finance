@@ -11,6 +11,7 @@ import CounterpartRiskScore from '@/components/CounterpartRiskScore';
 import MoMComparison from '@/components/MoMComparison';
 import DsoDpoIndicators from '@/components/DsoDpoIndicators';
 import WhatIfSimulator from '@/components/WhatIfSimulator';
+import MissingNFBanner from '@/components/MissingNFBanner';
 
 import { motion } from 'framer-motion';
 
@@ -42,6 +43,9 @@ export default function Dashboard() {
           </div>
         </div>
       </motion.div>
+
+      {/* === ALERTA NF PENDENTE === */}
+      <MissingNFBanner />
 
       {/* === HERO: KPIs Preditivos (dark panel) === */}
       <motion.div {...section(0.04)}>
