@@ -27,7 +27,7 @@ interface Props {
 }
 
 export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
-  const { confirmTransaction, addTransactions, deleteTransaction } = useFinance();
+  const { confirmTransaction, addTransactions, deleteTransaction, updateTransaction } = useFinance();
   const { obras } = useObras();
   const activeObras = useMemo(() => obras.filter(o => o.status === 'ativa'), [obras]);
 
