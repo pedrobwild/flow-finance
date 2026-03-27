@@ -221,6 +221,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (updates.billingSentAt !== undefined) db.billing_sent_at = updates.billingSentAt;
       if (updates.billingCount !== undefined) db.billing_count = updates.billingCount;
       if (updates.attachmentUrl !== undefined) db.attachment_url = updates.attachmentUrl;
+      if (updates.receiptUrl !== undefined) db.receipt_url = updates.receiptUrl;
       if ((updates as any).cdiAdjustable !== undefined) db.cdi_adjustable = (updates as any).cdiAdjustable;
       if ((updates as any).cdiPercentage !== undefined) db.cdi_percentage = (updates as any).cdiPercentage;
       if ((updates as any).baseAmount !== undefined) db.base_amount = (updates as any).baseAmount;
