@@ -73,8 +73,12 @@ export default function NFReportDialog({ open, onClose }: Props) {
         g.countWithoutNF++;
         g.totalWithoutNF += t.amount;
       }
+      if (t.receiptUrl) { g.countWithReceipt++; } else { g.countWithoutReceipt++; }
     });
-    map.forEach(g => { g.coverage = g.countAll > 0 ? (g.countWithNF / g.countAll) * 100 : 0; });
+    map.forEach(g => {
+      g.coverage = g.countAll > 0 ? (g.countWithNF / g.countAll) * 100 : 0;
+      g.receiptCoverage = g.countAll > 0 ? (g.countWithReceipt / g.countAll) * 100 : 0;
+    });
     return Array.from(map.values()).sort((a, b) => b.key.localeCompare(a.key));
   }, [confirmedPayables]);
 
