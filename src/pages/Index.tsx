@@ -11,6 +11,7 @@ import CounterpartRiskScore from '@/components/CounterpartRiskScore';
 import MoMComparison from '@/components/MoMComparison';
 import DsoDpoIndicators from '@/components/DsoDpoIndicators';
 import WhatIfSimulator from '@/components/WhatIfSimulator';
+import MissingNFBanner from '@/components/MissingNFBanner';
 
 import { motion } from 'framer-motion';
 
