@@ -29,6 +29,9 @@ interface MonthGroup {
   totalWithNF: number;
   totalWithoutNF: number;
   coverage: number;
+  countWithReceipt: number;
+  countWithoutReceipt: number;
+  receiptCoverage: number;
 }
 
 export default function NFReportDialog({ open, onClose }: Props) {
@@ -58,7 +61,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
       if (!map.has(key)) {
-        map.set(key, { key, label, total: 0, countAll: 0, countWithNF: 0, countWithoutNF: 0, totalWithNF: 0, totalWithoutNF: 0, coverage: 0 });
+        map.set(key, { key, label, total: 0, countAll: 0, countWithNF: 0, countWithoutNF: 0, totalWithNF: 0, totalWithoutNF: 0, coverage: 0, countWithReceipt: 0, countWithoutReceipt: 0, receiptCoverage: 0 });
       }
       const g = map.get(key)!;
       g.total += t.amount;
@@ -70,21 +73,31 @@ export default function NFReportDialog({ open, onClose }: Props) {
         g.countWithoutNF++;
         g.totalWithoutNF += t.amount;
       }
+      if (t.receiptUrl) { g.countWithReceipt++; } else { g.countWithoutReceipt++; }
     });
-    map.forEach(g => { g.coverage = g.countAll > 0 ? (g.countWithNF / g.countAll) * 100 : 0; });
+    map.forEach(g => {
+      g.coverage = g.countAll > 0 ? (g.countWithNF / g.countAll) * 100 : 0;
+      g.receiptCoverage = g.countAll > 0 ? (g.countWithReceipt / g.countAll) * 100 : 0;
+    });
     return Array.from(map.values()).sort((a, b) => b.key.localeCompare(a.key));
   }, [confirmedPayables]);
 
-  const totals = useMemo(() => ({
-    total: confirmedPayables.reduce((s, t) => s + t.amount, 0),
-    withNF: confirmedPayables.filter(t => t.attachmentUrl).length,
-    withoutNF: confirmedPayables.filter(t => !t.attachmentUrl).length,
-    totalWithNF: confirmedPayables.filter(t => t.attachmentUrl).reduce((s, t) => s + t.amount, 0),
-    totalWithoutNF: confirmedPayables.filter(t => !t.attachmentUrl).reduce((s, t) => s + t.amount, 0),
-    coverage: confirmedPayables.length > 0
-      ? (confirmedPayables.filter(t => t.attachmentUrl).length / confirmedPayables.length) * 100
-      : 0,
-  }), [confirmedPayables]);
+  const totals = useMemo(() => {
+    const withReceipt = confirmedPayables.filter(t => t.receiptUrl).length;
+    return {
+      total: confirmedPayables.reduce((s, t) => s + t.amount, 0),
+      withNF: confirmedPayables.filter(t => t.attachmentUrl).length,
+      withoutNF: confirmedPayables.filter(t => !t.attachmentUrl).length,
+      totalWithNF: confirmedPayables.filter(t => t.attachmentUrl).reduce((s, t) => s + t.amount, 0),
+      totalWithoutNF: confirmedPayables.filter(t => !t.attachmentUrl).reduce((s, t) => s + t.amount, 0),
+      coverage: confirmedPayables.length > 0
+        ? (confirmedPayables.filter(t => t.attachmentUrl).length / confirmedPayables.length) * 100
+        : 0,
+      withReceipt,
+      withoutReceipt: confirmedPayables.length - withReceipt,
+      receiptCoverage: confirmedPayables.length > 0 ? (withReceipt / confirmedPayables.length) * 100 : 0,
+    };
+  }, [confirmedPayables]);
 
   const detailRows = useMemo(() =>
     confirmedPayables
@@ -99,6 +112,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
           category: t.category,
           obra: obra?.code || '-',
           hasNF: !!t.attachmentUrl,
+          hasReceipt: !!t.receiptUrl,
         };
       }),
     [confirmedPayables, obras]
@@ -113,6 +127,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
       'Categoria': r.category,
       'Obra': r.obra,
       'NF Anexada': r.hasNF ? 'Sim' : 'Não',
+      'Comprovante': r.hasReceipt ? 'Sim' : 'Não',
     }));
     exportToCSV(rows, 'relatorio-nf');
   };
@@ -126,17 +141,18 @@ export default function NFReportDialog({ open, onClose }: Props) {
       'Categoria': r.category,
       'Obra': r.obra,
       'NF Anexada': r.hasNF ? 'Sim' : 'Não',
+      'Comprovante': r.hasReceipt ? 'Sim' : 'Não',
     }));
     exportToExcel(rows, 'relatorio-nf');
   };
 
   const handleExportPDF = () => {
-    const headers = ['Descrição', 'Fornecedor', 'Valor', 'Vencimento', 'Categoria', 'Obra', 'NF'];
+    const headers = ['Descrição', 'Fornecedor', 'Valor', 'Vencimento', 'Categoria', 'Obra', 'NF', 'Comp.'];
     const rows = detailRows.map(r => [
       r.description, r.counterpart, formatCurrency(r.amount),
-      formatDateFull(r.dueDate), r.category, r.obra, r.hasNF ? '✓' : '✗',
+      formatDateFull(r.dueDate), r.category, r.obra, r.hasNF ? '✓' : '✗', r.hasReceipt ? '✓' : '✗',
     ]);
-    exportToPDF('Relatório de Notas Fiscais', headers, rows);
+    exportToPDF('Relatório de Notas Fiscais e Comprovantes', headers, rows);
   };
 
   return (
@@ -145,38 +161,36 @@ export default function NFReportDialog({ open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <FileText className="w-4 h-4 text-primary" />
-            Relatório de Notas Fiscais
+            Relatório de Auditoria — NF e Comprovantes
           </DialogTitle>
         </DialogHeader>
 
         {/* Summary KPIs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="rounded-lg border bg-muted/30 p-3 text-center">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Pago</p>
             <p className="text-sm font-bold font-mono mt-1">{formatCurrency(totals.total)}</p>
             <p className="text-[10px] text-muted-foreground">{confirmedPayables.length} transações</p>
           </div>
-          <div className="rounded-lg border bg-success/5 border-success/20 p-3 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Com NF</p>
-            <p className="text-sm font-bold font-mono text-success mt-1">{formatCurrency(totals.totalWithNF)}</p>
-            <p className="text-[10px] text-muted-foreground">{totals.withNF} transações</p>
-          </div>
-          <div className="rounded-lg border bg-destructive/5 border-destructive/20 p-3 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Sem NF</p>
-            <p className="text-sm font-bold font-mono text-destructive mt-1">{formatCurrency(totals.totalWithoutNF)}</p>
-            <p className="text-[10px] text-muted-foreground">{totals.withoutNF} transações</p>
-          </div>
           <div className="rounded-lg border bg-primary/5 border-primary/20 p-3 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cobertura</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cobertura NF</p>
             <p className={cn('text-sm font-bold font-mono mt-1', totals.coverage >= 80 ? 'text-success' : totals.coverage >= 50 ? 'text-warning' : 'text-destructive')}>
               {totals.coverage.toFixed(0)}%
             </p>
             <div className="w-full h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
-              <div
-                className={cn('h-full rounded-full transition-all', totals.coverage >= 80 ? 'bg-success' : totals.coverage >= 50 ? 'bg-warning' : 'bg-destructive')}
-                style={{ width: `${totals.coverage}%` }}
-              />
+              <div className={cn('h-full rounded-full transition-all', totals.coverage >= 80 ? 'bg-success' : totals.coverage >= 50 ? 'bg-warning' : 'bg-destructive')} style={{ width: `${totals.coverage}%` }} />
             </div>
+            <p className="text-[10px] text-muted-foreground mt-1">{totals.withNF} com / {totals.withoutNF} sem</p>
+          </div>
+          <div className="rounded-lg border bg-primary/5 border-primary/20 p-3 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cobertura Comp.</p>
+            <p className={cn('text-sm font-bold font-mono mt-1', totals.receiptCoverage >= 80 ? 'text-success' : totals.receiptCoverage >= 50 ? 'text-warning' : 'text-destructive')}>
+              {totals.receiptCoverage.toFixed(0)}%
+            </p>
+            <div className="w-full h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+              <div className={cn('h-full rounded-full transition-all', totals.receiptCoverage >= 80 ? 'bg-success' : totals.receiptCoverage >= 50 ? 'bg-warning' : 'bg-destructive')} style={{ width: `${totals.receiptCoverage}%` }} />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">{totals.withReceipt} com / {totals.withoutReceipt} sem</p>
           </div>
         </div>
 
@@ -239,15 +253,16 @@ export default function NFReportDialog({ open, onClose }: Props) {
                 <TableRow className="bg-muted/30">
                   <TableHead className="text-[11px]">Período</TableHead>
                   <TableHead className="text-[11px] text-right">Total</TableHead>
-                  <TableHead className="text-[11px] text-center">Com NF</TableHead>
-                  <TableHead className="text-[11px] text-center">Sem NF</TableHead>
-                  <TableHead className="text-[11px] text-right">Cobertura</TableHead>
+                  <TableHead className="text-[11px] text-center">NF</TableHead>
+                  <TableHead className="text-[11px] text-center">Comp.</TableHead>
+                  <TableHead className="text-[11px] text-right">Cob. NF</TableHead>
+                  <TableHead className="text-[11px] text-right">Cob. Comp.</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {monthGroups.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
                       Nenhum pagamento confirmado encontrado.
                     </TableCell>
                   </TableRow>
@@ -256,22 +271,23 @@ export default function NFReportDialog({ open, onClose }: Props) {
                     <TableCell className="text-xs font-medium capitalize">{g.label}</TableCell>
                     <TableCell className="text-xs font-mono text-right">{formatCurrency(g.total)}</TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="outline" className="text-[10px] gap-1 bg-success/5 text-success border-success/20">
-                        <CheckCircle2 className="w-3 h-3" />{g.countWithNF}
+                      <Badge variant="outline" className={cn("text-[10px] gap-1", g.countWithNF > 0 ? "bg-success/5 text-success border-success/20" : "text-muted-foreground")}>
+                        <CheckCircle2 className="w-3 h-3" />{g.countWithNF}/{g.countAll}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      {g.countWithoutNF > 0 ? (
-                        <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/5 text-destructive border-destructive/20">
-                          <XCircle className="w-3 h-3" />{g.countWithoutNF}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground">—</Badge>
-                      )}
+                      <Badge variant="outline" className={cn("text-[10px] gap-1", g.countWithReceipt > 0 ? "bg-success/5 text-success border-success/20" : "text-muted-foreground")}>
+                        <CheckCircle2 className="w-3 h-3" />{g.countWithReceipt}/{g.countAll}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <span className={cn('text-xs font-bold', g.coverage >= 80 ? 'text-success' : g.coverage >= 50 ? 'text-warning' : 'text-destructive')}>
                         {g.coverage.toFixed(0)}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={cn('text-xs font-bold', g.receiptCoverage >= 80 ? 'text-success' : g.receiptCoverage >= 50 ? 'text-warning' : 'text-destructive')}>
+                        {g.receiptCoverage.toFixed(0)}%
                       </span>
                     </TableCell>
                   </TableRow>
@@ -293,12 +309,13 @@ export default function NFReportDialog({ open, onClose }: Props) {
                   <TableHead className="text-[11px]">Vencimento</TableHead>
                   <TableHead className="text-[11px]">Obra</TableHead>
                   <TableHead className="text-[11px] text-center">NF</TableHead>
+                  <TableHead className="text-[11px] text-center">Comp.</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {detailRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
+                    <TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-8">
                       Nenhum pagamento confirmado encontrado.
                     </TableCell>
                   </TableRow>
@@ -311,6 +328,13 @@ export default function NFReportDialog({ open, onClose }: Props) {
                     <TableCell className="text-xs">{r.obra}</TableCell>
                     <TableCell className="text-center">
                       {r.hasNF ? (
+                        <CheckCircle2 className="w-4 h-4 text-success mx-auto" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-destructive mx-auto" />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {r.hasReceipt ? (
                         <CheckCircle2 className="w-4 h-4 text-success mx-auto" />
                       ) : (
                         <XCircle className="w-4 h-4 text-destructive mx-auto" />
