@@ -309,6 +309,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
                   <TableHead className="text-[11px]">Vencimento</TableHead>
                   <TableHead className="text-[11px]">Obra</TableHead>
                   <TableHead className="text-[11px] text-center">NF</TableHead>
+                  <TableHead className="text-[11px] text-center">Comp.</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
