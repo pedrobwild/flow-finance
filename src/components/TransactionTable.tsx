@@ -202,7 +202,8 @@ export default function TransactionTable({ type }: Props) {
     const next7Total = next7.reduce((s, t) => s + t.amount, 0);
     const confirmed = filtered.filter(t => t.status === 'confirmado');
     const confirmedTotal = confirmed.reduce((s, t) => s + t.amount, 0);
-    return { total, overdueCount: overdue.length, overdueTotal, next7Total, next7Count: next7.length, confirmedTotal, confirmedCount: confirmed.length };
+    const missingNf = filtered.filter(t => t.status === 'confirmado' && !t.attachmentUrl);
+    return { total, overdueCount: overdue.length, overdueTotal, next7Total, next7Count: next7.length, confirmedTotal, confirmedCount: confirmed.length, missingNfCount: missingNf.length };
   }, [filtered]);
 
   const cLabel = isPagar ? 'Fornecedor' : 'Obra / Cliente';
