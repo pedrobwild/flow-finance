@@ -62,6 +62,11 @@ export default function Dashboard() {
         <CashFlowHeroChart period={period} />
       </motion.div>
 
+      {/* === PROJEÇÃO DE SALDO DIÁRIO 30/60/90d === */}
+      <motion.div {...section(0.14)}>
+        <DailyBalanceProjection />
+      </motion.div>
+
       {/* === COMPARATIVO MoM + WHAT-IF === */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div {...section(0.16)}>
