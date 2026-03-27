@@ -12,6 +12,7 @@ import MoMComparison from '@/components/MoMComparison';
 import DsoDpoIndicators from '@/components/DsoDpoIndicators';
 import WhatIfSimulator from '@/components/WhatIfSimulator';
 import MissingNFBanner from '@/components/MissingNFBanner';
+import MissingReceiptBanner from '@/components/MissingReceiptBanner';
 
 import { motion } from 'framer-motion';
 
