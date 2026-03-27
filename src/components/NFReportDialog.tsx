@@ -127,6 +127,7 @@ export default function NFReportDialog({ open, onClose }: Props) {
       'Categoria': r.category,
       'Obra': r.obra,
       'NF Anexada': r.hasNF ? 'Sim' : 'Não',
+      'Comprovante': r.hasReceipt ? 'Sim' : 'Não',
     }));
     exportToCSV(rows, 'relatorio-nf');
   };
