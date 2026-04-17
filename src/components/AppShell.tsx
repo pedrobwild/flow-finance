@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings, Siren, PieChart, Handshake } from 'lucide-react';
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings, Siren, PieChart, Handshake, Users } from 'lucide-react';
 import ChatCommandDrawer from '@/components/ChatCommandDrawer';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import MobileFAB from '@/components/MobileFAB';
