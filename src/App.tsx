@@ -51,6 +51,7 @@ const App = () => (
                             <Route path="/comando-de-guerra" element={<ComandoDeGuerra />} />
                             <Route path="/custos" element={<CustosAnalise />} />
                             <Route path="/negociacoes" element={<Negociacoes />} />
+                            <Route path="/admin/usuarios" element={<ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </AppShell>
