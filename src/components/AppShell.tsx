@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings, Siren, PieChart, Handshake } from 'lucide-react';
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings, Siren, PieChart, Handshake, Users } from 'lucide-react';
 import ChatCommandDrawer from '@/components/ChatCommandDrawer';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import MobileFAB from '@/components/MobileFAB';
@@ -149,10 +149,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
                 <DropdownMenuSeparator />
                 {isAdmin && (
-                  <DropdownMenuItem onClick={() => navigate('/obras')} className="gap-2">
-                    <Settings className="h-4 w-4" />
-                    Área do Admin
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={() => navigate('/obras')} className="gap-2">
+                      <Settings className="h-4 w-4" />
+                      Área do Admin
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/admin/usuarios')} className="gap-2">
+                      <Users className="h-4 w-4" />
+                      Usuários
+                    </DropdownMenuItem>
+                  </>
                 )}
                 <DropdownMenuItem onClick={signOut} className="gap-2 text-destructive focus:text-destructive">
                   <LogOut className="h-4 w-4" />

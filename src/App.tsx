@@ -19,6 +19,7 @@ import Obras from "./pages/Obras";
 import ComandoDeGuerra from "./pages/ComandoDeGuerra";
 import CustosAnalise from "./pages/CustosAnalise";
 import Negociacoes from "./pages/Negociacoes";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
                             <Route path="/comando-de-guerra" element={<ComandoDeGuerra />} />
                             <Route path="/custos" element={<CustosAnalise />} />
                             <Route path="/negociacoes" element={<Negociacoes />} />
+                            <Route path="/admin/usuarios" element={<ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </AppShell>
