@@ -128,7 +128,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
       setAttachmentUrl(urlData.publicUrl);
-      toast.success('Comprovante anexado');
+      toast.success(form.type === 'pagar' ? 'Nota fiscal anexada' : 'Comprovante anexado');
     } catch {
       toast.error('Erro ao enviar arquivo');
     } finally {
@@ -440,11 +440,11 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
             </div>
             {/* Attachment */}
             <div className="col-span-2">
-              <Label className="text-xs">Comprovante</Label>
+              <Label className="text-xs">{form.type === 'pagar' ? 'Nota Fiscal (PDF/PNG)' : 'Comprovante'}</Label>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,.pdf"
+                accept={form.type === 'pagar' ? '.pdf,image/png,image/jpeg' : 'image/*,.pdf'}
                 onChange={handleFileUpload}
                 className="hidden"
               />
@@ -452,7 +452,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                 <div className="flex items-center gap-2 mt-1 p-2 rounded-md bg-muted/50 border">
                   <FileText className="w-4 h-4 text-primary shrink-0" />
                   <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline truncate flex-1">
-                    Ver comprovante
+                    {form.type === 'pagar' ? 'Ver nota fiscal' : 'Ver comprovante'}
                   </a>
                   <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAttachmentUrl(null)}>
                     <X className="w-3 h-3" />
@@ -468,7 +468,11 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
                   disabled={uploading}
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  {uploading ? 'Enviando...' : 'Anexar comprovante (PDF/imagem)'}
+                  {uploading
+                    ? 'Enviando...'
+                    : form.type === 'pagar'
+                      ? 'Anexar nota fiscal (PDF/PNG)'
+                      : 'Anexar comprovante (PDF/imagem)'}
                 </Button>
               )}
             </div>
