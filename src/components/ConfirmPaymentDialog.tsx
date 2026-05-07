@@ -164,9 +164,13 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
     }
   };
 
-  const canConfirm = splitEnabled
+  const receiptRequired = transaction?.type === 'pagar';
+  const hasReceipt = !!receiptFile || !!transaction?.receiptUrl;
+  const receiptOk = !receiptRequired || hasReceipt;
+
+  const canConfirm = (splitEnabled
     ? allocations.filter(a => a.obraId && parseFloat(a.amount) > 0).length >= 2 && isBalanced && totalAmount > 0
-    : totalAmount > 0 && !!paidAt;
+    : totalAmount > 0 && !!paidAt) && receiptOk;
 
   if (!transaction) return null;
 
