@@ -332,8 +332,12 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
             <div className="flex items-center gap-2">
               <FileUp className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-xs font-semibold">Comprovante de Pagamento</p>
-                <p className="text-[10px] text-muted-foreground">PIX, boleto pago, TED (opcional)</p>
+                <p className="text-xs font-semibold">
+                  Comprovante de Pagamento {transaction?.type === 'pagar' && <span className="text-destructive">*</span>}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {transaction?.type === 'pagar' ? 'Obrigatório: PIX, boleto pago, TED' : 'PIX, boleto pago, TED (opcional)'}
+                </p>
               </div>
             </div>
             <input ref={receiptInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
