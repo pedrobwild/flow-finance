@@ -128,7 +128,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
       setAttachmentUrl(urlData.publicUrl);
-      toast.success('Comprovante anexado');
+      toast.success(form.type === 'pagar' ? 'Nota fiscal anexada' : 'Comprovante anexado');
     } catch {
       toast.error('Erro ao enviar arquivo');
     } finally {
