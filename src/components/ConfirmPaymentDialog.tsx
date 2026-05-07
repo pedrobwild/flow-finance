@@ -164,9 +164,13 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
     }
   };
 
-  const canConfirm = splitEnabled
+  const receiptRequired = transaction?.type === 'pagar';
+  const hasReceipt = !!receiptFile || !!transaction?.receiptUrl;
+  const receiptOk = !receiptRequired || hasReceipt;
+
+  const canConfirm = (splitEnabled
     ? allocations.filter(a => a.obraId && parseFloat(a.amount) > 0).length >= 2 && isBalanced && totalAmount > 0
-    : totalAmount > 0 && !!paidAt;
+    : totalAmount > 0 && !!paidAt) && receiptOk;
 
   if (!transaction) return null;
 
@@ -328,8 +332,12 @@ export default function ConfirmPaymentDialog({ transaction, onClose }: Props) {
             <div className="flex items-center gap-2">
               <FileUp className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-xs font-semibold">Comprovante de Pagamento</p>
-                <p className="text-[10px] text-muted-foreground">PIX, boleto pago, TED (opcional)</p>
+                <p className="text-xs font-semibold">
+                  Comprovante de Pagamento {transaction?.type === 'pagar' && <span className="text-destructive">*</span>}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {transaction?.type === 'pagar' ? 'Obrigatório: PIX, boleto pago, TED' : 'PIX, boleto pago, TED (opcional)'}
+                </p>
               </div>
             </div>
             <input ref={receiptInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
