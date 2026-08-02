@@ -29,7 +29,19 @@ export interface Transaction {
   cdiPercentage: number | null;
   baseAmount: number | null;
   baseDate: string | null;
+  source: TransactionSource;
+  needsReview: boolean;
+  barcodeLine: string | null;
 }
+
+export type TransactionSource = 'manual' | 'email' | 'dda' | 'nfe';
+
+export const SOURCE_LABELS: Record<TransactionSource, string> = {
+  manual: 'Manual',
+  email: 'E-mail',
+  dda: 'DDA',
+  nfe: 'NF-e',
+};
 
 export interface CashBalance {
   id: string;
