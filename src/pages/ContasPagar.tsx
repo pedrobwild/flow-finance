@@ -180,9 +180,10 @@ export default function ContasPagar() {
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90 hover:bg-success/10"
+            className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 sm:focus-visible:opacity-100 sm:group-focus-within/row:opacity-100 transition-opacity active:scale-90 hover:bg-success/10"
             onClick={() => setConfirmTx(tx)}
             title="Confirmar pagamento"
+            aria-label={`Confirmar pagamento de ${tx.description}`}
           >
             <Check className="w-4 h-4 text-success" />
           </Button>
@@ -191,11 +192,13 @@ export default function ContasPagar() {
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90"
+                className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 sm:focus-visible:opacity-100 sm:group-focus-within/row:opacity-100 transition-opacity active:scale-90"
+                aria-label={`Mais ações para ${tx.description}`}
               >
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem onClick={() => { setRescheduleTx(tx); setRescheduleDate(tx.dueDate); }}>
                 <CalendarClock className="w-3.5 h-3.5 mr-2" />
