@@ -229,6 +229,9 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if ((updates as any).cdiPercentage !== undefined) db.cdi_percentage = (updates as any).cdiPercentage;
       if ((updates as any).baseAmount !== undefined) db.base_amount = (updates as any).baseAmount;
       if ((updates as any).baseDate !== undefined) db.base_date = (updates as any).baseDate;
+      if (updates.needsReview !== undefined) db.needs_review = updates.needsReview;
+      if (updates.barcodeLine !== undefined) db.barcode_line = updates.barcodeLine;
+      if (updates.source !== undefined) db.source = updates.source;
       const { error } = await supabase.from('transactions').update(db).eq('id', id);
       if (error) throw error;
     },
