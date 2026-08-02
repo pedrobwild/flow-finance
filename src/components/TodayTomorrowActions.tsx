@@ -89,7 +89,7 @@ export default function TodayTomorrowActions({ period }: Props) {
                     size="sm"
                     variant="outline"
                     className="h-7 text-[10px] gap-1 px-2.5 active:scale-95 transition-transform"
-                    onClick={() => confirmAll(group.ids)}
+                    onClick={() => confirmAll([...group.pagar, ...group.receber])}
                   >
                     <CheckCheck className="w-3.5 h-3.5" />
                     Confirmar tudo
