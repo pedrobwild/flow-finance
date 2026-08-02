@@ -35,7 +35,7 @@ const sect = (delay: number) => ({
 });
 
 export default function ContasPagar() {
-  const { currentBalance, confirmTransaction, updateTransaction, deleteTransaction } = useFinance();
+  const { currentBalance, updateTransaction, deleteTransaction } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras } = useObras();
   const today = todayISO();
@@ -514,6 +514,7 @@ export default function ContasPagar() {
 
       <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
       <ConfirmPaymentDialog transaction={confirmTx} onClose={() => setConfirmTx(null)} />
+      <BulkConfirmDialog transactions={bulkConfirm} onClose={() => setBulkConfirm(null)} />
       <NFReportDialog open={showNFReport} onClose={() => setShowNFReport(false)} />
     </div>
   );
