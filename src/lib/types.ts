@@ -29,9 +29,9 @@ export interface Transaction {
   cdiPercentage: number | null;
   baseAmount: number | null;
   baseDate: string | null;
-  source: TransactionSource;
-  needsReview: boolean;
-  barcodeLine: string | null;
+  source?: TransactionSource;
+  needsReview?: boolean;
+  barcodeLine?: string | null;
 }
 
 export type TransactionSource = 'manual' | 'email' | 'dda' | 'nfe';
