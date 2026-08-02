@@ -112,6 +112,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
+            <InboxReviewButton />
             <nav className="hidden lg:flex items-center gap-1">
               {navItems.map(item => (
                 <Link key={item.path} to={item.path}>
