@@ -787,6 +787,11 @@ export default function TransactionTable({ type }: Props) {
                               {isConfirmed && isPagar && <Check className="w-3 h-3 mr-1" />}
                               {isConfirmed && isPagar ? 'Pago' : STATUS_LABELS[tx.status]}
                             </span>
+                            {tx.needsReview && (
+                              <Badge variant="outline" className="ml-1 text-[9px] px-1.5 py-0 h-[18px] border-warning/40 text-warning">
+                                A confirmar
+                              </Badge>
+                            )}
                             {isConfirmed && tx.paidAt && (
                               <p className="text-[10px] text-muted-foreground mt-0.5 pl-0.5">{formatDateFull(tx.paidAt)}</p>
                             )}
