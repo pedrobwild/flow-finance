@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useObraFilter } from '@/lib/obra-filter-context';
+import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
