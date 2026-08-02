@@ -33,6 +33,9 @@ function rowToTransaction(row: any): Transaction {
     cdiPercentage: row.cdi_percentage != null ? Number(row.cdi_percentage) : null,
     baseAmount: row.base_amount != null ? Number(row.base_amount) : null,
     baseDate: row.base_date || null,
+    source: (row.source || 'manual') as Transaction['source'],
+    needsReview: row.needs_review || false,
+    barcodeLine: row.barcode_line || null,
   };
   // Auto-recalculate CDI-adjusted amount
   if (tx.cdiAdjustable && tx.baseAmount != null && tx.baseDate && tx.cdiPercentage != null && tx.status !== 'confirmado') {
