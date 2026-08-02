@@ -1,12 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
+import { Transaction } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowDownCircle, ArrowUpCircle, CheckCheck, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import BulkConfirmDialog from '@/components/BulkConfirmDialog';
 
 interface Props {
   period?: { from: string; to: string; label: string };
@@ -15,8 +17,10 @@ interface Props {
 export default function TodayTomorrowActions({ period }: Props) {
   const { confirmTransaction } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
+  const [bulkConfirm, setBulkConfirm] = useState<Transaction[] | null>(null);
   const today = todayISO();
   const tomorrow = addDays(today, 1);
+
 
   const groups = useMemo(() => {
     const build = (date: string, label: string) => {
@@ -39,9 +43,7 @@ export default function TodayTomorrowActions({ period }: Props) {
   const hasItems = groups.some(g => g.pagar.length + g.receber.length > 0);
   if (!hasItems) return null;
 
-  const confirmAll = (ids: string[]) => {
-    ids.forEach(id => confirmTransaction(id));
-  };
+  const confirmAll = (txs: Transaction[]) => setBulkConfirm(txs);
 
   return (
     <div className="card-elevated overflow-hidden">
