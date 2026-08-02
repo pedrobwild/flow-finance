@@ -253,44 +253,40 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     onError: () => toast.error('Erro ao excluir transação'),
   });
 
+  /**
+   * Confirmação (individual ou em lote) via RPC atômica `confirmar_transacoes`:
+   * marca status/paid_at e aplica UM único ajuste de saldo no banco.
+   */
   const confirmMutation = useMutation({
-    mutationFn: async ({ id, actualAmount, txType, paidAt }: { id: string; actualAmount?: number; txType?: string; paidAt?: string }) => {
-      const updateData: any = {
-        status: 'confirmado',
-        paid_at: paidAt || todayISO(),
-      };
-      if (actualAmount !== undefined) {
-        updateData.amount = actualAmount;
+    mutationFn: async ({ ids, paidAt, amountOverrides }: {
+      ids: string[];
+      paidAt?: string;
+      amountOverrides?: Record<string, number>;
+    }) => {
+      const date = paidAt || todayISO();
+
+      // Se o valor real pago foi editado, grava o valor antes de confirmar.
+      if (amountOverrides) {
+        for (const [id, amount] of Object.entries(amountOverrides)) {
+          const { error } = await supabase.from('transactions').update({ amount }).eq('id', id);
+          if (error) throw error;
+        }
       }
-      const { error } = await supabase.from('transactions').update(updateData).eq('id', id);
+
+      const { data, error } = await supabase.rpc('confirmar_transacoes', {
+        p_ids: ids,
+        p_paid_at: date,
+      });
       if (error) throw error;
-
-      if (actualAmount !== undefined && txType) {
-        // Fetch the LATEST balance from DB to avoid stale state issues
-        const { data: latestBal } = await supabase
-          .from('cash_balance')
-          .select('amount')
-          .order('balance_date', { ascending: false })
-          .limit(1)
-          .single();
-
-        const currentAmt = latestBal?.amount ?? 0;
-        const newBalance = txType === 'receber'
-          ? currentAmt + actualAmount
-          : currentAmt - actualAmount;
-        const today = todayISO();
-        const { error: balError } = await supabase.from('cash_balance').upsert({
-          balance_date: today,
-          amount: newBalance,
-          bank_account: 'Principal',
-        }, { onConflict: 'balance_date' });
-        if (balError) throw balError;
-      }
+      return data as { confirmed: number; delta: number; new_balance: number } | null;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       invalidateTx();
       invalidateBal();
-      toast.success('Transação confirmada e saldo atualizado');
+      const n = result?.confirmed ?? 0;
+      toast.success(n > 1
+        ? `${n} lançamentos confirmados e saldo atualizado`
+        : 'Transação confirmada e saldo atualizado');
     },
     onError: () => toast.error('Erro ao confirmar transação'),
   });
