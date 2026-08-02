@@ -307,6 +307,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     onError: () => toast.error('Erro ao atualizar saldo'),
   });
 
+  /**
+   * Projeção geral: saldo atual + lançamentos até a data.
+   * Visão conservadora — recebíveis ATRASADOS ficam de fora (ver `overdueReceivablesTotal`).
+   */
   const projectedBalance = useCallback((targetDate: string): number => {
     const base = currentBalance?.amount ?? 0;
     let projected = base;
@@ -325,6 +329,13 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     return projected;
   }, [transactions, currentBalance]);
 
+  const overdueReceivablesTotal = useMemo(
+    () => transactions
+      .filter(t => t.type === 'receber' && t.status === 'atrasado')
+      .reduce((s, t) => s + t.amount, 0),
+    [transactions],
+  );
+
   const getTransactionsByObra = useCallback((obraId: string | null): Transaction[] => {
     if (obraId === null) {
       return transactions.filter(t => !t.obraId);
@@ -332,22 +343,32 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     return transactions.filter(t => t.obraId === obraId);
   }, [transactions]);
 
-  const projectedBalanceForObra = useCallback((obraId: string, targetDate: string): number => {
-    const obraTxs = transactions.filter(t => t.obraId === obraId);
-    let balance = 0;
+  /**
+   * Separa realizado x projetado da obra até a data:
+   * - realizado: apenas lançamentos confirmados (recebidos - pagos);
+   * - projetado: previstos/pendentes NÃO atrasados (a receber - a pagar);
+   * - liquido: realizado + projetado.
+   */
+  const obraBalanceBreakdown = useCallback((obraId: string, targetDate: string) => {
+    const obraTxs = transactions.filter(t => t.obraId === obraId && t.dueDate <= targetDate);
+    let realizado = 0;
+    let projetado = 0;
 
     for (const tx of obraTxs) {
-      if (tx.dueDate > targetDate) continue;
-      if (tx.type === 'receber') {
-        if (tx.status === 'confirmado' || tx.status !== 'atrasado') {
-          balance += tx.amount;
-        }
-      } else {
-        balance -= tx.amount;
+      const signed = tx.type === 'receber' ? tx.amount : -tx.amount;
+      if (tx.status === 'confirmado') {
+        realizado += signed;
+      } else if (tx.status !== 'atrasado') {
+        projetado += signed;
       }
     }
-    return balance;
+    return { realizado, projetado, liquido: realizado + projetado };
   }, [transactions]);
+
+  const projectedBalanceForObra = useCallback(
+    (obraId: string, targetDate: string): number => obraBalanceBreakdown(obraId, targetDate).liquido,
+    [obraBalanceBreakdown],
+  );
 
   return (
     <FinanceContext.Provider value={{
@@ -360,12 +381,20 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       addTransactions: (txs) => addBulkMutation.mutateAsync(txs),
       updateTransaction: (id, updates) => updateMutation.mutate({ id, updates }),
       deleteTransaction: (id) => deleteMutation.mutate(id),
-      confirmTransaction: (id, actualAmount, txType, paidAt) => confirmMutation.mutate({ id, actualAmount, txType, paidAt }),
+      confirmTransaction: (id, actualAmount, _txType, paidAt) => confirmMutation.mutate({
+        ids: [id],
+        paidAt,
+        amountOverrides: actualAmount !== undefined ? { [id]: actualAmount } : undefined,
+      }),
+      confirmTransactions: (ids, paidAt) => confirmMutation.mutateAsync({ ids, paidAt }).then(() => undefined),
       updateCashBalance: (amount, date) => balanceMutation.mutate({ amount, date: date || todayISO() }),
       projectedBalance,
+      overdueReceivablesTotal,
       getTransactionsByObra,
       projectedBalanceForObra,
+      obraBalanceBreakdown,
     }}>
+
       {children}
     </FinanceContext.Provider>
   );
