@@ -34,13 +34,14 @@ export interface Transaction {
   barcodeLine?: string | null;
 }
 
-export type TransactionSource = 'manual' | 'email' | 'dda' | 'nfe';
+export type TransactionSource = 'manual' | 'email' | 'dda' | 'nfe' | 'integracao';
 
 export const SOURCE_LABELS: Record<TransactionSource, string> = {
   manual: 'Manual',
   email: 'E-mail',
   dda: 'DDA',
   nfe: 'NF-e',
+  integracao: 'Integração',
 };
 
 export interface CashBalance {
@@ -58,6 +59,7 @@ export interface Obra {
   code: string;
   clientName: string;
   clientEmail: string;
+  clientPhone: string;
   condominium: string;
   unitNumber: string;
   address: string;
