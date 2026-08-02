@@ -65,10 +65,16 @@ interface FinanceContextType {
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   confirmTransaction: (id: string, actualAmount?: number, txType?: string, paidAt?: string) => void;
+  /** Confirma várias transações de uma vez (RPC atômica: status + saldo). */
+  confirmTransactions: (ids: string[], paidAt?: string) => Promise<void>;
   updateCashBalance: (amount: number, date?: string) => void;
   projectedBalance: (date: string) => number;
+  /** Total de recebíveis atrasados — deliberadamente FORA da projeção (visão conservadora). */
+  overdueReceivablesTotal: number;
   getTransactionsByObra: (obraId: string | null) => Transaction[];
   projectedBalanceForObra: (obraId: string, date: string) => number;
+  /** Detalhe da projeção da obra: realizado (confirmado) x projetado (previsto/pendente). */
+  obraBalanceBreakdown: (obraId: string, date: string) => { realizado: number; projetado: number; liquido: number };
 }
 
 const financeContextRegistry = globalThis as typeof globalThis & {
