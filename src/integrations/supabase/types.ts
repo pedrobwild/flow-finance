@@ -122,6 +122,51 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_sync_log: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          entity_type: string
+          error_message: string | null
+          id: string
+          payload: Json | null
+          source_id: string
+          source_system: string
+          sync_status: string
+          synced_at: string | null
+          target_id: string | null
+          target_system: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          source_id: string
+          source_system: string
+          sync_status?: string
+          synced_at?: string | null
+          target_id?: string | null
+          target_system?: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          source_id?: string
+          source_system?: string
+          sync_status?: string
+          synced_at?: string | null
+          target_id?: string | null
+          target_system?: string
+        }
+        Relationships: []
+      }
       negotiations: {
         Row: {
           contact_method: string
@@ -251,6 +296,7 @@ export type Database = {
           budget_target: number | null
           client_email: string | null
           client_name: string
+          client_phone: string | null
           code: string
           condominium: string
           contract_value: number
@@ -271,6 +317,7 @@ export type Database = {
           budget_target?: number | null
           client_email?: string | null
           client_name: string
+          client_phone?: string | null
           code: string
           condominium?: string
           contract_value?: number
@@ -291,6 +338,7 @@ export type Database = {
           budget_target?: number | null
           client_email?: string | null
           client_name?: string
+          client_phone?: string | null
           code?: string
           condominium?: string
           contract_value?: number
