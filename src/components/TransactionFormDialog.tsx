@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObras } from '@/lib/obras-context';
 import {
@@ -59,7 +59,14 @@ const empty = (type: TransactionType, obraId?: string) => ({
 });
 
 export default function TransactionFormDialog({ open, onClose, transaction, defaultType, defaultObraId, prefill }: Props) {
-  const { addTransaction, updateTransaction, addTransactions } = useFinance();
+  const { addTransaction, updateTransaction, addTransactions, transactions } = useFinance();
+  // Sugestões de contraparte já usadas — digitação livre continua permitida.
+  const counterpartOptions = useMemo(
+    () => Array.from(new Set(
+      transactions.map(t => t.counterpart?.trim()).filter((c): c is string => !!c),
+    )).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    [transactions],
+  );
   const { obras } = useObras();
   const { data: customCategories = [] } = useCustomCategories();
   const isEdit = !!transaction;
@@ -263,15 +270,24 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
 
             {/* Cliente (counterpart) */}
             <div className={form.type === 'receber' ? 'col-span-2' : ''}>
-              <Label className="text-xs">{cLabel}</Label>
+              <Label htmlFor="tx-counterpart" className="text-xs">{cLabel}</Label>
               <Input
+                id="tx-counterpart"
                 value={form.counterpart}
                 onChange={e => set('counterpart', e.target.value)}
                 readOnly={isObraReceber}
                 className={isObraReceber ? 'bg-muted/50' : ''}
-                placeholder={form.type === 'receber' && !form.obraId ? 'Ex: Banco, Investidor, Empresa...' : ''}
+                list={isObraReceber ? undefined : 'counterpart-options'}
+                autoComplete="off"
+                placeholder={form.type === 'receber' && !form.obraId ? 'Ex: Banco, Investidor, Empresa...' : 'Digite ou escolha um já usado'}
               />
+              {!isObraReceber && (
+                <datalist id="counterpart-options">
+                  {counterpartOptions.map(c => <option key={c} value={c} />)}
+                </datalist>
+              )}
             </div>
+
 
             {/* For receber: Parcela field prominently */}
             {form.type === 'receber' && form.obraId && (
