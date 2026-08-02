@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, TrendingUp, Menu, X, DollarSign, Beaker, Building2, LogOut, Shield, Settings, Siren, PieChart, Handshake, Users } from 'lucide-react';
 import ChatCommandDrawer from '@/components/ChatCommandDrawer';
+import InboxReviewButton from '@/components/InboxReviewButton';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import MobileFAB from '@/components/MobileFAB';
 import { useLocation, Link, useNavigate } from 'react-router-dom';

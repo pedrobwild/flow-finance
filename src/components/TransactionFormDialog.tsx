@@ -195,6 +195,7 @@ export default function TransactionFormDialog({ open, onClose, transaction, defa
       cdiPercentage: form.cdiAdjustable ? parseFloat(form.cdiPercentage) || 100 : null,
       baseAmount: form.cdiAdjustable ? (parseFloat(form.amount) || 0) : null,
       baseDate: form.cdiAdjustable ? form.dueDate : null,
+      needsReview: false,
     };
     if (isEdit && transaction) {
       updateTransaction(transaction.id, data);
