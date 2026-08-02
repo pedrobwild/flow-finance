@@ -26,6 +26,7 @@ import TransactionTable from '@/components/TransactionTable';
 import OFXImportDialog from '@/components/OFXImportDialog';
 import ConfirmPaymentDialog from '@/components/ConfirmPaymentDialog';
 import NFReportDialog from '@/components/NFReportDialog';
+import BulkConfirmDialog from '@/components/BulkConfirmDialog';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 12 } as const,
@@ -48,6 +49,7 @@ export default function ContasPagar() {
   const [showOFXImport, setShowOFXImport] = useState(false);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [showNFReport, setShowNFReport] = useState(false);
+  const [bulkConfirm, setBulkConfirm] = useState<Transaction[] | null>(null);
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -81,9 +83,9 @@ export default function ContasPagar() {
     return obras.find(o => o.id === obraId)?.code;
   };
 
-  const confirmAll = (txs: typeof transactions) => {
-    txs.forEach(t => confirmTransaction(t.id, t.amount, t.type));
-  };
+  // A confirmação em massa passa por um diálogo de revisão (quantidade, total, data)
+  // e é executada em UMA única chamada atômica.
+  const confirmAll = (txs: Transaction[]) => setBulkConfirm(txs);
 
   const renderTxCard = (tx: typeof transactions[0], showDate = false) => {
     const obraCode = getObraCode(tx.obraId);
