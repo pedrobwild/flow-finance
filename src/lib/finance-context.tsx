@@ -33,20 +33,13 @@ function rowToTransaction(row: any): Transaction {
     cdiPercentage: row.cdi_percentage != null ? Number(row.cdi_percentage) : null,
     baseAmount: row.base_amount != null ? Number(row.base_amount) : null,
     baseDate: row.base_date || null,
+    cdiLastUpdate: row.cdi_last_update || null,
     source: (row.source || 'manual') as Transaction['source'],
     needsReview: row.needs_review || false,
     barcodeLine: row.barcode_line || null,
   };
-  // Auto-recalculate CDI-adjusted amount
-  if (tx.cdiAdjustable && tx.baseAmount != null && tx.baseDate && tx.cdiPercentage != null && tx.status !== 'confirmado') {
-    const CDI_ANNUAL = 0.1415; // Selic/CDI ~14.15% a.a.
-    const today = new Date();
-    const base = new Date(tx.baseDate + 'T12:00:00');
-    const daysDiff = Math.max(0, Math.round((today.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)));
-    const dailyRate = Math.pow(1 + CDI_ANNUAL, 1 / 252) - 1;
-    const factor = Math.pow(1 + dailyRate * (tx.cdiPercentage / 100), daysDiff);
-    tx.amount = Math.round(tx.baseAmount * factor * 100) / 100;
-  }
+  // O valor corrigido pelo CDI é calculado no banco (job diário `aplicar_correcao_cdi`).
+  // Nada é recalculado no navegador para não divergir do banco/exports.
   tx.status = computeStatus(tx);
   return tx;
 }
