@@ -6,6 +6,7 @@ import { formatCurrency, todayISO, addDays, daysBetween } from '@/lib/helpers';
 import { ArrowUpRight, Clock, AlertTriangle, TrendingUp, Upload } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
 import OFXImportDialog from '@/components/OFXImportDialog';
+import ReceivablesAging from '@/components/ReceivablesAging';
 import { Button } from '@/components/ui/button';
 
 const sect = (delay: number) => ({
@@ -145,6 +146,10 @@ export default function ContasReceber() {
         </motion.div>
       )}
 
+      {/* Aging */}
+      <motion.div {...sect(0.14)}>
+        <ReceivablesAging />
+      </motion.div>
 
       {/* Table */}
       <motion.div {...sect(0.18)}>
