@@ -167,6 +167,27 @@ export type Database = {
         }
         Relationships: []
       }
+      market_rates: {
+        Row: {
+          key: string
+          rate: number
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          rate: number
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          rate?: number
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       negotiations: {
         Row: {
           contact_method: string
@@ -389,6 +410,7 @@ export type Database = {
           billing_sent_at: string | null
           category: string
           cdi_adjustable: boolean
+          cdi_last_update: string | null
           cdi_percentage: number | null
           cost_center: string
           counterpart: string
@@ -420,6 +442,7 @@ export type Database = {
           billing_sent_at?: string | null
           category?: string
           cdi_adjustable?: boolean
+          cdi_last_update?: string | null
           cdi_percentage?: number | null
           cost_center?: string
           counterpart?: string
@@ -451,6 +474,7 @@ export type Database = {
           billing_sent_at?: string | null
           category?: string
           cdi_adjustable?: boolean
+          cdi_last_update?: string | null
           cdi_percentage?: number | null
           cost_center?: string
           counterpart?: string
@@ -505,6 +529,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aplicar_correcao_cdi: { Args: never; Returns: Json }
+      confirmar_transacoes: {
+        Args: { p_ids: string[]; p_paid_at: string }
+        Returns: Json
+      }
+      dias_uteis: { Args: { p_from: string; p_to: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
