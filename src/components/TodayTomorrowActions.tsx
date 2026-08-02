@@ -1,12 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFinance } from '@/lib/finance-context';
 import { useObraFilter } from '@/lib/obra-filter-context';
 import { formatCurrency, todayISO, addDays } from '@/lib/helpers';
+import { Transaction } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowDownCircle, ArrowUpCircle, CheckCheck, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import BulkConfirmDialog from '@/components/BulkConfirmDialog';
 
 interface Props {
   period?: { from: string; to: string; label: string };
@@ -15,8 +17,10 @@ interface Props {
 export default function TodayTomorrowActions({ period }: Props) {
   const { confirmTransaction } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
+  const [bulkConfirm, setBulkConfirm] = useState<Transaction[] | null>(null);
   const today = todayISO();
   const tomorrow = addDays(today, 1);
+
 
   const groups = useMemo(() => {
     const build = (date: string, label: string) => {
@@ -39,9 +43,7 @@ export default function TodayTomorrowActions({ period }: Props) {
   const hasItems = groups.some(g => g.pagar.length + g.receber.length > 0);
   if (!hasItems) return null;
 
-  const confirmAll = (ids: string[]) => {
-    ids.forEach(id => confirmTransaction(id));
-  };
+  const confirmAll = (txs: Transaction[]) => setBulkConfirm(txs);
 
   return (
     <div className="card-elevated overflow-hidden">
@@ -87,7 +89,7 @@ export default function TodayTomorrowActions({ period }: Props) {
                     size="sm"
                     variant="outline"
                     className="h-7 text-[10px] gap-1 px-2.5 active:scale-95 transition-transform"
-                    onClick={() => confirmAll(group.ids)}
+                    onClick={() => confirmAll([...group.pagar, ...group.receber])}
                   >
                     <CheckCheck className="w-3.5 h-3.5" />
                     Confirmar tudo
@@ -153,8 +155,9 @@ export default function TodayTomorrowActions({ period }: Props) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-7 w-7 shrink-0 opacity-0 group-hover/item:opacity-100 sm:opacity-0 max-sm:opacity-100 transition-opacity active:scale-90"
+                        className="h-7 w-7 shrink-0 opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 group-focus-within/item:opacity-100 sm:opacity-0 max-sm:opacity-100 transition-opacity active:scale-90"
                         onClick={() => confirmTransaction(tx.id)}
+                        aria-label={`Confirmar ${tx.description}`}
                       >
                         <Check className="w-3.5 h-3.5 text-success" />
                       </Button>
@@ -166,6 +169,8 @@ export default function TodayTomorrowActions({ period }: Props) {
           );
         })}
       </div>
+      <BulkConfirmDialog transactions={bulkConfirm} onClose={() => setBulkConfirm(null)} />
     </div>
   );
 }
+

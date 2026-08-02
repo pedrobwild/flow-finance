@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useObraFilter } from '@/lib/obra-filter-context';
+import { useFinance } from '@/lib/finance-context';
 import { formatCurrency, todayISO, addDays, getDayMonth } from '@/lib/helpers';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -23,6 +24,7 @@ interface DataPoint {
 
 export default function DailyBalanceProjection() {
   const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
+  const { overdueReceivablesTotal } = useFinance();
   const [horizon, setHorizon] = useState<Horizon>(30);
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
@@ -141,7 +143,13 @@ export default function DailyBalanceProjection() {
             <p className="text-[10px] text-muted-foreground mt-0.5">
               Próximos {horizon} dias · Saldo projetado dia a dia
             </p>
+            {overdueReceivablesTotal > 0 && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Projeção conservadora: não conta {formatCurrency(overdueReceivablesTotal)} em recebimentos atrasados.
+              </p>
+            )}
           </div>
+
         </div>
         <div className="flex items-center gap-1">
           {([30, 60, 90] as const).map(p => (

@@ -33,20 +33,13 @@ function rowToTransaction(row: any): Transaction {
     cdiPercentage: row.cdi_percentage != null ? Number(row.cdi_percentage) : null,
     baseAmount: row.base_amount != null ? Number(row.base_amount) : null,
     baseDate: row.base_date || null,
+    cdiLastUpdate: row.cdi_last_update || null,
     source: (row.source || 'manual') as Transaction['source'],
     needsReview: row.needs_review || false,
     barcodeLine: row.barcode_line || null,
   };
-  // Auto-recalculate CDI-adjusted amount
-  if (tx.cdiAdjustable && tx.baseAmount != null && tx.baseDate && tx.cdiPercentage != null && tx.status !== 'confirmado') {
-    const CDI_ANNUAL = 0.1415; // Selic/CDI ~14.15% a.a.
-    const today = new Date();
-    const base = new Date(tx.baseDate + 'T12:00:00');
-    const daysDiff = Math.max(0, Math.round((today.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)));
-    const dailyRate = Math.pow(1 + CDI_ANNUAL, 1 / 252) - 1;
-    const factor = Math.pow(1 + dailyRate * (tx.cdiPercentage / 100), daysDiff);
-    tx.amount = Math.round(tx.baseAmount * factor * 100) / 100;
-  }
+  // O valor corrigido pelo CDI é calculado no banco (job diário `aplicar_correcao_cdi`).
+  // Nada é recalculado no navegador para não divergir do banco/exports.
   tx.status = computeStatus(tx);
   return tx;
 }
@@ -72,10 +65,16 @@ interface FinanceContextType {
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   confirmTransaction: (id: string, actualAmount?: number, txType?: string, paidAt?: string) => void;
+  /** Confirma várias transações de uma vez (RPC atômica: status + saldo). */
+  confirmTransactions: (ids: string[], paidAt?: string) => Promise<void>;
   updateCashBalance: (amount: number, date?: string) => void;
   projectedBalance: (date: string) => number;
+  /** Total de recebíveis atrasados — deliberadamente FORA da projeção (visão conservadora). */
+  overdueReceivablesTotal: number;
   getTransactionsByObra: (obraId: string | null) => Transaction[];
   projectedBalanceForObra: (obraId: string, date: string) => number;
+  /** Detalhe da projeção da obra: realizado (confirmado) x projetado (previsto/pendente). */
+  obraBalanceBreakdown: (obraId: string, date: string) => { realizado: number; projetado: number; liquido: number };
 }
 
 const financeContextRegistry = globalThis as typeof globalThis & {
@@ -254,44 +253,40 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     onError: () => toast.error('Erro ao excluir transação'),
   });
 
+  /**
+   * Confirmação (individual ou em lote) via RPC atômica `confirmar_transacoes`:
+   * marca status/paid_at e aplica UM único ajuste de saldo no banco.
+   */
   const confirmMutation = useMutation({
-    mutationFn: async ({ id, actualAmount, txType, paidAt }: { id: string; actualAmount?: number; txType?: string; paidAt?: string }) => {
-      const updateData: any = {
-        status: 'confirmado',
-        paid_at: paidAt || todayISO(),
-      };
-      if (actualAmount !== undefined) {
-        updateData.amount = actualAmount;
+    mutationFn: async ({ ids, paidAt, amountOverrides }: {
+      ids: string[];
+      paidAt?: string;
+      amountOverrides?: Record<string, number>;
+    }) => {
+      const date = paidAt || todayISO();
+
+      // Se o valor real pago foi editado, grava o valor antes de confirmar.
+      if (amountOverrides) {
+        for (const [id, amount] of Object.entries(amountOverrides)) {
+          const { error } = await supabase.from('transactions').update({ amount }).eq('id', id);
+          if (error) throw error;
+        }
       }
-      const { error } = await supabase.from('transactions').update(updateData).eq('id', id);
+
+      const { data, error } = await supabase.rpc('confirmar_transacoes', {
+        p_ids: ids,
+        p_paid_at: date,
+      });
       if (error) throw error;
-
-      if (actualAmount !== undefined && txType) {
-        // Fetch the LATEST balance from DB to avoid stale state issues
-        const { data: latestBal } = await supabase
-          .from('cash_balance')
-          .select('amount')
-          .order('balance_date', { ascending: false })
-          .limit(1)
-          .single();
-
-        const currentAmt = latestBal?.amount ?? 0;
-        const newBalance = txType === 'receber'
-          ? currentAmt + actualAmount
-          : currentAmt - actualAmount;
-        const today = todayISO();
-        const { error: balError } = await supabase.from('cash_balance').upsert({
-          balance_date: today,
-          amount: newBalance,
-          bank_account: 'Principal',
-        }, { onConflict: 'balance_date' });
-        if (balError) throw balError;
-      }
+      return data as { confirmed: number; delta: number; new_balance: number } | null;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       invalidateTx();
       invalidateBal();
-      toast.success('Transação confirmada e saldo atualizado');
+      const n = result?.confirmed ?? 0;
+      toast.success(n > 1
+        ? `${n} lançamentos confirmados e saldo atualizado`
+        : 'Transação confirmada e saldo atualizado');
     },
     onError: () => toast.error('Erro ao confirmar transação'),
   });
@@ -312,6 +307,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     onError: () => toast.error('Erro ao atualizar saldo'),
   });
 
+  /**
+   * Projeção geral: saldo atual + lançamentos até a data.
+   * Visão conservadora — recebíveis ATRASADOS ficam de fora (ver `overdueReceivablesTotal`).
+   */
   const projectedBalance = useCallback((targetDate: string): number => {
     const base = currentBalance?.amount ?? 0;
     let projected = base;
@@ -330,6 +329,13 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     return projected;
   }, [transactions, currentBalance]);
 
+  const overdueReceivablesTotal = useMemo(
+    () => transactions
+      .filter(t => t.type === 'receber' && t.status === 'atrasado')
+      .reduce((s, t) => s + t.amount, 0),
+    [transactions],
+  );
+
   const getTransactionsByObra = useCallback((obraId: string | null): Transaction[] => {
     if (obraId === null) {
       return transactions.filter(t => !t.obraId);
@@ -337,22 +343,32 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     return transactions.filter(t => t.obraId === obraId);
   }, [transactions]);
 
-  const projectedBalanceForObra = useCallback((obraId: string, targetDate: string): number => {
-    const obraTxs = transactions.filter(t => t.obraId === obraId);
-    let balance = 0;
+  /**
+   * Separa realizado x projetado da obra até a data:
+   * - realizado: apenas lançamentos confirmados (recebidos - pagos);
+   * - projetado: previstos/pendentes NÃO atrasados (a receber - a pagar);
+   * - liquido: realizado + projetado.
+   */
+  const obraBalanceBreakdown = useCallback((obraId: string, targetDate: string) => {
+    const obraTxs = transactions.filter(t => t.obraId === obraId && t.dueDate <= targetDate);
+    let realizado = 0;
+    let projetado = 0;
 
     for (const tx of obraTxs) {
-      if (tx.dueDate > targetDate) continue;
-      if (tx.type === 'receber') {
-        if (tx.status === 'confirmado' || tx.status !== 'atrasado') {
-          balance += tx.amount;
-        }
-      } else {
-        balance -= tx.amount;
+      const signed = tx.type === 'receber' ? tx.amount : -tx.amount;
+      if (tx.status === 'confirmado') {
+        realizado += signed;
+      } else if (tx.status !== 'atrasado') {
+        projetado += signed;
       }
     }
-    return balance;
+    return { realizado, projetado, liquido: realizado + projetado };
   }, [transactions]);
+
+  const projectedBalanceForObra = useCallback(
+    (obraId: string, targetDate: string): number => obraBalanceBreakdown(obraId, targetDate).liquido,
+    [obraBalanceBreakdown],
+  );
 
   return (
     <FinanceContext.Provider value={{
@@ -365,12 +381,20 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       addTransactions: (txs) => addBulkMutation.mutateAsync(txs),
       updateTransaction: (id, updates) => updateMutation.mutate({ id, updates }),
       deleteTransaction: (id) => deleteMutation.mutate(id),
-      confirmTransaction: (id, actualAmount, txType, paidAt) => confirmMutation.mutate({ id, actualAmount, txType, paidAt }),
+      confirmTransaction: (id, actualAmount, _txType, paidAt) => confirmMutation.mutate({
+        ids: [id],
+        paidAt,
+        amountOverrides: actualAmount !== undefined ? { [id]: actualAmount } : undefined,
+      }),
+      confirmTransactions: (ids, paidAt) => confirmMutation.mutateAsync({ ids, paidAt }).then(() => undefined),
       updateCashBalance: (amount, date) => balanceMutation.mutate({ amount, date: date || todayISO() }),
       projectedBalance,
+      overdueReceivablesTotal,
       getTransactionsByObra,
       projectedBalanceForObra,
+      obraBalanceBreakdown,
     }}>
+
       {children}
     </FinanceContext.Provider>
   );

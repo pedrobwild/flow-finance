@@ -26,6 +26,7 @@ import TransactionTable from '@/components/TransactionTable';
 import OFXImportDialog from '@/components/OFXImportDialog';
 import ConfirmPaymentDialog from '@/components/ConfirmPaymentDialog';
 import NFReportDialog from '@/components/NFReportDialog';
+import BulkConfirmDialog from '@/components/BulkConfirmDialog';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 12 } as const,
@@ -34,7 +35,7 @@ const sect = (delay: number) => ({
 });
 
 export default function ContasPagar() {
-  const { currentBalance, confirmTransaction, updateTransaction, deleteTransaction } = useFinance();
+  const { currentBalance, updateTransaction, deleteTransaction } = useFinance();
   const { filteredTransactions: transactions } = useObraFilter();
   const { obras } = useObras();
   const today = todayISO();
@@ -48,6 +49,7 @@ export default function ContasPagar() {
   const [showOFXImport, setShowOFXImport] = useState(false);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
   const [showNFReport, setShowNFReport] = useState(false);
+  const [bulkConfirm, setBulkConfirm] = useState<Transaction[] | null>(null);
 
   const toggleSection = (key: string) =>
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -81,9 +83,9 @@ export default function ContasPagar() {
     return obras.find(o => o.id === obraId)?.code;
   };
 
-  const confirmAll = (txs: typeof transactions) => {
-    txs.forEach(t => confirmTransaction(t.id, t.amount, t.type));
-  };
+  // A confirmação em massa passa por um diálogo de revisão (quantidade, total, data)
+  // e é executada em UMA única chamada atômica.
+  const confirmAll = (txs: Transaction[]) => setBulkConfirm(txs);
 
   const renderTxCard = (tx: typeof transactions[0], showDate = false) => {
     const obraCode = getObraCode(tx.obraId);
@@ -172,15 +174,25 @@ export default function ContasPagar() {
               {getDayMonth(tx.dueDate)}
             </span>
           )}
-          <span className="text-sm font-mono font-bold text-destructive min-w-[80px] text-right">
+          <span
+            className={cn(
+              'text-sm font-mono font-bold text-destructive min-w-[80px] text-right',
+              tx.cdiAdjustable && 'underline decoration-dotted underline-offset-4',
+            )}
+            title={tx.cdiAdjustable && tx.baseAmount
+              ? `Valor base ${formatCurrency(tx.baseAmount)} + correção CDI (${tx.cdiPercentage ?? 100}% do CDI)${tx.cdiLastUpdate ? ` até ${formatDateFull(tx.cdiLastUpdate)}` : ''}`
+              : undefined}
+          >
             {formatCurrency(tx.amount)}
           </span>
+
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90 hover:bg-success/10"
+            className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 sm:focus-visible:opacity-100 sm:group-focus-within/row:opacity-100 transition-opacity active:scale-90 hover:bg-success/10"
             onClick={() => setConfirmTx(tx)}
             title="Confirmar pagamento"
+            aria-label={`Confirmar pagamento de ${tx.description}`}
           >
             <Check className="w-4 h-4 text-success" />
           </Button>
@@ -189,11 +201,13 @@ export default function ContasPagar() {
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity active:scale-90"
+                className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover/row:opacity-100 sm:focus-visible:opacity-100 sm:group-focus-within/row:opacity-100 transition-opacity active:scale-90"
+                aria-label={`Mais ações para ${tx.description}`}
               >
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem onClick={() => { setRescheduleTx(tx); setRescheduleDate(tx.dueDate); }}>
                 <CalendarClock className="w-3.5 h-3.5 mr-2" />
@@ -509,6 +523,7 @@ export default function ContasPagar() {
 
       <OFXImportDialog open={showOFXImport} onClose={() => setShowOFXImport(false)} />
       <ConfirmPaymentDialog transaction={confirmTx} onClose={() => setConfirmTx(null)} />
+      <BulkConfirmDialog transactions={bulkConfirm} onClose={() => setBulkConfirm(null)} />
       <NFReportDialog open={showNFReport} onClose={() => setShowNFReport(false)} />
     </div>
   );
