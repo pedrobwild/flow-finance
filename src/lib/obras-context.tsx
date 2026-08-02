@@ -45,6 +45,7 @@ function rowToObra(row: any): Obra {
     code: row.code,
     clientName: row.client_name,
     clientEmail: row.client_email || '',
+    clientPhone: row.client_phone || '',
     condominium: row.condominium || '',
     unitNumber: row.unit_number || '',
     address: row.address || '',
@@ -156,6 +157,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
         code: generateCode(),
         client_name: data.clientName,
         client_email: data.clientEmail || '',
+        client_phone: data.clientPhone || '',
         condominium: data.condominium,
         unit_number: data.unitNumber,
         address: data.address,
@@ -184,6 +186,7 @@ export function ObrasProvider({ children }: { children: React.ReactNode }) {
       const update: any = {};
       if (data.clientName !== undefined) update.client_name = data.clientName;
       if (data.clientEmail !== undefined) update.client_email = data.clientEmail;
+      if (data.clientPhone !== undefined) update.client_phone = data.clientPhone;
       if (data.condominium !== undefined) update.condominium = data.condominium;
       if (data.unitNumber !== undefined) update.unit_number = data.unitNumber;
       if (data.address !== undefined) update.address = data.address;

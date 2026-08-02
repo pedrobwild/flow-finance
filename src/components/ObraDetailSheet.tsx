@@ -93,6 +93,11 @@ export default function ObraDetailSheet({ obra, onClose }: Props) {
                     {obra.unitNumber && `Un. ${obra.unitNumber}`}
                   </p>
                 )}
+                {obra.clientPhone && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Telefone: <a href={`tel:${obra.clientPhone}`} className="underline underline-offset-2">{obra.clientPhone}</a>
+                  </p>
+                )}
               </div>
               <Badge className={cn('text-xs', statusColor.bg, statusColor.text)} variant="outline">
                 {OBRA_STATUS_LABELS[obra.status]}
