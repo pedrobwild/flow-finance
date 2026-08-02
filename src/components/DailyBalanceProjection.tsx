@@ -141,7 +141,13 @@ export default function DailyBalanceProjection() {
             <p className="text-[10px] text-muted-foreground mt-0.5">
               Próximos {horizon} dias · Saldo projetado dia a dia
             </p>
+            {overdueReceivablesTotal > 0 && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Projeção conservadora: não conta {formatCurrency(overdueReceivablesTotal)} em recebimentos atrasados.
+              </p>
+            )}
           </div>
+
         </div>
         <div className="flex items-center gap-1">
           {([30, 60, 90] as const).map(p => (
