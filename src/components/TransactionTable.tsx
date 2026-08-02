@@ -34,6 +34,7 @@ import ObraDetailSheet from './ObraDetailSheet';
 import AuditLogDrawer from './AuditLogDrawer';
 import CustomCategoriesManager from './CustomCategoriesManager';
 import ConfirmPaymentDialog from './ConfirmPaymentDialog';
+import CopyBarcodeButton from './CopyBarcodeButton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -271,6 +272,11 @@ export default function TransactionTable({ type }: Props) {
                     Atrasado
                   </Badge>
                 )}
+                {tx.needsReview && (
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[18px] border-warning/40 text-warning">
+                    A confirmar
+                  </Badge>
+                )}
                 {obraCode && (
                   <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-[18px] font-mono">
                     {obraCode}
@@ -326,6 +332,7 @@ export default function TransactionTable({ type }: Props) {
                     <span>{tx.notes}</span>
                   </div>
                 )}
+                {tx.barcodeLine && <CopyBarcodeButton barcodeLine={tx.barcodeLine} />}
                 {tx.attachmentUrl && (
                   <a href={tx.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-primary">
                     <Paperclip className="w-3 h-3" /> Ver comprovante
@@ -787,6 +794,11 @@ export default function TransactionTable({ type }: Props) {
                               {isConfirmed && isPagar && <Check className="w-3 h-3 mr-1" />}
                               {isConfirmed && isPagar ? 'Pago' : STATUS_LABELS[tx.status]}
                             </span>
+                            {tx.needsReview && (
+                              <Badge variant="outline" className="ml-1 text-[9px] px-1.5 py-0 h-[18px] border-warning/40 text-warning">
+                                A confirmar
+                              </Badge>
+                            )}
                             {isConfirmed && tx.paidAt && (
                               <p className="text-[10px] text-muted-foreground mt-0.5 pl-0.5">{formatDateFull(tx.paidAt)}</p>
                             )}
@@ -917,6 +929,7 @@ export default function TransactionTable({ type }: Props) {
                           </td>
                           <td className="pr-5 pl-3 py-3">
                             <div className="flex items-center justify-end gap-0.5">
+                              {tx.barcodeLine && <CopyBarcodeButton barcodeLine={tx.barcodeLine} compact />}
                               {tx.attachmentUrl && (
                                 <a href={tx.attachmentUrl} target="_blank" rel="noopener noreferrer"><Button size="icon" variant="ghost" className="h-7 w-7 hover:bg-primary/10" type="button"><Paperclip className="w-3.5 h-3.5 text-primary" /></Button></a>
                               )}
