@@ -334,6 +334,7 @@ export type Database = {
         Row: {
           amount: number
           attachment_url: string | null
+          barcode_line: string | null
           base_amount: number | null
           base_date: string | null
           billing_count: number
@@ -346,7 +347,9 @@ export type Database = {
           created_at: string
           description: string
           due_date: string
+          email_message_id: string | null
           id: string
+          needs_review: boolean
           notes: string | null
           obra_id: string | null
           paid_at: string | null
@@ -354,6 +357,7 @@ export type Database = {
           priority: string
           receipt_url: string | null
           recurrence: string
+          source: string
           status: string
           type: string
           updated_at: string
@@ -361,6 +365,7 @@ export type Database = {
         Insert: {
           amount?: number
           attachment_url?: string | null
+          barcode_line?: string | null
           base_amount?: number | null
           base_date?: string | null
           billing_count?: number
@@ -373,7 +378,9 @@ export type Database = {
           created_at?: string
           description: string
           due_date: string
+          email_message_id?: string | null
           id?: string
+          needs_review?: boolean
           notes?: string | null
           obra_id?: string | null
           paid_at?: string | null
@@ -381,6 +388,7 @@ export type Database = {
           priority?: string
           receipt_url?: string | null
           recurrence?: string
+          source?: string
           status?: string
           type: string
           updated_at?: string
@@ -388,6 +396,7 @@ export type Database = {
         Update: {
           amount?: number
           attachment_url?: string | null
+          barcode_line?: string | null
           base_amount?: number | null
           base_date?: string | null
           billing_count?: number
@@ -400,7 +409,9 @@ export type Database = {
           created_at?: string
           description?: string
           due_date?: string
+          email_message_id?: string | null
           id?: string
+          needs_review?: boolean
           notes?: string | null
           obra_id?: string | null
           paid_at?: string | null
@@ -408,6 +419,7 @@ export type Database = {
           priority?: string
           receipt_url?: string | null
           recurrence?: string
+          source?: string
           status?: string
           type?: string
           updated_at?: string
