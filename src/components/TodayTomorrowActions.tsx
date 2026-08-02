@@ -155,8 +155,9 @@ export default function TodayTomorrowActions({ period }: Props) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-7 w-7 shrink-0 opacity-0 group-hover/item:opacity-100 sm:opacity-0 max-sm:opacity-100 transition-opacity active:scale-90"
+                        className="h-7 w-7 shrink-0 opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 group-focus-within/item:opacity-100 sm:opacity-0 max-sm:opacity-100 transition-opacity active:scale-90"
                         onClick={() => confirmTransaction(tx.id)}
+                        aria-label={`Confirmar ${tx.description}`}
                       >
                         <Check className="w-3.5 h-3.5 text-success" />
                       </Button>
@@ -168,6 +169,8 @@ export default function TodayTomorrowActions({ period }: Props) {
           );
         })}
       </div>
+      <BulkConfirmDialog transactions={bulkConfirm} onClose={() => setBulkConfirm(null)} />
     </div>
   );
 }
+
