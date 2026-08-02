@@ -174,9 +174,18 @@ export default function ContasPagar() {
               {getDayMonth(tx.dueDate)}
             </span>
           )}
-          <span className="text-sm font-mono font-bold text-destructive min-w-[80px] text-right">
+          <span
+            className={cn(
+              'text-sm font-mono font-bold text-destructive min-w-[80px] text-right',
+              tx.cdiAdjustable && 'underline decoration-dotted underline-offset-4',
+            )}
+            title={tx.cdiAdjustable && tx.baseAmount
+              ? `Valor base ${formatCurrency(tx.baseAmount)} + correção CDI (${tx.cdiPercentage ?? 100}% do CDI)${tx.cdiLastUpdate ? ` até ${formatDateFull(tx.cdiLastUpdate)}` : ''}`
+              : undefined}
+          >
             {formatCurrency(tx.amount)}
           </span>
+
           <Button
             size="icon"
             variant="ghost"
