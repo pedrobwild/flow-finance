@@ -23,6 +23,7 @@ interface DataPoint {
 
 export default function DailyBalanceProjection() {
   const { filteredTransactions: transactions, filteredBalance: currentBalance, filteredProjectedBalance: projectedBalance } = useObraFilter();
+  const { overdueReceivablesTotal } = useFinance();
   const [horizon, setHorizon] = useState<Horizon>(30);
   const today = todayISO();
   const bal = currentBalance?.amount ?? 0;
