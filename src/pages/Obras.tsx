@@ -9,7 +9,7 @@ import { formatCurrency, formatDate, formatDateFull, todayISO } from '@/lib/help
 import { motion } from 'framer-motion';
 import {
   Building2, Plus, Pencil, Trash2, Search, Eye, AlertTriangle,
-  DollarSign, TrendingUp, ArrowUpRight, ArrowDownRight, Wallet,
+  DollarSign, TrendingUp, ArrowUpRight, ArrowDownRight, Wallet, Paperclip,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import ObraFormDialog from '@/components/ObraFormDialog';
 import ObraDetailSheet from '@/components/ObraDetailSheet';
+import ObraAttachmentsDialog from '@/components/ObraAttachmentsDialog';
 
 const sect = (delay: number) => ({
   initial: { opacity: 0, y: 14, filter: 'blur(6px)' },
@@ -38,6 +39,7 @@ export default function Obras() {
   const [editingObra, setEditingObra] = useState<Obra | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
+  const [attachObra, setAttachObra] = useState<Obra | null>(null);
 
   const activeObras = getActiveObrasWithFinancials();
 
@@ -270,6 +272,9 @@ export default function Obras() {
                       <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={() => setDetailObra(obra)}>
                         <Eye className="h-3 w-3" /> Detalhes
                       </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setAttachObra(obra)} aria-label={`Anexos da obra ${obra.code}`}>
+                        <Paperclip className="h-3 w-3" /> Anexos
+                      </Button>
                       <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openEdit(obra)}>
                         <Pencil className="h-3 w-3" />
                       </Button>
@@ -297,6 +302,8 @@ export default function Obras() {
         obra={detailObra}
         onClose={() => setDetailObra(null)}
       />
+
+      <ObraAttachmentsDialog obra={attachObra} onClose={() => setAttachObra(null)} />
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
