@@ -534,6 +534,7 @@ export type Database = {
         Args: { p_ids: string[]; p_paid_at: string }
         Returns: Json
       }
+      desfazer_confirmacao: { Args: { p_id: string }; Returns: Json }
       dias_uteis: { Args: { p_from: string; p_to: string }; Returns: number }
       has_role: {
         Args: {

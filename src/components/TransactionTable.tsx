@@ -20,8 +20,9 @@ import {
 import {
   Check, Pencil, Trash2, Plus, Search, ArrowDownRight, ArrowUpRight,
   Clock, AlertTriangle, CalendarDays, X, CalendarIcon, Send, FileText, CreditCard, Paperclip, ChevronDown,
-  FileUp, Loader2, FileWarning,
+  FileUp, Loader2, FileWarning, Undo2,
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import ExportDropdown from './ExportDropdown';
 import { exportToCSV, exportToExcel, exportToPDF, transactionsToExportRows } from '@/lib/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -79,6 +80,19 @@ export default function TransactionTable({ type }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Transaction | null>(null);
   const [confirmTx, setConfirmTx] = useState<Transaction | null>(null);
+  const [undoTx, setUndoTx] = useState<Transaction | null>(null);
+  const [undoing, setUndoing] = useState(false);
+  const queryClient = useQueryClient();
+  const handleUndo = async () => {
+    if (!undoTx) return;
+    setUndoing(true);
+    const { error } = await supabase.rpc('desfazer_confirmacao' as any, { p_id: undoTx.id });
+    setUndoing(false);
+    if (error) { toast.error('Erro ao desfazer'); return; }
+    queryClient.invalidateQueries();
+    toast.success('Confirmação desfeita e saldo ajustado');
+    setUndoTx(null);
+  };
   const [detailObra, setDetailObra] = useState<Obra | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [uploadingNfId, setUploadingNfId] = useState<string | null>(null);
@@ -349,6 +363,12 @@ export default function TransactionTable({ type }: Props) {
                     >
                       <Check className="w-3.5 h-3.5" />
                       {isPagar ? 'Confirmar pgto' : 'Confirmar receb.'}
+                    </Button>
+                  )}
+                  {isConfirmed && (
+                    <Button size="sm" variant="outline" className="flex-1 h-9 text-xs gap-1.5" onClick={() => setUndoTx(tx)}>
+                      <Undo2 className="w-3.5 h-3.5" />
+                      {isPagar ? 'Desfazer pgto' : 'Desfazer receb.'}
                     </Button>
                   )}
                   {!isPagar && !isConfirmed && (
@@ -947,6 +967,14 @@ export default function TransactionTable({ type }: Props) {
                                   <Check className="w-3.5 h-3.5 text-success" />
                                 </Button>
                               )}
+                              {isConfirmed && (
+                                <Button size="icon" variant="ghost" className="h-7 w-7 hover:bg-warning/10 active:scale-90"
+                                  onClick={() => setUndoTx(tx)}
+                                  aria-label={`Desfazer confirmação de ${tx.description}`}
+                                  title={isPagar ? 'Desfazer pagamento' : 'Desfazer recebimento'}>
+                                  <Undo2 className="w-3.5 h-3.5 text-warning" />
+                                </Button>
+                              )}
                               <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity active:scale-90"
                                 onClick={() => { setEditingTx(tx); setShowForm(true); }}>
                                 <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1006,6 +1034,25 @@ export default function TransactionTable({ type }: Props) {
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>Cancelar</Button>
             <Button variant="destructive" size="sm" onClick={handleDelete}>Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Desfazer confirmação */}
+      <Dialog open={!!undoTx} onOpenChange={(o) => !o && setUndoTx(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isPagar ? 'Desfazer pagamento' : 'Desfazer recebimento'}</DialogTitle>
+            <DialogDescription>
+              <strong>{undoTx?.description}</strong> volta para pendente e{' '}
+              {undoTx && formatCurrency(undoTx.amount)} {isPagar ? 'volta para' : 'sai do'} saldo de caixa.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setUndoTx(null)}>Cancelar</Button>
+            <Button size="sm" disabled={undoing} onClick={handleUndo}>
+              {undoing && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}Desfazer
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
